@@ -84,6 +84,10 @@ class MenuScene extends Phaser.Scene {
 class GameScene extends Phaser.Scene {
   constructor() { super('GameScene'); }
 
+  preload() {
+    this.load.spritesheet('player', 'axiom.png', { frameWidth: 256, frameHeight: 256 });
+  }
+
   init() {
     this.pHP       = 100;
     this.pMaxHP    = 100;
@@ -126,6 +130,7 @@ class GameScene extends Phaser.Scene {
     this.gems    = this.physics.add.group();
 
     this.makeTextures();
+    this.createAnims();
     this.createPlayer();
     this.createUI();
     this.setupInput();
@@ -167,7 +172,6 @@ class GameScene extends Phaser.Scene {
   makeTextures() {
     const mk=(key,fn)=>{ if(this.textures.exists(key)) return; const g=this.make.graphics({add:false}); fn(g); g.destroy(); };
 
-    mk('player', g=>{ g.fillStyle(0x00ffcc,0.2); g.fillCircle(22,22,22); g.fillStyle(0x00ffcc,1); g.fillCircle(22,22,13); g.fillStyle(0xffffff,0.85); g.fillCircle(22,22,6); g.generateTexture('player',44,44); });
     mk('bullet', g=>{ g.fillStyle(0xffff55,1); g.fillCircle(5,5,5); g.fillStyle(0xffffff,0.7); g.fillCircle(5,5,2); g.generateTexture('bullet',10,10); });
     mk('gem',    g=>{ g.fillStyle(0x00ff88,1); g.fillTriangle(8,0,16,14,0,14); g.generateTexture('gem',16,16); });
     mk('blade',  g=>{ g.fillStyle(0x00eeff,1); g.fillRect(0,5,26,8); g.fillStyle(0xffffff,0.5); g.fillRect(0,6,26,4); g.generateTexture('blade',26,18); });
@@ -187,8 +191,17 @@ class GameScene extends Phaser.Scene {
     });
   }
 
+  createAnims() {
+    if(!this.anims.exists('player_idle')) {
+      this.anims.create({ key: 'player_idle', frames: this.anims.generateFrameNumbers('player', { start: 0, end: 3 }), frameRate: 6, repeat: -1 });
+      this.anims.create({ key: 'player_shoot', frames: [{ key: 'player', frame: 1 }], frameRate: 1 });
+    }
+  }
+
   createPlayer() {
     this.player = this.physics.add.sprite(W/2, H/2, 'player').setDepth(10).setCollideWorldBounds(true);
+    this.player.setDisplaySize(44, 44);
+    this.player.play('player_idle');
     this.glow = this.add.graphics().setDepth(9);
   }
 
@@ -292,7 +305,9 @@ class GameScene extends Phaser.Scene {
     b.hitSet = new Set();
     const ang = Phaser.Math.Angle.Between(this.player.x,this.player.y,t.x,t.y);
     b.setVelocity(Math.cos(ang)*460, Math.sin(ang)*460);
-    // Muzzle flash
+    // Shoot animation + muzzle flash
+    this.player.play('player_shoot');
+    this.time.delayedCall(150, () => { if(this.player.active) this.player.play('player_idle'); });
     const f = this.add.graphics().setDepth(11);
     f.fillStyle(0xffff00,0.75); f.fillCircle(this.player.x,this.player.y,9);
     this.time.delayedCall(70,()=>f.destroy());

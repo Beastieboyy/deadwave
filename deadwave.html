@@ -92,6 +92,7 @@ class GameScene extends Phaser.Scene {
     this.load.spritesheet('boss', 'boss.png', { frameWidth: 256, frameHeight: 256 });
     this.load.spritesheet('gem', 'shard.png', { frameWidth: 256, frameHeight: 256 });
     this.load.image('bg', 'bg.png');
+    this.load.image('bullet', 'bullet.png');
   }
 
   init() {
@@ -179,7 +180,6 @@ class GameScene extends Phaser.Scene {
   makeTextures() {
     const mk=(key,fn)=>{ if(this.textures.exists(key)) return; const g=this.make.graphics({add:false}); fn(g); g.destroy(); };
 
-    mk('bullet', g=>{ g.fillStyle(0xffff55,1); g.fillCircle(5,5,5); g.fillStyle(0xffffff,0.7); g.fillCircle(5,5,2); g.generateTexture('bullet',10,10); });
     mk('blade',  g=>{ g.fillStyle(0x00eeff,1); g.fillRect(0,5,26,8); g.fillStyle(0xffffff,0.5); g.fillRect(0,6,26,4); g.generateTexture('blade',26,18); });
 
   }
@@ -297,11 +297,14 @@ class GameScene extends Phaser.Scene {
     this.lastShot = time;
     const b = this.bullets.create(this.player.x, this.player.y, 'bullet');
     b.setDepth(8);
+    b.setDisplaySize(28, 12);
+    b.setFlipX(true);
     b.pdmg = this.pDmg;
     b.pierce = this.piercing ? 3 : 1;
     b.hits = 0;
     b.hitSet = new Set();
     const ang = Phaser.Math.Angle.Between(this.player.x,this.player.y,t.x,t.y);
+    b.setRotation(ang);
     b.setVelocity(Math.cos(ang)*460, Math.sin(ang)*460);
     // Shoot animation + muzzle flash
     this.player.play('player_shoot');

@@ -90,6 +90,7 @@ class GameScene extends Phaser.Scene {
     this.load.spritesheet('et', 'hulk.png', { frameWidth: 256, frameHeight: 256 });
     this.load.spritesheet('ef', 'runner.png', { frameWidth: 512, frameHeight: 512 });
     this.load.spritesheet('boss', 'boss.png', { frameWidth: 256, frameHeight: 256 });
+    this.load.spritesheet('gem', 'shard.png', { frameWidth: 256, frameHeight: 256 });
   }
 
   init() {
@@ -179,7 +180,6 @@ class GameScene extends Phaser.Scene {
     const mk=(key,fn)=>{ if(this.textures.exists(key)) return; const g=this.make.graphics({add:false}); fn(g); g.destroy(); };
 
     mk('bullet', g=>{ g.fillStyle(0xffff55,1); g.fillCircle(5,5,5); g.fillStyle(0xffffff,0.7); g.fillCircle(5,5,2); g.generateTexture('bullet',10,10); });
-    mk('gem',    g=>{ g.fillStyle(0x00ff88,1); g.fillTriangle(8,0,16,14,0,14); g.generateTexture('gem',16,16); });
     mk('blade',  g=>{ g.fillStyle(0x00eeff,1); g.fillRect(0,5,26,8); g.fillStyle(0xffffff,0.5); g.fillRect(0,6,26,4); g.generateTexture('blade',26,18); });
 
   }
@@ -191,6 +191,7 @@ class GameScene extends Phaser.Scene {
       this.anims.create({ key: 'hulk_walk', frames: this.anims.generateFrameNumbers('et', { start: 0, end: 3 }), frameRate: 6, repeat: -1 });
       this.anims.create({ key: 'runner_walk', frames: this.anims.generateFrameNumbers('ef', { start: 0, end: 3 }), frameRate: 10, repeat: -1 });
       this.anims.create({ key: 'boss_float', frames: this.anims.generateFrameNumbers('boss', { start: 0, end: 3 }), frameRate: 5, repeat: -1 });
+      this.anims.create({ key: 'shard_pulse', frames: this.anims.generateFrameNumbers('gem', { start: 0, end: 3 }), frameRate: 8, repeat: -1 });
     }
   }
 
@@ -342,6 +343,8 @@ class GameScene extends Phaser.Scene {
     for(let i=0;i<(e.gd||1);i++) {
       const gx=e.x+Phaser.Math.Between(-18,18), gy=e.y+Phaser.Math.Between(-18,18);
       const gem=this.gems.create(gx,gy,'gem').setDepth(5);
+      gem.setDisplaySize(20,20);
+      gem.play('shard_pulse');
       gem.xp=1;
       this.tweens.add({targets:gem,y:gy-22,duration:220,yoyo:true,ease:'Bounce'});
     }

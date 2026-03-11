@@ -85,7 +85,7 @@ class GameScene extends Phaser.Scene {
   constructor() { super('GameScene'); }
 
   preload() {
-    this.load.image('player', 'axiom.png');
+    this.load.image('player', 'axiom_single.png');
     this.load.image('ew', 'drone.png');
     this.load.spritesheet('et', 'hulk.png', { frameWidth: 256, frameHeight: 1024 });
     this.load.spritesheet('ef', 'runner.png', { frameWidth: 512, frameHeight: 512 });
@@ -510,6 +510,7 @@ class GameScene extends Phaser.Scene {
     this.orbitCnt++;
     const blade=this.add.sprite(this.player.x,this.player.y,'blade').setDepth(9);
     blade.setDisplaySize(30,30);
+    blade.setBlendMode(Phaser.BlendModes.ADD);
     blade.orbitR=58; blade.dmg=this.pDmg*0.55; blade.cd={};
     this.orbitBlades.push(blade);
   }

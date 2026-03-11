@@ -91,6 +91,7 @@ class GameScene extends Phaser.Scene {
     this.load.spritesheet('ef', 'runner.png', { frameWidth: 512, frameHeight: 512 });
     this.load.spritesheet('boss', 'boss.png', { frameWidth: 256, frameHeight: 256 });
     this.load.spritesheet('gem', 'shard.png', { frameWidth: 256, frameHeight: 256 });
+    this.load.image('bg', 'bg.png');
   }
 
   init() {
@@ -128,7 +129,10 @@ class GameScene extends Phaser.Scene {
 
   create() {
     // BG
-    this.bgG = this.add.graphics().setDepth(0);
+    const bgTile = this.add.tileSprite(0, 0, W, H, 'bg').setOrigin(0, 0).setDepth(0).setAlpha(0.75);
+    bgTile.tileScaleX = 0.15;
+    bgTile.tileScaleY = 0.15;
+    this.bgG = this.add.graphics().setDepth(1);
     this.drawBG();
 
     // Physics groups
@@ -163,11 +167,7 @@ class GameScene extends Phaser.Scene {
 
   drawBG() {
     this.bgG.clear();
-    this.bgG.fillStyle(0x07070f); this.bgG.fillRect(0,0,W,H);
-    this.bgG.lineStyle(1,0x10102a,0.9);
-    for(let x=0;x<W;x+=50) this.bgG.lineBetween(x,0,x,H);
-    for(let y=0;y<H;y+=50) this.bgG.lineBetween(0,y,W,y);
-    // Corners
+    // Corner bracket decorations
     [[0,0],[W,0],[0,H],[W,H]].forEach(([cx,cy])=>{
       this.bgG.lineStyle(2,0x00ccff,0.25);
       const sx=cx===0?1:-1, sy=cy===0?1:-1;

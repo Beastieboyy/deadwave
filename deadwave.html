@@ -89,6 +89,7 @@ class GameScene extends Phaser.Scene {
     this.load.image('ew', 'drone.png');
     this.load.spritesheet('et', 'hulk.png', { frameWidth: 256, frameHeight: 256 });
     this.load.spritesheet('ef', 'runner.png', { frameWidth: 512, frameHeight: 512 });
+    this.load.spritesheet('boss', 'boss.png', { frameWidth: 256, frameHeight: 256 });
   }
 
   init() {
@@ -116,6 +117,8 @@ class GameScene extends Phaser.Scene {
     this.dead      = false;
     this.orbitBlades = [];
     this.orbitAng  = 0;
+    this.bossOrbs  = [];
+    this.bossOrbAng = 0;
     this.joyActive = false;
     this.joyAng    = 0;
     this.joyDist   = 0;
@@ -179,16 +182,6 @@ class GameScene extends Phaser.Scene {
     mk('gem',    g=>{ g.fillStyle(0x00ff88,1); g.fillTriangle(8,0,16,14,0,14); g.generateTexture('gem',16,16); });
     mk('blade',  g=>{ g.fillStyle(0x00eeff,1); g.fillRect(0,5,26,8); g.fillStyle(0xffffff,0.5); g.fillRect(0,6,26,4); g.generateTexture('blade',26,18); });
 
-    // Enemies
-    mk('boss', g=>{
-      g.fillStyle(0x660000,1); g.fillCircle(45,45,45);
-      g.fillStyle(0xff1111,0.7); g.fillCircle(45,45,32);
-      g.fillStyle(0xffaa00,1); g.fillCircle(30,34,10); g.fillCircle(60,34,10);
-      g.fillStyle(0x000000,1); g.fillCircle(30,34,5); g.fillCircle(60,34,5);
-      g.fillStyle(0xff4444,1);
-      for(let i=0;i<8;i++){const a=i*Math.PI/4; g.fillCircle(45+Math.cos(a)*43,45+Math.sin(a)*43,6);}
-      g.generateTexture('boss',90,90);
-    });
   }
 
   createAnims() {
@@ -197,6 +190,7 @@ class GameScene extends Phaser.Scene {
       this.anims.create({ key: 'player_shoot', frames: [{ key: 'player', frame: 1 }], frameRate: 1 });
       this.anims.create({ key: 'hulk_walk', frames: this.anims.generateFrameNumbers('et', { start: 0, end: 3 }), frameRate: 6, repeat: -1 });
       this.anims.create({ key: 'runner_walk', frames: this.anims.generateFrameNumbers('ef', { start: 0, end: 3 }), frameRate: 10, repeat: -1 });
+      this.anims.create({ key: 'boss_float', frames: this.anims.generateFrameNumbers('boss', { start: 0, end: 3 }), frameRate: 5, repeat: -1 });
     }
   }
 
@@ -273,6 +267,7 @@ class GameScene extends Phaser.Scene {
     this.autoShoot(time);
     if(this.orbitCnt>0) this.updateOrbits(delta);
     this.moveEnemies();
+    this.updateBossOrbs(delta);
     this.updateGlow();
     this.cleanBullets();
   }
@@ -583,11 +578,22 @@ class GameScene extends Phaser.Scene {
 
   spawnBoss() {
     const e=this.enemies.create(W/2,-70,'boss').setDepth(6);
+    e.setDisplaySize(90,90);
+    e.play('boss_float');
     e.uid=++this.uidCounter;
     e.dead=false; e.isBoss=true;
     e.hp=900+this.waveNum*60; e.maxHp=e.hp;
     e.spd=52; e.dmg=28; e.gd=20; e.sv=600; e.burstColor=0xff0000;
     e.hpGfx=this.add.graphics().setDepth(7);
+
+    // Orbiting colored circles
+    const orbColors = [0x00ffff, 0xff8800, 0xff2244, 0xaa44ff];
+    this.bossOrbs = orbColors.map(c => {
+      const orb = this.add.graphics().setDepth(7);
+      orb.fillStyle(c, 0.85); orb.fillCircle(0, 0, 6);
+      orb.bossRef = e;
+      return orb;
+    });
 
     const ann=this.add.text(W/2,H/2,'☠  BOSS INCOMING  ☠',{fontFamily:'Orbitron',fontSize:'30px',color:'#ff0000',fontStyle:'bold',stroke:'#000',strokeThickness:6}).setDepth(201).setOrigin(0.5);
     this.cameras.main.shake(600,0.018);
@@ -627,6 +633,21 @@ class GameScene extends Phaser.Scene {
     this.glow.clear();
     const p=0.5+0.3*Math.sin(this.time.now*0.005);
     this.glow.fillStyle(0x00ffcc,p*0.18); this.glow.fillCircle(this.player.x,this.player.y,30);
+  }
+
+  updateBossOrbs(delta) {
+    if(!this.bossOrbs.length) return;
+    this.bossOrbAng += delta * 0.003;
+    const boss = this.bossOrbs[0].bossRef;
+    if(!boss || boss.dead) {
+      this.bossOrbs.forEach(o => o.destroy());
+      this.bossOrbs = [];
+      return;
+    }
+    this.bossOrbs.forEach((orb, i) => {
+      const a = this.bossOrbAng + (i * Math.PI * 2 / this.bossOrbs.length);
+      orb.setPosition(boss.x + Math.cos(a) * 55, boss.y + Math.sin(a) * 55);
+    });
   }
 
   dmgNum(x,y,amt) {

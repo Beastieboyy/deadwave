@@ -93,6 +93,7 @@ class GameScene extends Phaser.Scene {
     this.load.spritesheet('gem', 'shard.png', { frameWidth: 256, frameHeight: 256 });
     this.load.image('bg', 'bg.png');
     this.load.image('bullet', 'bullet.png');
+    this.load.image('blade', 'disc.png');
   }
 
   init() {
@@ -130,9 +131,9 @@ class GameScene extends Phaser.Scene {
 
   create() {
     // BG
-    const bgTile = this.add.tileSprite(0, 0, W, H, 'bg').setOrigin(0, 0).setDepth(0).setAlpha(0.75);
-    bgTile.tileScaleX = 0.15;
-    bgTile.tileScaleY = 0.15;
+    const bgTile = this.add.tileSprite(0, 0, W, H, 'bg').setOrigin(0, 0).setDepth(0).setAlpha(0.7);
+    bgTile.tileScaleX = 0.18;
+    bgTile.tileScaleY = 0.18;
     this.bgG = this.add.graphics().setDepth(1);
     this.drawBG();
 
@@ -178,10 +179,6 @@ class GameScene extends Phaser.Scene {
   }
 
   makeTextures() {
-    const mk=(key,fn)=>{ if(this.textures.exists(key)) return; const g=this.make.graphics({add:false}); fn(g); g.destroy(); };
-
-    mk('blade',  g=>{ g.fillStyle(0x00eeff,1); g.fillRect(0,5,26,8); g.fillStyle(0xffffff,0.5); g.fillRect(0,6,26,4); g.generateTexture('blade',26,18); });
-
   }
 
   createAnims() {
@@ -197,7 +194,7 @@ class GameScene extends Phaser.Scene {
 
   createPlayer() {
     this.player = this.physics.add.sprite(W/2, H/2, 'player').setDepth(10).setCollideWorldBounds(true);
-    this.player.setDisplaySize(44, 44);
+    this.player.setDisplaySize(48, 48);
     this.player.play('player_idle');
     this.glow = this.add.graphics().setDepth(9);
   }
@@ -515,6 +512,7 @@ class GameScene extends Phaser.Scene {
   addOrbit() {
     this.orbitCnt++;
     const blade=this.add.sprite(this.player.x,this.player.y,'blade').setDepth(9);
+    blade.setDisplaySize(30,30);
     blade.orbitR=58; blade.dmg=this.pDmg*0.55; blade.cd={};
     this.orbitBlades.push(blade);
   }
@@ -526,7 +524,7 @@ class GameScene extends Phaser.Scene {
       const a=this.orbitAng+(i*Math.PI*2/n);
       bl.x=this.player.x+Math.cos(a)*bl.orbitR;
       bl.y=this.player.y+Math.sin(a)*bl.orbitR;
-      bl.setRotation(a+Math.PI/2);
+      bl.angle+=8;
       this.enemies.getChildren().forEach(e=>{
         if(e.dead) return;
         const now=Date.now();
@@ -575,7 +573,7 @@ class GameScene extends Phaser.Scene {
     switch(tex){
       case 'ew': e.setDisplaySize(32,32); e.hp=(32+this.waveNum*9)*sc; e.spd=72+Phaser.Math.Between(0,25); e.dmg=8;  e.gd=1; e.sv=10; e.burstColor=0xff3333; break;
       case 'ef': e.setDisplaySize(34,34); e.play('runner_walk'); e.hp=(14+this.waveNum*5)*sc; e.spd=155+Phaser.Math.Between(0,35); e.dmg=5; e.gd=1; e.sv=15; e.burstColor=0xff8800; break;
-      case 'et': e.setDisplaySize(48,48); e.play('hulk_walk'); e.hp=(130+this.waveNum*22)*sc; e.spd=38; e.dmg=22; e.gd=4; e.sv=55; e.burstColor=0xaa0000; break;
+      case 'et': e.setDisplaySize(52,52); e.play('hulk_walk'); e.hp=(130+this.waveNum*22)*sc; e.spd=38; e.dmg=22; e.gd=4; e.sv=55; e.burstColor=0xaa0000; break;
     }
     e.maxHp=e.hp;
     e.hpGfx=this.add.graphics().setDepth(7);
@@ -584,7 +582,7 @@ class GameScene extends Phaser.Scene {
 
   spawnBoss() {
     const e=this.enemies.create(W/2,-70,'boss').setDepth(6);
-    e.setDisplaySize(90,90);
+    e.setDisplaySize(96,96);
     e.play('boss_float');
     e.uid=++this.uidCounter;
     e.dead=false; e.isBoss=true;

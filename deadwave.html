@@ -85,7 +85,7 @@ class GameScene extends Phaser.Scene {
   constructor() { super('GameScene'); }
 
   preload() {
-    this.load.spritesheet('player', 'axiom.png', { frameWidth: 256, frameHeight: 1024 });
+    this.load.image('player', 'axiom.png');
     this.load.image('ew', 'drone.png');
     this.load.spritesheet('et', 'hulk.png', { frameWidth: 256, frameHeight: 1024 });
     this.load.spritesheet('ef', 'runner.png', { frameWidth: 512, frameHeight: 512 });
@@ -183,8 +183,6 @@ class GameScene extends Phaser.Scene {
 
   createAnims() {
     if(!this.anims.exists('player_idle')) {
-      this.anims.create({ key: 'player_idle', frames: this.anims.generateFrameNumbers('player', { start: 0, end: 3 }), frameRate: 6, repeat: -1 });
-      this.anims.create({ key: 'player_shoot', frames: [{ key: 'player', frame: 1 }], frameRate: 1 });
       this.anims.create({ key: 'hulk_walk', frames: this.anims.generateFrameNumbers('et', { start: 0, end: 3 }), frameRate: 6, repeat: -1 });
       this.anims.create({ key: 'runner_walk', frames: this.anims.generateFrameNumbers('ef', { start: 0, end: 3 }), frameRate: 10, repeat: -1 });
       this.anims.create({ key: 'boss_float', frames: this.anims.generateFrameNumbers('boss', { start: 0, end: 3 }), frameRate: 5, repeat: -1 });
@@ -195,7 +193,6 @@ class GameScene extends Phaser.Scene {
     this.player = this.physics.add.sprite(W/2, H/2, 'player').setDepth(10).setCollideWorldBounds(true);
     this.player.setDisplaySize(48, 48);
     this.player.setBodySize(40, 40);
-    this.player.play('player_idle');
     this.glow = this.add.graphics().setDepth(9);
   }
 
@@ -304,9 +301,7 @@ class GameScene extends Phaser.Scene {
     const ang = Phaser.Math.Angle.Between(this.player.x,this.player.y,t.x,t.y);
     b.setRotation(ang);
     b.setVelocity(Math.cos(ang)*460, Math.sin(ang)*460);
-    // Shoot animation + muzzle flash
-    this.player.play('player_shoot');
-    this.time.delayedCall(150, () => { if(this.player.active) this.player.play('player_idle'); });
+    // Muzzle flash
     const f = this.add.graphics().setDepth(11);
     f.fillStyle(0xffff00,0.75); f.fillCircle(this.player.x,this.player.y,9);
     this.time.delayedCall(70,()=>f.destroy());
@@ -345,6 +340,7 @@ class GameScene extends Phaser.Scene {
       const gx=e.x+Phaser.Math.Between(-18,18), gy=e.y+Phaser.Math.Between(-18,18);
       const gem=this.gems.create(gx,gy,'gem').setDepth(5);
       gem.setDisplaySize(20,20);
+      gem.setBlendMode(Phaser.BlendModes.MULTIPLY);
       gem.xp=1;
       this.tweens.add({targets:gem,y:gy-22,duration:220,yoyo:true,ease:'Bounce'});
     }
@@ -571,7 +567,7 @@ class GameScene extends Phaser.Scene {
     e.dead=false;
     const sc=1+this.waveNum*0.04;
     switch(tex){
-      case 'ew': e.setDisplaySize(32,32); e.hp=(32+this.waveNum*9)*sc; e.spd=72+Phaser.Math.Between(0,25); e.dmg=8;  e.gd=1; e.sv=10; e.burstColor=0xff3333; break;
+      case 'ew': e.setDisplaySize(32,32); e.setBlendMode(Phaser.BlendModes.MULTIPLY); e.hp=(32+this.waveNum*9)*sc; e.spd=72+Phaser.Math.Between(0,25); e.dmg=8;  e.gd=1; e.sv=10; e.burstColor=0xff3333; break;
       case 'ef': e.setDisplaySize(34,34); e.play('runner_walk'); e.hp=(14+this.waveNum*5)*sc; e.spd=155+Phaser.Math.Between(0,35); e.dmg=5; e.gd=1; e.sv=15; e.burstColor=0xff8800; break;
       case 'et': e.setDisplaySize(52,52); e.play('hulk_walk'); e.hp=(130+this.waveNum*22)*sc; e.spd=38; e.dmg=22; e.gd=4; e.sv=55; e.burstColor=0xaa0000; break;
     }

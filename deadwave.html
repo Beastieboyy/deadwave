@@ -85,12 +85,12 @@ class GameScene extends Phaser.Scene {
   constructor() { super('GameScene'); }
 
   preload() {
-    this.load.spritesheet('player', 'axiom.png', { frameWidth: 256, frameHeight: 256 });
+    this.load.spritesheet('player', 'axiom.png', { frameWidth: 256, frameHeight: 1024 });
     this.load.image('ew', 'drone.png');
-    this.load.spritesheet('et', 'hulk.png', { frameWidth: 256, frameHeight: 256 });
+    this.load.spritesheet('et', 'hulk.png', { frameWidth: 256, frameHeight: 1024 });
     this.load.spritesheet('ef', 'runner.png', { frameWidth: 512, frameHeight: 512 });
-    this.load.spritesheet('boss', 'boss.png', { frameWidth: 256, frameHeight: 256 });
-    this.load.spritesheet('gem', 'shard.png', { frameWidth: 256, frameHeight: 256 });
+    this.load.spritesheet('boss', 'boss.png', { frameWidth: 256, frameHeight: 1024 });
+    this.load.image('gem', 'shard.png');
     this.load.image('bg', 'bg.png');
     this.load.image('bullet', 'bullet.png');
     this.load.image('blade', 'disc.png');
@@ -188,7 +188,6 @@ class GameScene extends Phaser.Scene {
       this.anims.create({ key: 'hulk_walk', frames: this.anims.generateFrameNumbers('et', { start: 0, end: 3 }), frameRate: 6, repeat: -1 });
       this.anims.create({ key: 'runner_walk', frames: this.anims.generateFrameNumbers('ef', { start: 0, end: 3 }), frameRate: 10, repeat: -1 });
       this.anims.create({ key: 'boss_float', frames: this.anims.generateFrameNumbers('boss', { start: 0, end: 3 }), frameRate: 5, repeat: -1 });
-      this.anims.create({ key: 'shard_pulse', frames: this.anims.generateFrameNumbers('gem', { start: 0, end: 3 }), frameRate: 8, repeat: -1 });
     }
   }
 
@@ -344,7 +343,6 @@ class GameScene extends Phaser.Scene {
       const gx=e.x+Phaser.Math.Between(-18,18), gy=e.y+Phaser.Math.Between(-18,18);
       const gem=this.gems.create(gx,gy,'gem').setDepth(5);
       gem.setDisplaySize(20,20);
-      gem.play('shard_pulse');
       gem.xp=1;
       this.tweens.add({targets:gem,y:gy-22,duration:220,yoyo:true,ease:'Bounce'});
     }

@@ -194,6 +194,7 @@ class GameScene extends Phaser.Scene {
   createPlayer() {
     this.player = this.physics.add.sprite(W/2, H/2, 'player').setDepth(10).setCollideWorldBounds(true);
     this.player.setDisplaySize(48, 48);
+    this.player.setBodySize(40, 40);
     this.player.play('player_idle');
     this.glow = this.add.graphics().setDepth(9);
   }
@@ -294,6 +295,7 @@ class GameScene extends Phaser.Scene {
     const b = this.bullets.create(this.player.x, this.player.y, 'bullet');
     b.setDepth(8);
     b.setDisplaySize(28, 12);
+    b.setBlendMode(Phaser.BlendModes.ADD);
     b.setFlipX(true);
     b.pdmg = this.pDmg;
     b.pierce = this.piercing ? 3 : 1;

@@ -86,6 +86,7 @@ class GameScene extends Phaser.Scene {
 
   preload() {
     this.load.spritesheet('player', 'axiom.png', { frameWidth: 256, frameHeight: 256 });
+    this.load.image('ew', 'drone.png');
   }
 
   init() {
@@ -177,7 +178,6 @@ class GameScene extends Phaser.Scene {
     mk('blade',  g=>{ g.fillStyle(0x00eeff,1); g.fillRect(0,5,26,8); g.fillStyle(0xffffff,0.5); g.fillRect(0,6,26,4); g.generateTexture('blade',26,18); });
 
     // Enemies
-    mk('ew', g=>{ g.fillStyle(0xff3333,1); g.fillCircle(15,15,15); g.fillStyle(0xffaaaa,0.4); g.fillCircle(15,15,8); g.generateTexture('ew',30,30); });
     mk('ef', g=>{ g.fillStyle(0xff8800,1); g.fillTriangle(11,0,22,20,0,20); g.generateTexture('ef',22,22); });
     mk('et', g=>{ g.fillStyle(0xaa0000,1); g.fillRect(0,0,40,40); g.fillStyle(0xff4444,0.3); g.fillRect(5,5,30,30); g.generateTexture('et',40,40); });
     mk('boss', g=>{
@@ -570,7 +570,7 @@ class GameScene extends Phaser.Scene {
     e.dead=false;
     const sc=1+this.waveNum*0.04;
     switch(tex){
-      case 'ew': e.hp=(32+this.waveNum*9)*sc; e.spd=72+Phaser.Math.Between(0,25); e.dmg=8;  e.gd=1; e.sv=10; e.burstColor=0xff3333; break;
+      case 'ew': e.setDisplaySize(32,32); e.hp=(32+this.waveNum*9)*sc; e.spd=72+Phaser.Math.Between(0,25); e.dmg=8;  e.gd=1; e.sv=10; e.burstColor=0xff3333; break;
       case 'ef': e.hp=(14+this.waveNum*5)*sc; e.spd=155+Phaser.Math.Between(0,35); e.dmg=5; e.gd=1; e.sv=15; e.burstColor=0xff8800; break;
       case 'et': e.hp=(130+this.waveNum*22)*sc; e.spd=38; e.dmg=22; e.gd=4; e.sv=55; e.burstColor=0xaa0000; break;
     }

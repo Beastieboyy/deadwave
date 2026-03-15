@@ -56,7 +56,7 @@ SFX.load();
 // ─────────────────────────────────────────────────
 const DTM = {
   W:390, H:844,
-  API:'https://tiki-tan.com/deadwave/api.php',
+  API:(window.location.origin.includes('tiki-tan.com')?'/deadwave/api.php':'https://tiki-tan.com/deadwave/api.php'),
   getName:()=>localStorage.getItem('dtm_playername')||'',
   setName:(n)=>localStorage.setItem('dtm_playername',n),
   getSnacks:()=>parseInt(localStorage.getItem('dtm_snacks')||'0'),
@@ -370,20 +370,25 @@ class LeaderboardScene extends Phaser.Scene {
       if(data.error){listContainer.add(this.add.text(W/2,H/2,`API error: ${data.error}`,{fontFamily:'Orbitron',fontSize:'11px',color:'#ff4444',wordWrap:{width:320},align:'center'}).setOrigin(0.5));return;}
       const scores=data.scores||[];
       if(scores.length===0){listContainer.add(this.add.text(W/2,H/2-40,'\ud83c\udfc6',{fontSize:'48px'}).setOrigin(0.5));listContainer.add(this.add.text(W/2,H/2+20,'No scores yet!\nBe the FIRST on the\nNorthwood Snitch List!',{fontFamily:'Orbitron',fontSize:'14px',color:'#ff9900',align:'center',lineSpacing:8}).setOrigin(0.5));return;}
-      const myName=DTM.getName().toLowerCase();let myRank=-1;
+      const myName=(DTM.getName()||'').toLowerCase();let myRank=-1;
+      const LW=DTM.W;
       scores.forEach((s,i)=>{
-        const y=105+i*54,isMe=s.player_name.toLowerCase()===myName;
+        const y=105+i*54;
+        console.log('Render score:',i,(s.player_name||'?'),s.score,'y:',y);
+        const isMe=(s.player_name||'').toLowerCase()===myName;
         if(isMe)myRank=i+1;
-        const rowBg=this.add.graphics();rowBg.fillStyle(isMe?0x2a1a00:i%2===0?0x0d0d1a:0x111122,1);rowBg.fillRoundedRect(12,y,W-24,48,6);
-        if(isMe){rowBg.lineStyle(1,0xff9900,0.8);rowBg.strokeRoundedRect(12,y,W-24,48,6);}
-        listContainer.add(rowBg);
+        const rowBg=this.add.graphics().setDepth(5);
+        rowBg.fillStyle(isMe?0x2a1a00:i%2===0?0x0d0d1a:0x111122,1);rowBg.fillRoundedRect(12,y,LW-24,48,6);
+        if(isMe){rowBg.lineStyle(1,0xff9900,0.8);rowBg.strokeRoundedRect(12,y,LW-24,48,6);}
         const rc=i===0?'#ffd700':i===1?'#c0c0c0':i===2?'#cd7f32':'#ffffff';
-        listContainer.add(this.add.text(30,y+24,`#${i+1}`,{fontFamily:'Orbitron',fontSize:'14px',color:rc,fontStyle:'bold'}).setOrigin(0,0.5));
-        listContainer.add(this.add.text(72,y+16,s.player_name.toUpperCase(),{fontFamily:'Orbitron',fontSize:'12px',color:isMe?'#ff9900':'#ffffff'}).setOrigin(0,0.5));
-        listContainer.add(this.add.text(72,y+34,`Night ${s.level_reached}`,{fontFamily:'Orbitron',fontSize:'10px',color:'#666688'}).setOrigin(0,0.5));
-        listContainer.add(this.add.text(W-24,y+24,String(parseInt(s.score||0).toLocaleString()),{fontFamily:'Orbitron',fontSize:'14px',color:'#ff9900',fontStyle:'bold'}).setOrigin(1,0.5));
+        const nm=(s.player_name||'???').toUpperCase().substring(0,16);
+        const sc=parseInt(s.score||0).toLocaleString();
+        this.add.text(30,y+24,`#${i+1}`,{fontFamily:'Orbitron',fontSize:'14px',color:rc,fontStyle:'bold'}).setOrigin(0,0.5).setDepth(6);
+        this.add.text(72,y+16,nm,{fontFamily:'Orbitron',fontSize:'12px',color:isMe?'#ff9900':'#ffffff'}).setOrigin(0,0.5).setDepth(6);
+        this.add.text(72,y+34,`Night ${s.level_reached||1}`,{fontFamily:'Orbitron',fontSize:'10px',color:'#666688'}).setOrigin(0,0.5).setDepth(6);
+        this.add.text(LW-24,y+24,sc,{fontFamily:'Orbitron',fontSize:'14px',color:'#ff9900',fontStyle:'bold'}).setOrigin(1,0.5).setDepth(6);
       });
-      if(myRank>0){const pb=this.add.graphics();pb.fillStyle(0x1a0d00,0.97);pb.fillRect(0,H-130,W,50);pb.lineStyle(1,0xff9900,0.5);pb.lineBetween(0,H-130,W,H-130);listContainer.add(pb);listContainer.add(this.add.text(W/2,H-105,`YOU: #${myRank} \u2022 ${DTM.getName().toUpperCase()}`,{fontFamily:'Orbitron',fontSize:'13px',color:'#ff9900',fontStyle:'bold'}).setOrigin(0.5));}
+      if(myRank>0){const pb=this.add.graphics().setDepth(5);pb.fillStyle(0x1a0d00,0.97);pb.fillRect(0,H-130,LW,50);pb.lineStyle(1,0xff9900,0.5);pb.lineBetween(0,H-130,LW,H-130);this.add.text(LW/2,H-105,`YOU: #${myRank} \u2022 ${DTM.getName().toUpperCase()}`,{fontFamily:'Orbitron',fontSize:'13px',color:'#ff9900',fontStyle:'bold'}).setOrigin(0.5).setDepth(6);}
     };
     loadBoard('all');
     this.time.addEvent({delay:30000,callback:()=>loadBoard(activePeriod),loop:true});

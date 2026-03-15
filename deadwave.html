@@ -455,7 +455,7 @@ class GameScene extends Phaser.Scene {
     this.score=0;this.kills=0;this.elapsed=0;this.totalTime=15*60*1000;
     this.roundNum=0;this.roundActive=false;this.roundEnemies=[];
     this.paused=false;this.dead=false;this.playerFrozen=false;this.forcedRun=false;
-    this.playerIframes=0;this.lastHurtTime=0;this.transitioning=false;
+    this.playerIframes=0;this.lastHurtTime=0;this.transitioning=false;this.levelUpActive=false;
     this.bossOrbs=[];this.bossOrbAng=0;
     this.joyActive=false;this.joyAng=0;this.joyDist=0;this.joyBaseX=0;this.joyBaseY=0;
     this.uidCounter=0;this.projectiles=[];
@@ -652,6 +652,8 @@ class GameScene extends Phaser.Scene {
   }
 
   update(time,delta){
+    // Ghost-pause recovery
+    if(this.paused&&!this.levelUpActive&&!this.dead&&!this.transitioning){console.warn('Ghost pause — recovering');this.paused=false;this.physics.resume();}
     if(this.paused||this.dead)return;
     this.elapsed+=delta;
     const rem=Math.max(0,this.totalTime-this.elapsed);
@@ -858,18 +860,33 @@ class GameScene extends Phaser.Scene {
   updateXP(){this.xpBar.clear();const p=Math.min(1,this.pXP/this.xpNeeded);this.xpBar.fillStyle(0xffdd00,0.8);this.xpBar.fillRoundedRect(9,31,Math.floor(158*p),6,2);}
 
   showLevelUp(){
+    if(this.levelUpActive)return;this.levelUpActive=true;
     this.paused=true;this.physics.pause();
-    const ov=this.add.graphics().setDepth(200);ov.fillStyle(0x000000,0.78);ov.fillRect(0,0,W,H);
-    this.add.text(W/2,100,'BRODY LEVELED UP!',{fontFamily:'Orbitron',fontSize:'22px',color:'#ffcc00',fontStyle:'bold',stroke:'#000',strokeThickness:6}).setDepth(201).setOrigin(0.5);
-    this.add.text(W/2,135,'CHOOSE YOUR MOVE',{fontFamily:'Orbitron',fontSize:'11px',color:'#8888bb',letterSpacing:4}).setDepth(201).setOrigin(0.5);
-    const SKILLS=[{id:'dmg',name:'SUGAR RUSH',desc:'Ate too much candy \u2014 +30% throw speed',icon:'\ud83c\udf6c',col:0xff4444},{id:'rate',name:'PANIC MODE',desc:'Throwing homework faster',icon:'\ud83d\udcdd',col:0xffaa00},{id:'spd',name:'SPRINT HOME',desc:'+20% Move Speed',icon:'\ud83d\udc5f',col:0x00ccff},{id:'pierce',name:'HALL PASS',desc:'Papers go through snitches',icon:'\ud83d\udccb',col:0xcc44ff},{id:'orbit',name:'BACKPACK SPIN',desc:'Spinning bag knocks snitches away',icon:'\ud83c\udf92',col:0xff9900},{id:'pulse',name:'ALARM CLOCK',desc:'Stun burst freezes nearby snitches',icon:'\u23f0',col:0xff88ff},{id:'mag',name:'SNACK RADAR',desc:'2x snack pickup range',icon:'\ud83c\udf55',col:0xffff44},{id:'regen',name:'ENERGY DRINK',desc:'+3 HP regen per second',icon:'\ud83e\udd64',col:0xff6688},{id:'maxhp',name:"MOM'S COOKING",desc:'+50 max HP + full heal',icon:'\ud83c\udf72',col:0x44aaff}];
+    if(this._kh){this.input.keyboard.off('keydown',this._kh);this._kh=null;}
+    const objs=[];const add=(o)=>{objs.push(o);return o;};
+    add(this.add.graphics().setDepth(200)).fillStyle(0x000000,0.82).fillRect(0,0,W,H);
+    add(this.add.text(W/2,115,'\u26a1 LEVEL UP!',{fontFamily:'Orbitron',fontSize:'28px',color:'#ffcc00',fontStyle:'bold',stroke:'#000',strokeThickness:6}).setDepth(201).setOrigin(0.5));
+    add(this.add.text(W/2,153,`LEVEL ${this.pLevel} \u2014 CHOOSE YOUR POWER`,{fontFamily:'Orbitron',fontSize:'11px',color:'#888899',letterSpacing:3}).setDepth(201).setOrigin(0.5));
+    const SKILLS=[{id:'dmg',name:'OVERDRIVE',desc:'+4 Bullet Damage',icon:'\ud83d\udca5',col:0xff4444},{id:'rate',name:'RAPID FIRE',desc:'Fire 120ms Faster',icon:'\u26a1',col:0xffaa00},{id:'spd',name:'AFTERBURN',desc:'+30 Move Speed',icon:'\ud83d\udc5f',col:0x00ccff},{id:'pierce',name:'PENETRATOR',desc:'Bullets Pierce Enemies',icon:'\ud83d\udd31',col:0xcc44ff},{id:'orbit',name:'ORBIT BLADE',desc:'Spinning Blade Weapon',icon:'\ud83c\udf00',col:0x00ff88},{id:'pulse',name:'SHOCKWAVE',desc:'Area Pulse Every 3s',icon:'\ud83d\udcab',col:0xff88ff},{id:'mag',name:'VORTEX',desc:'+60 Snack Pickup Range',icon:'\ud83e\uddf2',col:0xffff44},{id:'regen',name:'NANOBOTS',desc:'+2 HP Regen Per Second',icon:'\u2764\ufe0f',col:0xff6688},{id:'maxhp',name:'FORTIFY',desc:'+25 Max HP + Heal',icon:'\ud83d\udee1\ufe0f',col:0x44aaff}];
     const pool=[...SKILLS],chosen=[];for(let i=0;i<3;i++)chosen.push(pool.splice(Phaser.Math.Between(0,pool.length-1),1)[0]);
-    const cW=W-40,cH=120,startX=20,startY=170;
-    chosen.forEach((sk,i)=>{const cx=startX,cy=startY+i*(cH+14);const drawCard=(hover)=>{card.clear();card.fillStyle(hover?0x1c1c38:0x0e0e22,0.97);card.fillRoundedRect(cx,cy,cW,cH,9);card.lineStyle(hover?3:2,0xff9900,hover?1:0.7);card.strokeRoundedRect(cx,cy,cW,cH,9);if(hover){for(let s=8;s<24;s+=6){card.lineStyle(1,0xff9900,0.07);card.strokeRoundedRect(cx-s/3,cy-s/3,cW+s*0.66,cH+s*0.66,9+s/3);}}};const card=this.add.graphics().setDepth(201);drawCard(false);this.add.text(cx+35,cy+cH/2,sk.icon,{fontSize:'34px'}).setDepth(202).setOrigin(0.5);this.add.text(cx+cW/2+20,cy+30,sk.name,{fontFamily:'Orbitron',fontSize:'13px',color:'#'+sk.col.toString(16).padStart(6,'0'),fontStyle:'bold',wordWrap:{width:cW-90}}).setDepth(202).setOrigin(0.5);this.add.text(cx+cW/2+20,cy+58,sk.desc,{fontFamily:'Orbitron',fontSize:'9px',color:'#9999bb',wordWrap:{width:cW-90}}).setDepth(202).setOrigin(0.5);this.add.text(cx+cW/2+20,cy+85,`[ ${i+1} ]`,{fontFamily:'Orbitron',fontSize:'11px',color:'#555577'}).setDepth(202).setOrigin(0.5);const zone=this.add.zone(cx,cy,cW,cH).setOrigin(0,0).setDepth(203).setInteractive({useHandCursor:true});zone.on('pointerover',()=>drawCard(true));zone.on('pointerout',()=>drawCard(false));zone.on('pointerdown',()=>this.applySkill(sk));});
-    const kh=(ev)=>{const idx=['1','2','3'].indexOf(ev.key);if(idx>=0&&chosen[idx])this.applySkill(chosen[idx]);};this.input.keyboard.on('keydown',kh);this._kh=kh;
+    const close=(skillId)=>{if(!this.levelUpActive)return;this.levelUpActive=false;if(this._kh){this.input.keyboard.off('keydown',this._kh);this._kh=null;}objs.forEach(o=>{if(o?.scene)try{o.destroy();}catch(e){}});if(skillId)this.applySkill(skillId);this.time.delayedCall(50,()=>{this.paused=false;if(!this.dead)this.physics.resume();});};
+    const cW=W-60,cH=140,startY=195;
+    chosen.forEach((sk,i)=>{const cx=30,cy=startY+i*(cH+12);const colH='#'+sk.col.toString(16).padStart(6,'0');
+      const card=add(this.add.graphics().setDepth(201));card.fillStyle(0x0e0e22,0.97);card.fillRoundedRect(cx,cy,cW,cH,10);card.lineStyle(2,sk.col,0.8);card.strokeRoundedRect(cx,cy,cW,cH,10);
+      add(this.add.text(cx+20,cy+cH/2,sk.icon,{fontSize:'36px'}).setOrigin(0,0.5).setDepth(202));
+      add(this.add.text(cx+72,cy+42,sk.name,{fontFamily:'Orbitron',fontSize:'15px',color:colH,fontStyle:'bold'}).setOrigin(0,0.5).setDepth(202));
+      add(this.add.text(cx+72,cy+78,sk.desc,{fontFamily:'Orbitron',fontSize:'11px',color:'#9999bb',wordWrap:{width:cW-90}}).setOrigin(0,0.5).setDepth(202));
+      add(this.add.text(cx+cW-16,cy+cH/2,`[${i+1}]`,{fontFamily:'Orbitron',fontSize:'13px',color:'#555577'}).setOrigin(1,0.5).setDepth(202));
+      const zone=add(this.add.zone(cx,cy,cW,cH).setOrigin(0,0).setDepth(203).setInteractive({useHandCursor:true}));
+      zone.on('pointerdown',()=>close(sk.id));
+    });
+    this._kh=(ev)=>{const idx=['1','2','3'].indexOf(ev.key);if(idx>=0&&chosen[idx])close(chosen[idx].id);};
+    this.input.keyboard.on('keydown',this._kh);
+    this.time.delayedCall(30000,()=>{if(this.levelUpActive)close(chosen[0].id);});
+    this.cameras.main.flash(250,0,255,160);
   }
 
-  applySkill(sk){this.children.list.filter(c=>c.depth>=200).forEach(c=>c.destroy());if(this._kh){this.input.keyboard.off('keydown',this._kh);this._kh=null;}this.paused=false;this.physics.resume();switch(sk.id){case'dmg':this.pDmg+=4;break;case'rate':this.fireRate=Math.max(300,this.fireRate-120);break;case'spd':this.pSpeed+=30;break;case'pierce':this.piercing=true;break;case'orbit':this.addOrbit();break;case'pulse':this.hasPulse=true;break;case'mag':this.magnetR+=60;break;case'regen':this.regenRate+=2;break;case'maxhp':this.pMaxHP+=25;this.pHP=Math.min(this.pHP+25,this.pMaxHP);this.updateHP();break;}this.cameras.main.flash(250,0,255,160);}
+  applySkill(id){switch(id){case'dmg':this.pDmg+=4;break;case'rate':this.fireRate=Math.max(300,this.fireRate-120);break;case'spd':this.pSpeed+=30;break;case'pierce':this.piercing=true;break;case'orbit':this.addOrbit();break;case'pulse':this.hasPulse=true;break;case'mag':this.magnetR+=60;break;case'regen':this.regenRate+=2;break;case'maxhp':this.pMaxHP+=25;this.pHP=Math.min(this.pHP+25,this.pMaxHP);this.updateHP();break;}this.cameras.main.flash(200,0,255,160);}
 
   addOrbit(){this.orbitCnt++;const blade=this.add.sprite(this.player.x,this.player.y,'blade').setDepth(9).setDisplaySize(30,30);blade.orbitR=58;blade.dmg=this.pDmg*0.55;blade.cd={};this.orbitBlades.push(blade);}
 

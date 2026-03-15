@@ -71,7 +71,7 @@ const DTM = {
   getCurrentLevel:()=>parseInt(localStorage.getItem('dtm_currentlevel')||'1'),
   setCurrentLevel:(n)=>localStorage.setItem('dtm_currentlevel',String(n)),
   getPin:()=>localStorage.getItem('dtm_pin')||'0000',
-  _gfetch:async(url)=>{try{console.log('FETCH:',url);const c=new AbortController();const t=setTimeout(()=>c.abort(),8000);const r=await fetch(url,{signal:c.signal});clearTimeout(t);if(!r.ok){console.error('FETCH ERR:',r.status);return{error:`Server error: ${r.status}`};}const d=await r.json();console.log('FETCH OK:',d);return d;}catch(e){console.error('FETCH FAIL:',e.message);if(e.name==='AbortError')return{error:'Request timed out'};return{error:e.message};}},
+  _xget:async(url)=>{console.log('XHR:',url);return new Promise((resolve)=>{const xhr=new XMLHttpRequest();xhr.open('GET',url,true);xhr.timeout=8000;xhr.onload=()=>{try{const d=JSON.parse(xhr.responseText);console.log('XHR OK:',d);resolve(d);}catch(e){console.error('XHR parse:',e);resolve({error:'Invalid response'});}};xhr.onerror=()=>{console.error('XHR err');resolve({error:'Network error'});};xhr.ontimeout=()=>{console.error('XHR timeout');resolve({error:'Request timed out'});};xhr.send();});},
   locationForLevel:(n)=>{
     if(n<=10) return{name:'NORTHWOOD HIGH',color:'#4488ff'};
     if(n<=20) return{name:'MAIN ST ROASTERS',color:'#ff8800'};
@@ -86,9 +86,9 @@ const DTM = {
     return['ew','sister','ef','es','coach','et','boss'];
   },
   calcScore:(kills,rounds,timeLeft,stars,level)=>(kills*100)+(rounds*500)+(Math.floor(timeLeft/1000)*10)+(stars*1000)+(level*200),
-  submitScore:async(score,level,kills,stars)=>{const n=DTM.getName(),p=DTM.getPin();if(!n||n.startsWith('Guest_'))return{error:'guest'};return DTM._gfetch(`${DTM.API}?action=submit&name=${encodeURIComponent(n)}&pin=${p}&score=${score}&level=${level}&kills=${kills}&stars=${stars}`);},
-  fetchLeaderboard:async(period='all')=>DTM._gfetch(`${DTM.API}?action=leaderboard&period=${period}`),
-  getPersonalBest:async()=>{const n=DTM.getName(),p=DTM.getPin();if(!n||n.startsWith('Guest_'))return null;return DTM._gfetch(`${DTM.API}?action=personal&name=${encodeURIComponent(n)}&pin=${p}`);},
+  submitScore:async(score,level,kills,stars)=>{const n=DTM.getName(),p=DTM.getPin();if(!n||n.startsWith('Guest_'))return{error:'guest'};return DTM._xget(`${DTM.API}?action=submit&name=${encodeURIComponent(n)}&pin=${encodeURIComponent(p)}&score=${score}&level=${level}&kills=${kills}&stars=${stars}`);},
+  fetchLeaderboard:async(period='all')=>DTM._xget(`${DTM.API}?action=leaderboard&period=${period}`),
+  getPersonalBest:async()=>{const n=DTM.getName(),p=DTM.getPin();if(!n||n.startsWith('Guest_'))return null;return DTM._xget(`${DTM.API}?action=personal&name=${encodeURIComponent(n)}&pin=${encodeURIComponent(p)}`);},
   makeBG:(scene)=>{const g=scene.add.graphics();g.fillStyle(0x08080f);g.fillRect(0,0,W,H);g.lineStyle(1,0x1a1a2e,0.5);for(let x=0;x<W;x+=40)g.lineBetween(x,0,x,H);for(let y=0;y<H;y+=40)g.lineBetween(0,y,W,y);return g;},
   makeCard:(scene,x,y,w,h,alpha=1)=>{const g=scene.add.graphics();g.fillStyle(0x1a1a2e,alpha);g.fillRoundedRect(x,y,w,h,12);g.lineStyle(2,0xff9900,0.6);g.strokeRoundedRect(x,y,w,h,12);return g;},
   makeBtn:(scene,x,y,w,h,label,color=0xff9900)=>{
@@ -348,13 +348,9 @@ class LeaderboardScene extends Phaser.Scene {
       let data=null,fetchErr=null;
       try{
         const url=DTM.API+'?action=leaderboard&period='+period;
-        console.log('LB fetch:',url);
-        const resp=await fetch(url);
-        console.log('LB status:',resp.status);
-        const text=await resp.text();
-        console.log('LB raw:',text.substring(0,200));
-        data=JSON.parse(text);
-      }catch(e){fetchErr=e.message;console.error('LB error:',e);}
+        data=await DTM._xget(url);
+        if(data.error)fetchErr=data.error;
+      }catch(e){fetchErr=e.message;}
       if(loadTxt&&loadTxt.scene)loadTxt.destroy();
       if(fetchErr){listContainer.add(this.add.text(W/2,H/2,`Fetch error:\n${fetchErr}`,{fontFamily:'Orbitron',fontSize:'11px',color:'#ff4444',align:'center',wordWrap:{width:320}}).setOrigin(0.5));return;}
       if(!data){listContainer.add(this.add.text(W/2,H/2,'No response from server',{fontFamily:'Orbitron',fontSize:'12px',color:'#ff4444'}).setOrigin(0.5));return;}

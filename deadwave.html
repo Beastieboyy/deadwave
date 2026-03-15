@@ -513,7 +513,7 @@ class GameScene extends Phaser.Scene {
     this.player.setDisplaySize(58,58).setBodySize(28,28);
     this.player.play('brody_idle');
     this.glow=this.add.graphics().setDepth(9);
-    this.playerLabel=this.add.text(0,0,DTM.getName()||'BRODY',{fontFamily:'Orbitron',fontSize:'11px',color:'#00ffcc',stroke:'#000',strokeThickness:3}).setDepth(20).setOrigin(0.5,1);
+    this.playerLabel=this.add.text(0,0,DTM.getName()||'BRODY',{fontFamily:'Orbitron',fontSize:'13px',fontStyle:'bold',color:'#00ffcc',stroke:'#000000',strokeThickness:5}).setDepth(22).setOrigin(0.5,1);
   }
 
   createUI(){
@@ -644,7 +644,8 @@ class GameScene extends Phaser.Scene {
     e.hpGfx=this.add.graphics().setDepth(7);
     e.hpTxt=null;
     const isBoss=tex==='sister'||tex==='boss'||tex==='coach';
-    e.nameLabel=this.add.text(0,0,ENAMES[tex]||'',{fontFamily:'Orbitron',fontSize:isBoss?'15px':'13px',color:'#ffffff',stroke:'#000',strokeThickness:4,fontStyle:'bold'}).setDepth(20).setOrigin(0.5,1);
+    e.nameLabel=this.add.text(0,0,ENAMES[tex]||'',{fontFamily:'Orbitron',fontSize:'14px',fontStyle:'bold',color:'#ffffff',stroke:'#000000',strokeThickness:5}).setDepth(22).setOrigin(0.5,1);
+    e.nameBg=this.add.graphics().setDepth(21);
     // Tier dot
     const tierCol={1:0x888888,2:0x4488ff,3:0xaa44ff}[e.tier];
     e.tierDot=this.add.graphics().setDepth(20);e.tierDot.fillStyle(tierCol,1);e.tierDot.fillCircle(0,0,5);
@@ -668,7 +669,8 @@ class GameScene extends Phaser.Scene {
     e.setDisplaySize(size,size);if(tex==='ef')e.play('karen_walk');
     e.hp=hp;e.maxHp=hp;e.spd=tex==='ef'?100:50;e.dmg=5;e.gd=1;e.sv=5;e.burstColor=0xff6666;
     e.hpGfx=this.add.graphics().setDepth(7);e.hpTxt=null;
-    e.nameLabel=this.add.text(0,0,tex==='ew'?'NOSEY JR.':tex==='ef'?'KAREN':'',{fontFamily:'Orbitron',fontSize:'8px',color:'#aaaaaa',stroke:'#000',strokeThickness:2}).setDepth(20).setOrigin(0.5,1);
+    e.nameLabel=this.add.text(0,0,tex==='ew'?'NOSEY JR.':tex==='ef'?'KAREN':'',{fontFamily:'Orbitron',fontSize:'11px',fontStyle:'bold',color:'#aaaaaa',stroke:'#000000',strokeThickness:4}).setDepth(22).setOrigin(0.5,1);
+    e.nameBg=this.add.graphics().setDepth(21);
     return e;
   }
 
@@ -778,7 +780,7 @@ class GameScene extends Phaser.Scene {
       if(e.isPeyton){const iCD=e._invCD||8000,iDur=e._invDur||2500;if(e.abilityTimer>=iCD&&!e.invincible){e.abilityTimer=0;e.invincible=true;e.setAlpha(0.5);this.floatText(e.x,e.y-50,"shhhh I'm on the phone",0xcc44ff);e._shield=this.add.graphics().setDepth(8);e._shield.lineStyle(2,0xcc44ff,0.6);e._shield.strokeCircle(0,0,50);this.time.delayedCall(iDur,()=>{if(!e.dead){e.invincible=false;e.setAlpha(1);if(e._shield){e._shield.destroy();e._shield=null;}}});}if(e._shield&&!e.dead)e._shield.setPosition(e.x,e.y);e.abilityTimer2=(e.abilityTimer2||0)+delta;if(e.abilityTimer2>=15000){e.abilityTimer2=0;this.floatText(e.x,e.y-40,"I'm calling the neighbor!",0xcc44ff);this.spawnMinion('ew',45,60);}}
       if(e.isBoss){const pct=e.hp/e.maxHp;if(pct>0.6&&e.abilityTimer>=5000){e.abilityTimer=0;const d=Phaser.Math.Distance.Between(e.x,e.y,px,py);if(d<120){this.floatText(e.x,e.y-60,'WHERE HAVE YOU BEEN??',0xff4444);this.hurtPlayer(60);const a=Phaser.Math.Angle.Between(e.x,e.y,px,py);this.player.x+=Math.cos(a)*80;this.player.y+=Math.sin(a)*80;}}if(pct<=0.6&&pct>0.3){e.abilityTimer2=(e.abilityTimer2||0)+delta;if(e.abilityTimer2>=8000){e.abilityTimer2=0;this.floatText(e.x,e.y-60,"I'm texting your father!!",0xff8800);const f=this.add.graphics().setDepth(99);f.fillStyle(0xff6600,0.2);f.fillRect(0,0,W,H);this.time.delayedCall(300,()=>f.destroy());this.spawnMinion('et',60,150);}}if(pct<=0.3){e.setTint(0xff8844);if(e.abilityTimer>=4000&&!e.isCharging){e.abilityTimer=0;e.isCharging=true;this.floatText(e.x,e.y-60,'GET BACK HERE!!',0xff2244);const a=Phaser.Math.Angle.Between(e.x,e.y,px,py);e.setVelocity(Math.cos(a)*380,Math.sin(a)*380);this.cameras.main.shake(300,0.012);this.time.delayedCall(1000,()=>{if(!e.dead){e.isCharging=false;e.setVelocity(0,0);}});}}}
       if(e.hpGfx){e.hpGfx.clear();const p=Phaser.Math.Clamp(e.hp/e.maxHp,0,1),bw=e.displayWidth+40,bh=14,bx=e.x-bw/2,by=e.y-e.displayHeight/2-22;e.hpGfx.fillStyle(0x2a2a2a,0.9);e.hpGfx.fillRoundedRect(bx,by,bw,bh,4);const col=p>0.6?0x00ee44:p>0.3?0xffaa00:0xff2200;e.hpGfx.fillStyle(col,1);e.hpGfx.fillRoundedRect(bx,by,Math.floor(bw*p),bh,4);e.hpGfx.lineStyle(1,0x000000,0.5);e.hpGfx.strokeRoundedRect(bx,by,bw,bh,4);if(!e.hpTxt){e.hpTxt=this.add.text(e.x,by-2,`${Math.ceil(e.hp)}/${e.maxHp}`,{fontFamily:'Orbitron',fontSize:'8px',color:'#ffffff',stroke:'#000',strokeThickness:2}).setOrigin(0.5,1).setDepth(8);}else{e.hpTxt.setText(`${Math.ceil(e.hp)}/${e.maxHp}`).setPosition(e.x,by-2);}}
-      if(e.nameLabel)e.nameLabel.setPosition(e.x,e.y-e.displayHeight/2-18);
+      if(e.nameLabel){const nx=e.x,ny=e.y-e.displayHeight/2-6;e.nameLabel.setPosition(nx,ny);if(e.nameBg){e.nameBg.clear();const tw=e.nameLabel.width+14,th=18;e.nameBg.fillStyle(0x000000,0.7);e.nameBg.fillRoundedRect(nx-tw/2,ny-th,tw,th,4);}}
       if(e.tierDot){const nlw=(e.nameLabel?e.nameLabel.width/2:30)+8;e.tierDot.setPosition(e.x-nlw,e.y-e.displayHeight/2-22);}
       if(e.phaseLabel){const pct=e.hp/e.maxHp;e.phaseLabel.setText(pct>0.6?'\ud83e\udd24 PHASE 1':pct>0.3?'\ud83d\ude21 PHASE 2':'\ud83e\udd2c PHASE 3').setPosition(e.x,e.y-e.displayHeight/2-6);}
       // ── TIER 2+ ABILITIES ──
@@ -841,7 +843,7 @@ class GameScene extends Phaser.Scene {
     else{const rd2=this.activeRounds?.[this.roundNum-1];const quip=rd2?.deathQ?.[e.etype]||{ew:"I'm telling your mother!",ef:'DETENTION!!',es:'F MINUS!!',et:'SUSPENDED!!',coach:'6AM MONDAY!!'}[e.etype];if(quip)this.floatText(e.x,e.y-28,quip,0xffdd00);}
     for(let i=0;i<(e.gd||1);i++){const gx=e.x+Phaser.Math.Between(-18,18),gy=e.y+Phaser.Math.Between(-18,18);const gem=this.gems.create(gx,gy,'gem').setDepth(5).setDisplaySize(20,20);gem.xp=1;this.tweens.add({targets:gem,y:gy-22,duration:220,yoyo:true,ease:'Bounce'});}
     // (death explosion already handled above with multi-ring)
-    if(e.hpGfx){e.hpGfx.destroy();e.hpGfx=null;}if(e.hpTxt){e.hpTxt.destroy();e.hpTxt=null;}if(e.nameLabel){e.nameLabel.destroy();e.nameLabel=null;}if(e.tierDot){e.tierDot.destroy();e.tierDot=null;}if(e.phaseLabel){e.phaseLabel.destroy();e.phaseLabel=null;}if(e._shield){e._shield.destroy();e._shield=null;}
+    if(e.hpGfx){e.hpGfx.destroy();e.hpGfx=null;}if(e.hpTxt){e.hpTxt.destroy();e.hpTxt=null;}if(e.nameBg){e.nameBg.destroy();e.nameBg=null;}if(e.nameLabel){e.nameLabel.destroy();e.nameLabel=null;}if(e.tierDot){e.tierDot.destroy();e.tierDot=null;}if(e.phaseLabel){e.phaseLabel.destroy();e.phaseLabel=null;}if(e._shield){e._shield.destroy();e._shield=null;}
     // Equipment drop (25% chance)
     if(Math.random()<0.25&&!e.isMinion){
       const eqTypes=[{key:'shoes',icon:'\ud83d\udc5f',color:0x00ff88,stat:'speed',val:12},{key:'backpack',icon:'\ud83c\udf92',color:0x4488ff,stat:'damage',val:0.1},{key:'phone',icon:'\ud83d\udcf1',color:0xaa44ff,stat:'firerate',val:60},{key:'hat',icon:'\ud83e\udde2',color:0xff8800,stat:'maxhp',val:30},{key:'chain',icon:'\ud83d\udd17',color:0xffcc00,stat:'magnet',val:40}];
@@ -923,7 +925,7 @@ class GameScene extends Phaser.Scene {
     if(isCrit)t.setRotation(Phaser.Math.Between(-15,15)*Math.PI/180);
     this.tweens.add({targets:t,y:y-70,alpha:0,duration:isCrit?1000:750,ease:'Power2',onComplete:()=>t.destroy()});
   }
-  cleanBullets(){this.bullets.getChildren().forEach(b=>{if(b.x<-60||b.x>W+60||b.y<-60||b.y>H+60)b.destroy();});this.enemies.getChildren().forEach(e=>{if(e.dead){if(e.hpGfx){e.hpGfx.destroy();e.hpGfx=null;}if(e.hpTxt){e.hpTxt.destroy();e.hpTxt=null;}if(e.nameLabel){e.nameLabel.destroy();e.nameLabel=null;}if(e.tierDot){e.tierDot.destroy();e.tierDot=null;}if(e.phaseLabel){e.phaseLabel.destroy();e.phaseLabel=null;}}});}
+  cleanBullets(){this.bullets.getChildren().forEach(b=>{if(b.x<-60||b.x>W+60||b.y<-60||b.y>H+60)b.destroy();});this.enemies.getChildren().forEach(e=>{if(e.dead){if(e.hpGfx){e.hpGfx.destroy();e.hpGfx=null;}if(e.hpTxt){e.hpTxt.destroy();e.hpTxt=null;}if(e.nameBg){e.nameBg.destroy();e.nameBg=null;}if(e.nameLabel){e.nameLabel.destroy();e.nameLabel=null;}if(e.tierDot){e.tierDot.destroy();e.tierDot=null;}if(e.phaseLabel){e.phaseLabel.destroy();e.phaseLabel=null;}}});}
 
   checkCollisions(){
     if(this.paused||this.dead)return;

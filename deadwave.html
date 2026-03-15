@@ -602,8 +602,8 @@ class GameScene extends Phaser.Scene {
     const sc=1+this.waveNum*0.04;
     switch(tex){
       case 'ew': e.setDisplaySize(32,32); e.setBlendMode(Phaser.BlendModes.MULTIPLY); e.hp=(32+this.waveNum*9)*sc; e.spd=60+Phaser.Math.Between(0,25); e.dmg=8;  e.gd=1; e.sv=10; e.burstColor=0xff3333; break;
-      case 'ef': e.setDisplaySize(34,34); e.play('runner_walk'); e.hp=(14+this.waveNum*5)*sc; e.spd=130+Phaser.Math.Between(0,35); e.dmg=5; e.gd=1; e.sv=15; e.burstColor=0xff8800; break;
-      case 'et': e.setDisplaySize(52,52); e.play('hulk_walk'); e.hp=(130+this.waveNum*22)*sc; e.spd=38; e.dmg=22; e.gd=4; e.sv=55; e.burstColor=0xaa0000; break;
+      case 'ef': e.setDisplaySize(28,28); e.setBlendMode(Phaser.BlendModes.MULTIPLY); e.play('runner_walk'); e.hp=(14+this.waveNum*5)*sc; e.spd=85+Phaser.Math.Between(0,15); e.dmg=5; e.gd=1; e.sv=15; e.burstColor=0xff8800; break;
+      case 'et': e.setDisplaySize(52,52); e.setBlendMode(Phaser.BlendModes.MULTIPLY); e.play('hulk_walk'); e.hp=(130+this.waveNum*22)*sc; e.spd=38; e.dmg=22; e.gd=4; e.sv=55; e.burstColor=0xaa0000; break;
     }
     e.maxHp=e.hp;
     e.hpGfx=this.add.graphics().setDepth(7);
@@ -613,6 +613,7 @@ class GameScene extends Phaser.Scene {
   spawnBoss() {
     const e=this.enemies.create(W/2,-70,'boss').setDepth(6);
     e.setDisplaySize(96,96);
+    e.setBlendMode(Phaser.BlendModes.MULTIPLY);
     e.play('boss_float');
     e.uid=++this.uidCounter;
     e.dead=false; e.isBoss=true;

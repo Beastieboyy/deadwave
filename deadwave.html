@@ -94,6 +94,13 @@ const ROUNDS = [
 ];
 const TIER_QUOTES={ew:['Neighborhood watch','Got night vision','Running the block'],ef:['Hall monitor','Vice principal energy','The warden'],es:['Pop quiz','Midterm mode','Final exam'],et:['Office hours','Suspension notice','Expelled'],coach:['Practice time','Two-a-days','Championship run'],sister:['Snitching','Going live','Nuclear option'],boss:['Disappointed','Furious','Full name mode']};
 const ENAMES={ew:'RODNEY',ef:'KAREN',es:'MRS. STEINER',et:'MR. BERG',coach:'COACH ANDREWS',sister:'PEYTON',boss:'MAMA'};
+const BALANCE={
+  rarityMult:{'beat-up':1.0,decent:1.2,fresh:1.45,drip:1.8,heat:2.3,legendary:3.2},
+  equipGain:{shoes:8,backpack:0.08,phone:45,hat:25,chain:30},
+  critBase:0.05,critDmgBase:1.5,
+  enemyHPScale:0.12,enemySpdScale:0.04,
+  minRoundTime:35000,
+};
 
 // ─────────────────────────────────────────────────
 // MENU SCENE
@@ -351,7 +358,7 @@ class GameScene extends Phaser.Scene {
 
   init(data){
     this.pHP=150;this.pMaxHP=150;this.pSpeed=185;this.pDmg=22;
-    this.fireRate=650;this.piercing=false;this.orbitCnt=0;
+    this.fireRate=1050;this.piercing=false;this.orbitCnt=0;
     this.hasPulse=false;this.magnetR=75;this.regenRate=0;
     this.lastShot=0;this.pXP=0;this.pLevel=1;this.xpNeeded=10;
     this.score=0;this.kills=0;this.elapsed=0;this.totalTime=15*60*1000;
@@ -368,15 +375,17 @@ class GameScene extends Phaser.Scene {
     this.roundsCompleted=0;
     this.snacksEarned=0;
     this.specialHitCount=0;
-    // Apply upgrades
+    this.roundStartTime=0;this.roundMinTimeMet=false;this.roundTimerTxt=null;
+    this.critRate=BALANCE.critBase;this.critDmg=BALANCE.critDmgBase;
+    // Apply locker upgrades using BALANCE system
     const u=DTM.getUpgrades();
-    this.pSpeed+=(u.sneakers||0)*18;
-    this.pDmg=Math.floor(this.pDmg*(1+(u.backpack||0)*0.12));
-    this.fireRate=Math.max(200,this.fireRate-(u.phone||0)*55);
-    this.pMaxHP+=(u.hoodie||0)*40;
+    this.pSpeed=Math.floor(185*(1+(u.sneakers||0)*0.15));
+    this.pDmg=Math.floor(this.pDmg*(1+(u.backpack||0)*BALANCE.equipGain.backpack));
+    this.fireRate=Math.max(200,this.fireRate-(u.phone||0)*BALANCE.equipGain.phone);
+    this.pMaxHP+=(u.hoodie||0)*BALANCE.equipGain.hat;
     this.pHP=this.pMaxHP;
-    // Difficulty scaling
-    this.diffScale=1+(this.levelNum-1)*0.07;
+    // Difficulty scaling per level
+    this.diffScale=1+(this.levelNum-1)*BALANCE.enemyHPScale;
     // Filter rounds by level
     const allowed=DTM.enemiesForLevel(this.levelNum);
     this.activeRounds=ROUNDS.filter(r=>r.enemies.every(eg=>allowed.includes(eg.type)));
@@ -413,7 +422,7 @@ class GameScene extends Phaser.Scene {
 
   createPlayer(){
     this.player=this.physics.add.sprite(W/2,H/2,'player').setDepth(10).setCollideWorldBounds(true);
-    this.player.setDisplaySize(58,58).setBodySize(22,22);
+    this.player.setDisplaySize(58,58).setBodySize(28,28);
     this.player.play('brody_idle');
     this.glow=this.add.graphics().setDepth(9);
     this.playerLabel=this.add.text(0,0,DTM.getName()||'BRODY',{fontFamily:'Orbitron',fontSize:'11px',color:'#00ffcc',stroke:'#000',strokeThickness:3}).setDepth(20).setOrigin(0.5,1);
@@ -464,6 +473,7 @@ class GameScene extends Phaser.Scene {
     const ti=this.add.text(W/2,H/2+50,tierNames[tier],{fontFamily:'Orbitron',fontSize:'12px',color:tierColors[tier],fontStyle:'bold'}).setDepth(202).setOrigin(0.5);
     const tierDotG=this.add.graphics().setDepth(202);tierDotG.fillStyle({1:0x888888,2:0x4488ff,3:0xaa44ff}[tier],1);tierDotG.fillCircle(W/2-ti.width/2-14,H/2+50,6);
     this.time.delayedCall(2000,()=>{[ov,card,rt,sep,en,qt,ti,tierDotG].forEach(o=>o.destroy());
+      this.roundStartTime=this.elapsed;this.roundMinTimeMet=false;this._respawnScheduled=false;
       this.waveTxt.setText(rd.label).setAlpha(1).setY(H/2-80);
       this.tweens.add({targets:this.waveTxt,alpha:0,y:H/2-130,duration:2500,ease:'Power2'});
       let idx=0;
@@ -473,7 +483,30 @@ class GameScene extends Phaser.Scene {
 
   checkRoundClear(){
     if(!this.roundActive||this.dead)return;
-    if(this.roundEnemies.filter(e=>e&&!e.dead).length>0)return;
+    const alive=this.roundEnemies.filter(e=>e&&!e.dead);
+    if(alive.length>0)return;
+    // Minimum round timer — if enemies died too fast, respawn
+    if(!this.roundMinTimeMet&&this.roundStartTime>0){
+      const rElapsed=this.elapsed-this.roundStartTime;
+      const remaining=Math.ceil((BALANCE.minRoundTime-rElapsed)/1000);
+      if(!this._surviveText){
+        this._surviveText=this.add.text(W/2,H/2+40,'',{fontFamily:'Orbitron',fontSize:'14px',color:'#ff9900',stroke:'#000',strokeThickness:3}).setDepth(150).setOrigin(0.5);
+      }
+      this._surviveText.setText(`SURVIVING... ${remaining}s`);
+      // Respawn after 3s delay
+      if(!this._respawnScheduled){
+        this._respawnScheduled=true;
+        const rd=this.activeRounds[this.roundNum-1];
+        if(rd){this.time.delayedCall(3000,()=>{
+          if(this.dead||this.roundMinTimeMet)return;
+          rd.enemies.forEach(grp=>{for(let i=0;i<grp.count;i++){const e=this.spawnEnemy(grp.type);if(e)this.roundEnemies.push(e);}});
+          this._respawnScheduled=false;
+        });}
+      }
+      return;
+    }
+    if(this._surviveText){this._surviveText.destroy();this._surviveText=null;}
+    this._respawnScheduled=false;
     this.roundActive=false;this.roundsCompleted++;
     const lk=this._lastKillPos||{x:W/2,y:H/2};
     for(let i=0;i<8;i++){const gx=lk.x+Phaser.Math.Between(-40,40),gy=lk.y+Phaser.Math.Between(-40,40);const gem=this.gems.create(gx,gy,'gem').setDepth(5).setDisplaySize(20,20);gem.xp=1;this.tweens.add({targets:gem,y:gy-22,duration:220,yoyo:true,ease:'Bounce'});}
@@ -497,13 +530,13 @@ class GameScene extends Phaser.Scene {
     const tm={1:1.0,2:1.6,3:2.4}[e.tier];
     const sm=1+(e.tier-1)*0.3;
     switch(tex){
-      case 'ew':e.setDisplaySize(100,100);e.hp=Math.floor(180*ds*tm);e.maxHp=e.hp;e.spd=Math.floor(42*sm);e.dmg=8;e.gd=2;e.sv=10;e.burstColor=0xff3333;break;
-      case 'ef':e.setDisplaySize(95,95);e.play('karen_walk');e.hp=Math.floor(140*ds*tm);e.maxHp=e.hp;e.spd=Math.floor(110*sm);e.dmg=5;e.gd=2;e.sv=15;e.burstColor=0xff8800;break;
-      case 'es':e.setDisplaySize(95,95);e.play('steiner_walk');e.hp=Math.floor(200*ds*tm);e.maxHp=e.hp;e.spd=Math.floor(75*sm);e.dmg=12;e.gd=3;e.sv=30;e.burstColor=0xcc44ff;e.patrolTarget={x:Phaser.Math.Between(60,W-60),y:Phaser.Math.Between(100,H-100)};break;
-      case 'et':e.setDisplaySize(120,120);e.hp=Math.floor(380*ds*tm);e.maxHp=e.hp;e.spd=Math.floor(35*sm);e.dmg=22;e.gd=5;e.sv=55;e.burstColor=0xaa0000;e.chargeDmg=30;break;
-      case 'coach':e.setDisplaySize(108,108);e.play('coach_run');e.hp=Math.floor(220*ds*tm);e.maxHp=e.hp;e.spd=Math.floor(95*sm);e.dmg=12;e.gd=8;e.sv=150;e.burstColor=0x4488ff;e.lastWhistle=0;e.lastDrill=0;break;
-      case 'sister':e.setDisplaySize(100,100);e.play('peyton_snitch');e.hp=Math.floor(450*ds*tm);e.maxHp=e.hp;e.spd=Math.floor(85*sm);e.dmg=15;e.gd=8;e.sv=300;e.burstColor=0xcc44ff;break;
-      case 'boss':e.setDisplaySize(155,155);e.play('mama_charge');e.hp=Math.floor(1200*ds*tm);e.maxHp=e.hp;e.spd=65;e.dmg=28;e.gd=20;e.sv=600;e.burstColor=0xff0000;e.chargeDmg=35;
+      case 'ew':e.setDisplaySize(100,100);e.hp=Math.floor(720*ds*tm);e.maxHp=e.hp;e.spd=Math.floor(42*sm);e.dmg=20;e.gd=2;e.sv=10;e.burstColor=0xff3333;break;
+      case 'ef':e.setDisplaySize(95,95);e.play('karen_walk');e.hp=Math.floor(560*ds*tm);e.maxHp=e.hp;e.spd=Math.floor(110*sm);e.dmg=18;e.gd=2;e.sv=15;e.burstColor=0xff8800;break;
+      case 'es':e.setDisplaySize(95,95);e.play('steiner_walk');e.hp=Math.floor(800*ds*tm);e.maxHp=e.hp;e.spd=Math.floor(75*sm);e.dmg=22;e.gd=3;e.sv=30;e.burstColor=0xcc44ff;e.patrolTarget={x:Phaser.Math.Between(60,W-60),y:Phaser.Math.Between(100,H-100)};break;
+      case 'et':e.setDisplaySize(120,120);e.hp=Math.floor(1520*ds*tm);e.maxHp=e.hp;e.spd=Math.floor(35*sm);e.dmg=40;e.gd=5;e.sv=55;e.burstColor=0xaa0000;e.chargeDmg=80;break;
+      case 'coach':e.setDisplaySize(108,108);e.play('coach_run');e.hp=Math.floor(880*ds*tm);e.maxHp=e.hp;e.spd=Math.floor(95*sm);e.dmg=22;e.gd=8;e.sv=150;e.burstColor=0x4488ff;e.lastWhistle=0;e.lastDrill=0;break;
+      case 'sister':e.setDisplaySize(100,100);e.play('peyton_snitch');e.hp=Math.floor(1800*ds*tm);e.maxHp=e.hp;e.spd=Math.floor(85*sm);e.dmg=14;e.gd=8;e.sv=300;e.burstColor=0xcc44ff;break;
+      case 'boss':e.setDisplaySize(155,155);e.play('mama_charge');e.hp=Math.floor(5000*ds*tm);e.maxHp=e.hp;e.spd=65;e.dmg=55;e.gd=20;e.sv=600;e.burstColor=0xff0000;e.chargeDmg=70;
         this.bossOrbs=[0xff9900,0xff4400,0xff2244,0xffdd00].map(c=>{const o=this.add.graphics().setDepth(7);o.fillStyle(c,0.85);o.fillCircle(0,0,6);o.bossRef=e;return o;});break;
     }
     e.hpGfx=this.add.graphics().setDepth(7);
@@ -540,6 +573,16 @@ class GameScene extends Phaser.Scene {
     if(rem<=0){this.winGame();return;}
     if(this.playerIframes>0)this.playerIframes-=delta;
     this.playerLabel.setPosition(this.player.x,this.player.y-this.player.displayHeight/2-4);
+    // Minimum round timer
+    if(this.roundActive&&this.roundStartTime>0){
+      const rElapsed=this.elapsed-this.roundStartTime;
+      if(rElapsed<BALANCE.minRoundTime)this.roundMinTimeMet=false;else this.roundMinTimeMet=true;
+      // In-round difficulty ramp
+      if(rElapsed>=15000&&rElapsed<15000+delta)this.enemies.getChildren().forEach(en=>{if(!en.dead&&!en.isMinion){en.spd=Math.floor(en.spd*1.2);}});
+      if(rElapsed>=30000&&rElapsed<30000+delta){this.enemies.getChildren().forEach(en=>{if(!en.dead&&!en.isMinion){en.spd=Math.floor(en.spd*1.15);}});this.floatText(W/2,H/2-40,"THEY'RE GETTING IMPATIENT...",0xff6600);}
+    }
+    // Enemy HP regen (2% max per second)
+    this.enemies.getChildren().forEach(en=>{if(!en.dead&&en.hp<en.maxHp){en.hp=Math.min(en.maxHp,en.hp+en.maxHp*0.02*(delta/1000));}});
     if(this.playerFrozen){this.player.setVelocity(0,0);}else if(this.forcedRun){}else{this.movePlayer();}
     this.autoShoot(time);
     if(this.orbitCnt>0)this.updateOrbits(delta);
@@ -566,7 +609,8 @@ class GameScene extends Phaser.Scene {
   autoShoot(time){
     if(time-this.lastShot<this.fireRate)return;const t=this.nearestEnemy();if(!t)return;this.lastShot=time;
     const b=this.bullets.create(this.player.x,this.player.y,'bullet').setDepth(8).setDisplaySize(28,12).setFlipX(true);
-    b.pdmg=this.pDmg;b.pierce=this.piercing?3:1;b.hits=0;b.hitSet=new Set();
+    const isCrit=Math.random()<this.critRate;
+    b.pdmg=isCrit?Math.floor(this.pDmg*this.critDmg):this.pDmg;b.isCrit=isCrit;b.pierce=this.piercing?3:1;b.hits=0;b.hitSet=new Set();
     const ang=Phaser.Math.Angle.Between(this.player.x,this.player.y,t.x,t.y);
     b.setRotation(ang).setVelocity(Math.cos(ang)*460,Math.sin(ang)*460);
     const f=this.add.graphics().setDepth(11);f.fillStyle(0xffff00,0.75);f.fillCircle(this.player.x,this.player.y,9);
@@ -600,12 +644,12 @@ class GameScene extends Phaser.Scene {
         const a=Phaser.Math.Angle.Between(e.x,e.y,px,py);e.setVelocity(Math.cos(a)*e.spd,Math.sin(a)*e.spd);
       }
       if(e.etype==='ew'&&!e.isMinion&&e.abilityTimer>=9000){e.abilityTimer=0;const minis=this.enemies.getChildren().filter(m=>m.etype==='ew'&&m.isMinion&&!m.dead);if(minis.length<2){e.setVelocity(0,0);this.floatText(e.x,e.y-40,"I'm calling your mother!",0xffdd00);this.time.delayedCall(2000,()=>{if(!e.dead){const a=Phaser.Math.Angle.Between(e.x,e.y,px,py);e.setVelocity(Math.cos(a)*e.spd,Math.sin(a)*e.spd);}});this.time.delayedCall(1000,()=>{if(!e.dead)this.spawnMinion('ew',45,60);});}}
-      if(e.etype==='ef'&&!e.isMinion&&e.abilityTimer>=10000){e.abilityTimer=0;this.floatText(e.x,e.y-40,'STOP RIGHT THERE!',0xff4444);this.playerFrozen=true;this.player.setTint(0xff4444);this.specialHitCount++;this.time.delayedCall(1800,()=>{this.playerFrozen=false;this.player.clearTint();});}
-      if(e.etype==='es'&&!e.isMinion&&e.abilityTimer>=12000){e.abilityTimer=0;this.floatText(e.x,e.y-40,'SHOW YOUR WORK!',0xcc44ff);const ang=Phaser.Math.Angle.Between(e.x,e.y,px,py);const book=this.add.graphics().setDepth(8);book.fillStyle(0x8B4513);book.fillRect(-15,-10,30,20);book.setPosition(e.x,e.y);book.vx=Math.cos(ang)*280;book.vy=Math.sin(ang)*280;book.life=3000;book.dmg=18;this.projectiles.push(book);}
+      if(e.etype==='ef'&&!e.isMinion&&e.abilityTimer>=10000){e.abilityTimer=0;this.floatText(e.x,e.y-40,'STOP RIGHT THERE!',0xff4444);this.playerFrozen=true;this.player.setTint(0xff4444);this.specialHitCount++;this.hurtPlayer(15);this.time.delayedCall(1800,()=>{this.playerFrozen=false;this.player.clearTint();});}
+      if(e.etype==='es'&&!e.isMinion&&e.abilityTimer>=12000){e.abilityTimer=0;this.floatText(e.x,e.y-40,'SHOW YOUR WORK!',0xcc44ff);const ang=Phaser.Math.Angle.Between(e.x,e.y,px,py);const book=this.add.graphics().setDepth(8);book.fillStyle(0x8B4513);book.fillRect(-15,-10,30,20);book.setPosition(e.x,e.y);book.vx=Math.cos(ang)*280;book.vy=Math.sin(ang)*280;book.life=3000;book.dmg=35;this.projectiles.push(book);}
       if(e.etype==='et'&&!e.isMinion){e.abilityTimer2=(e.abilityTimer2||0)+delta;if(e.abilityTimer2>=7000){e.abilityTimer2=0;const karens=this.enemies.getChildren().filter(m=>m.etype==='ef'&&m.isMinion&&!m.dead);if(karens.length<2){this.floatText(e.x,e.y-40,'BACKUP REQUESTED',0xff8800);this.spawnMinion('ef',50,80);}}if(e.abilityTimer>=14000&&!e.isCharging){e.abilityTimer=0;e.isCharging=true;const a=Phaser.Math.Angle.Between(e.x,e.y,px,py);e.setVelocity(Math.cos(a)*340,Math.sin(a)*340);e.setTint(0xff4444);this.specialHitCount++;this.time.delayedCall(1200,()=>{if(!e.dead){e.isCharging=false;e.clearTint();e.setVelocity(0,0);}});}}
       if(e.etype==='coach'&&!e.isMinion){const now=this.time.now;if(now-e.lastWhistle>8000){e.lastWhistle=now;this.floatText(e.x,e.y-30,'HUSTLE UP!!',0x4488ff);const orig=this.pSpeed;this.pSpeed=Math.floor(orig*1.8);this.cameras.main.flash(200,68,136,255);this.time.delayedCall(2000,()=>{this.pSpeed=orig;});}if(now-e.lastDrill>13000){e.lastDrill=now;this.floatText(e.x,e.y-50,'RUN IT AGAIN!!',0xff8800);if(!this.forcedRun){this.forcedRun=true;const ang=Phaser.Math.Between(0,360)*Math.PI/180;this.player.setVelocity(Math.cos(ang)*this.pSpeed*1.4,Math.sin(ang)*this.pSpeed*1.4);this.time.delayedCall(1500,()=>{this.forcedRun=false;});}}}
       if(e.isPeyton){if(e.abilityTimer>=8000&&!e.invincible){e.abilityTimer=0;e.invincible=true;e.setAlpha(0.5);this.floatText(e.x,e.y-50,"shhhh I'm on the phone",0xcc44ff);e._shield=this.add.graphics().setDepth(8);e._shield.lineStyle(2,0xcc44ff,0.6);e._shield.strokeCircle(0,0,50);this.time.delayedCall(3000,()=>{if(!e.dead){e.invincible=false;e.setAlpha(1);if(e._shield){e._shield.destroy();e._shield=null;}}});}if(e._shield&&!e.dead)e._shield.setPosition(e.x,e.y);e.abilityTimer2=(e.abilityTimer2||0)+delta;if(e.abilityTimer2>=15000){e.abilityTimer2=0;this.floatText(e.x,e.y-40,"I'm calling Rodney!",0xcc44ff);this.spawnMinion('ew',45,60);}}
-      if(e.isBoss){const pct=e.hp/e.maxHp;if(pct>0.6&&e.abilityTimer>=5000){e.abilityTimer=0;const d=Phaser.Math.Distance.Between(e.x,e.y,px,py);if(d<120){this.floatText(e.x,e.y-60,'WHERE HAVE YOU BEEN??',0xff4444);this.hurtPlayer(35);const a=Phaser.Math.Angle.Between(e.x,e.y,px,py);this.player.x+=Math.cos(a)*80;this.player.y+=Math.sin(a)*80;}}if(pct<=0.6&&pct>0.3){e.abilityTimer2=(e.abilityTimer2||0)+delta;if(e.abilityTimer2>=8000){e.abilityTimer2=0;this.floatText(e.x,e.y-60,"I'm texting your father!!",0xff8800);const f=this.add.graphics().setDepth(99);f.fillStyle(0xff6600,0.2);f.fillRect(0,0,W,H);this.time.delayedCall(300,()=>f.destroy());this.spawnMinion('et',60,150);}}if(pct<=0.3){e.setTint(0xff8844);if(e.abilityTimer>=4000&&!e.isCharging){e.abilityTimer=0;e.isCharging=true;this.floatText(e.x,e.y-60,'GET BACK HERE!!',0xff2244);const a=Phaser.Math.Angle.Between(e.x,e.y,px,py);e.setVelocity(Math.cos(a)*380,Math.sin(a)*380);this.cameras.main.shake(300,0.012);this.time.delayedCall(1000,()=>{if(!e.dead){e.isCharging=false;e.setVelocity(0,0);}});}}}
+      if(e.isBoss){const pct=e.hp/e.maxHp;if(pct>0.6&&e.abilityTimer>=5000){e.abilityTimer=0;const d=Phaser.Math.Distance.Between(e.x,e.y,px,py);if(d<120){this.floatText(e.x,e.y-60,'WHERE HAVE YOU BEEN??',0xff4444);this.hurtPlayer(60);const a=Phaser.Math.Angle.Between(e.x,e.y,px,py);this.player.x+=Math.cos(a)*80;this.player.y+=Math.sin(a)*80;}}if(pct<=0.6&&pct>0.3){e.abilityTimer2=(e.abilityTimer2||0)+delta;if(e.abilityTimer2>=8000){e.abilityTimer2=0;this.floatText(e.x,e.y-60,"I'm texting your father!!",0xff8800);const f=this.add.graphics().setDepth(99);f.fillStyle(0xff6600,0.2);f.fillRect(0,0,W,H);this.time.delayedCall(300,()=>f.destroy());this.spawnMinion('et',60,150);}}if(pct<=0.3){e.setTint(0xff8844);if(e.abilityTimer>=4000&&!e.isCharging){e.abilityTimer=0;e.isCharging=true;this.floatText(e.x,e.y-60,'GET BACK HERE!!',0xff2244);const a=Phaser.Math.Angle.Between(e.x,e.y,px,py);e.setVelocity(Math.cos(a)*380,Math.sin(a)*380);this.cameras.main.shake(300,0.012);this.time.delayedCall(1000,()=>{if(!e.dead){e.isCharging=false;e.setVelocity(0,0);}});}}}
       if(e.hpGfx){e.hpGfx.clear();const p=e.hp/e.maxHp,bw=e.displayWidth+20,bx=e.x-bw/2,by=e.y-e.displayHeight/2-14;e.hpGfx.fillStyle(0x2a2a2a,0.9);e.hpGfx.fillRect(bx,by,bw,6);const col=e.isPeyton?0xcc44ff:e.isBoss?0xff2244:(p>0.5?0xff9900:p>0.25?0xffaa00:0xff2200);e.hpGfx.fillStyle(col,1);e.hpGfx.fillRect(bx,by,Math.floor(bw*p),6);}
       if(e.nameLabel)e.nameLabel.setPosition(e.x,e.y-e.displayHeight/2-18);
       if(e.tierDot){const nlw=(e.nameLabel?e.nameLabel.width/2:30)+8;e.tierDot.setPosition(e.x-nlw,e.y-e.displayHeight/2-22);}
@@ -651,14 +695,15 @@ class GameScene extends Phaser.Scene {
     if(Math.random()<0.25&&!e.isMinion){
       const eqTypes=[{key:'shoes',icon:'\ud83d\udc5f',color:0x00ff88,stat:'speed',val:12},{key:'backpack',icon:'\ud83c\udf92',color:0x4488ff,stat:'damage',val:0.1},{key:'phone',icon:'\ud83d\udcf1',color:0xaa44ff,stat:'firerate',val:60},{key:'hat',icon:'\ud83e\udde2',color:0xff8800,stat:'maxhp',val:30},{key:'chain',icon:'\ud83d\udd17',color:0xffcc00,stat:'magnet',val:40}];
       const eq=eqTypes[Phaser.Math.Between(0,eqTypes.length-1)];
-      const roll=Math.random();const rarity=roll<0.5?'beat-up':roll<0.75?'decent':roll<0.9?'fresh':roll<0.97?'drip':'legendary';
-      const rm={'beat-up':1,decent:1.3,fresh:1.7,drip:2.3,legendary:3.5}[rarity];
+      const roll=Math.random();const rarity=roll<0.45?'beat-up':roll<0.7?'decent':roll<0.85?'fresh':roll<0.94?'drip':roll<0.98?'heat':'legendary';
+      const rm=BALANCE.rarityMult[rarity]||1;
       const rarCol={'beat-up':0x888888,decent:0x00ff88,fresh:0x4488ff,drip:0xaa44ff,legendary:0xffd700}[rarity];
       const eg=this.add.graphics().setDepth(5);eg.fillStyle(eq.color,0.9);eg.fillRoundedRect(e.x-16,e.y-16,32,32,6);eg.lineStyle(2,rarCol,1);eg.strokeRoundedRect(e.x-16,e.y-16,32,32,6);
       const ei=this.add.text(e.x,e.y,eq.icon,{fontSize:'18px'}).setDepth(6).setOrigin(0.5);
       const ez=this.add.zone(e.x,e.y,40,40).setDepth(6);this.physics.add.existing(ez);
       this.physics.add.overlap(this.player,ez,()=>{
-        const v=Math.floor(eq.val*rm);
+        const baseGain=BALANCE.equipGain[eq.key]||eq.val;
+        const v=eq.stat==='damage'?baseGain*rm:Math.floor(baseGain*rm);
         if(eq.stat==='speed')this.pSpeed+=v;else if(eq.stat==='damage')this.pDmg=Math.floor(this.pDmg*(1+v));else if(eq.stat==='firerate')this.fireRate=Math.max(150,this.fireRate-v);else if(eq.stat==='maxhp'){this.pMaxHP+=v;this.pHP=Math.min(this.pHP+v,this.pMaxHP);this.updateHP();}else if(eq.stat==='magnet')this.magnetR+=v;
         this.floatText(this.player.x,this.player.y-40,`+${eq.icon} ${rarity.toUpperCase()}`,rarCol);
         if(rarity==='legendary'){this.cameras.main.flash(400,255,215,0);const lt=this.add.text(W/2,H/2,'LEGENDARY DROP!! \ud83d\udd25',{fontFamily:'Orbitron',fontSize:'18px',color:'#ffd700',stroke:'#000',strokeThickness:5,fontStyle:'bold'}).setDepth(201).setOrigin(0.5);this.time.delayedCall(2000,()=>lt.destroy());}
@@ -676,8 +721,8 @@ class GameScene extends Phaser.Scene {
 
   hurtPlayer(dmg){
     if(this.dead||this.playerIframes>0)return;
-    this.pHP=Math.max(0,this.pHP-dmg);this.updateHP();this.playerIframes=500;
-    this.player.setAlpha(0.5);this.time.delayedCall(500,()=>{if(!this.dead)this.player.setAlpha(1);});
+    this.pHP=Math.max(0,this.pHP-dmg);this.updateHP();this.playerIframes=250;
+    this.player.setAlpha(0.5);this.time.delayedCall(250,()=>{if(!this.dead)this.player.setAlpha(1);});
     const f=this.add.graphics().setDepth(99);f.fillStyle(0xff0000,0.28);f.fillRect(0,0,W,H);this.time.delayedCall(130,()=>f.destroy());
     this.cameras.main.shake(180,0.009);if(this.pHP<=0)this.diePlayer();
   }

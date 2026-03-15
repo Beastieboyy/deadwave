@@ -1119,7 +1119,6 @@ class ResultScene extends Phaser.Scene {
     const rankTxt=this.add.text(W/2,450,'',{fontFamily:'Orbitron',fontSize:'12px',color:'#888899'}).setOrigin(0.5);
     if((DTM.getName()||'').toLowerCase()==='vince'){rankTxt.setText('\ud83d\ude08 Dev mode \u2014 not ranked').setColor('#ff0000');}
     else{rankTxt.setText('\u23f3 Submitting score...');const result=await DTM.submitScore(score,level,kills,stars);if(result?.rank)rankTxt.setText(`\ud83c\udfc6 YOUR RANK: #${result.rank} on the Snitch List!`).setColor('#ffcc00');else rankTxt.setText('\ud83d\udce1 Score saved locally').setColor('#888899');}
-    else rankTxt.setText('\ud83d\udce1 Score saved locally').setColor('#888899');
     if(gearRewards.length>0){this.add.text(W/2,428,'\ud83c\udf81 GEAR EARNED:',{fontFamily:'Orbitron',fontSize:'12px',color:'#ffcc00'}).setOrigin(0.5);gearRewards.forEach((gi,i)=>{const rar=RARITIES[gi.rarityIdx];const col='#'+rar.color.toString(16).padStart(6,'0');const def=GEAR_DEFS[gi.slot];this.add.text(W/2,450+i*20,`${def.icon} ${gi.name}`,{fontFamily:'Orbitron',fontSize:'11px',color:col}).setOrigin(0.5);});}
     const retryBtn=DTM.makeBtn(this,20,510,(W-52)/2,56,'\u21ba RETRY');
     retryBtn.bg.on('pointerdown',()=>{this.cameras.main.fadeOut(250,0,0,0);this.time.delayedCall(250,()=>this.scene.start('GameScene',{level:level}));});

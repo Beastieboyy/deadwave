@@ -468,6 +468,7 @@ class GameScene extends Phaser.Scene {
     this.joyActive=false;this.joyAng=0;this.joyDist=0;
     this.joyBaseX=0;this.joyBaseY=0;
     this.uidCounter=0;this.projectiles=[];
+    this.comboCount=0;this.comboTimer=0;this.scoreMult=1;this.lastComboTime=0;
     // New tracking
     this.levelNum=data?.level||DTM.getCurrentLevel()||1;
     this.roundsCompleted=0;
@@ -560,6 +561,7 @@ class GameScene extends Phaser.Scene {
     this.killTxt=this.add.text(W-10,10,'SNITCHES: 0',{fontFamily:'Orbitron',fontSize:'10px',color:'#ffcc00'}).setDepth(D).setOrigin(1,0);
     this.roundTxt=this.add.text(W/2,32,'',{fontFamily:'Orbitron',fontSize:'10px',color:'#ff9900'}).setDepth(D).setOrigin(0.5,0);
     this.waveTxt=this.add.text(W/2,H/2-80,'',{fontFamily:'Orbitron',fontSize:'20px',color:'#ff6600',fontStyle:'bold',stroke:'#000',strokeThickness:5}).setDepth(D).setOrigin(0.5).setAlpha(0);
+    this.multTxt=this.add.text(W-10,28,'',{fontFamily:'Orbitron',fontSize:'11px',color:'#ffcc00',fontStyle:'bold'}).setDepth(D).setOrigin(1,0);
     this.updateHP();this.updateXP();
   }
 
@@ -631,6 +633,8 @@ class GameScene extends Phaser.Scene {
     const lk=this._lastKillPos||{x:W/2,y:H/2};
     for(let i=0;i<8;i++){const gx=lk.x+Phaser.Math.Between(-40,40),gy=lk.y+Phaser.Math.Between(-40,40);const gem=this.gems.create(gx,gy,'gem').setDepth(5).setDisplaySize(20,20);gem.xp=1;this.tweens.add({targets:gem,y:gy-22,duration:220,yoyo:true,ease:'Bounce'});}
     SFX.play('roundclear');
+    this.cameras.main.flash(200,0,255,100);
+    this.physics.world.timeScale=3;this.time.delayedCall(400,()=>{this.physics.world.timeScale=1;});
     const ct=this.add.text(W/2,H/2,'\u2713 ROUND CLEAR!',{fontFamily:'Orbitron',fontSize:'26px',color:'#00ff88',fontStyle:'bold',stroke:'#000',strokeThickness:6}).setDepth(201).setOrigin(0.5);
     this.time.delayedCall(2500,()=>{ct.destroy();this.startRound(this.roundNum+1);});
   }
@@ -715,6 +719,13 @@ class GameScene extends Phaser.Scene {
     this.updateGlow();
     this.cleanBullets();
     this.checkRoundClear();
+    // Combo decay after 3s
+    if(this.comboCount>0&&this.time.now-this.lastComboTime>3000){this.comboCount=0;this.scoreMult=1;}
+    this.multTxt.setText(this.scoreMult>1?`x${this.scoreMult}`:'');
+    // Low HP vignette
+    if(!this.vigGfx)this.vigGfx=this.add.graphics().setDepth(95);
+    this.vigGfx.clear();
+    if(this.pHP/this.pMaxHP<0.3){const pulse=0.12+0.08*Math.sin(this.time.now*0.006);this.vigGfx.fillStyle(0xff0000,pulse);this.vigGfx.fillRect(0,0,W,20);this.vigGfx.fillRect(0,H-20,W,20);this.vigGfx.fillRect(0,0,20,H);this.vigGfx.fillRect(W-20,0,20,H);}
   }
 
   movePlayer(){
@@ -739,14 +750,31 @@ class GameScene extends Phaser.Scene {
     SFX.play('shoot');
     const f=this.add.graphics().setDepth(11);f.fillStyle(0xffff00,0.75);f.fillCircle(this.player.x,this.player.y,9);
     this.time.delayedCall(70,()=>f.destroy());
+    // Muzzle ring
+    const muzz=this.add.graphics().setDepth(11);muzz.lineStyle(2,0x00ffcc,0.9);muzz.strokeCircle(this.player.x,this.player.y,12);
+    this.tweens.add({targets:muzz,scaleX:2.5,scaleY:2.5,alpha:0,duration:120,onComplete:()=>muzz.destroy()});
   }
 
   nearestEnemy(){let best=null,bd=Infinity;this.enemies.getChildren().forEach(e=>{if(e.dead)return;const d=Phaser.Math.Distance.Between(this.player.x,this.player.y,e.x,e.y);if(d<bd){bd=d;best=e;}});return best;}
 
+  spawnHitParticles(x,y,color){
+    const n=navigator.hardwareConcurrency<=4?3:5;
+    for(let i=0;i<n;i++){const p=this.add.graphics().setDepth(15);p.fillStyle(color||0xffff00,1);p.fillRect(0,0,5,5);p.x=x;p.y=y;const ang=Phaser.Math.Between(0,360)*Math.PI/180;const spd=Phaser.Math.Between(60,160);this.tweens.add({targets:p,x:p.x+Math.cos(ang)*spd*0.4,y:p.y+Math.sin(ang)*spd*0.4,alpha:0,scaleX:0.2,scaleY:0.2,duration:Phaser.Math.Between(200,400),onComplete:()=>p.destroy()});}
+  }
+
   bulletHit(b,e){
     if(e.dead||b.hitSet.has(e.uid)||e.invincible)return;
-    b.hitSet.add(e.uid);const dmg=b.pdmg;this.dmgNum(e.x,e.y,dmg);e.hp-=dmg;SFX.play('hit');
-    this.tweens.add({targets:e,alpha:0.25,duration:70,yoyo:true});
+    b.hitSet.add(e.uid);const dmg=b.pdmg;
+    this.dmgNum(e.x,e.y,dmg,b.isCrit?'crit':'normal');
+    e.hp-=dmg;SFX.play('hit');
+    // Hit flash white
+    e.setTint(0xffffff);this.time.delayedCall(80,()=>{if(e&&!e.dead)e.clearTint();});
+    // Hit particles
+    this.spawnHitParticles(e.x,e.y,e.burstColor||0xffff00);
+    // Hit stop + micro-shake
+    if(!this.dead&&!this.paused){this.physics.pause();this.time.delayedCall(40,()=>{if(!this.dead&&!this.paused)this.physics.resume();});}
+    this.cameras.main.shake(60,0.003);
+    if(b.isCrit)this.cameras.main.shake(80,0.005);
     b.hits++;if(b.hits>=b.pierce)b.destroy();
     if(e.hp<=0)this.killEnemy(e);
   }
@@ -804,9 +832,22 @@ class GameScene extends Phaser.Scene {
   floatText(x,y,txt,col){const t=this.add.text(x,y,txt,{fontFamily:'Orbitron',fontSize:'9px',color:'#'+col.toString(16).padStart(6,'0'),stroke:'#000',strokeThickness:3,fontStyle:'bold'}).setDepth(51).setOrigin(0.5);this.tweens.add({targets:t,y:y-50,alpha:0,duration:1800,ease:'Power2',onComplete:()=>t.destroy()});}
 
   killEnemy(e){
-    if(e.dead)return;e.dead=true;this.kills++;this.score+=e.sv||10;
+    if(e.dead)return;e.dead=true;this.kills++;
+    // Combo system
+    this.comboCount++;this.lastComboTime=this.time.now;
+    this.scoreMult=this.comboCount<2?1:this.comboCount<5?2:this.comboCount<10?3:this.comboCount<20?5:10;
+    this.score+=(e.sv||10)*this.scoreMult;
     this.killTxt.setText(`SNITCHES: ${this.kills}`);
+    if(this.comboCount===5)this.floatText(W/2,H/2-120,'COMBO x5!',0xffcc00);
+    if(this.comboCount===10)this.floatText(W/2,H/2-120,'ON FIRE! \ud83d\udd25',0xff8800);
+    if(this.comboCount===20)this.floatText(W/2,H/2-120,'UNSTOPPABLE! \u26a1',0xff4400);
+    if(this.comboCount===30)this.floatText(W/2,H/2-120,'BRODY IS A MENACE \ud83d\udc80',0xff0044);
     SFX.play('death');if(e.isBoss||e.isPeyton)SFX.play('roundclear');
+    // Multi-ring death explosion
+    const r1=this.add.graphics().setDepth(12);r1.lineStyle(3,e.burstColor||0xff4444,1);r1.strokeCircle(e.x,e.y,10);this.tweens.add({targets:r1,scaleX:4,scaleY:4,alpha:0,duration:350,onComplete:()=>r1.destroy()});
+    const r2=this.add.graphics().setDepth(11);r2.lineStyle(2,0xffffff,0.6);r2.strokeCircle(e.x,e.y,8);this.tweens.add({targets:r2,scaleX:6,scaleY:6,alpha:0,duration:500,onComplete:()=>r2.destroy()});
+    this.spawnHitParticles(e.x,e.y,e.burstColor||0xff4444);this.spawnHitParticles(e.x,e.y,0xffffff);
+    const flash=this.add.graphics().setDepth(10);flash.fillStyle(0xffffff,0.4);flash.fillCircle(e.x,e.y,e.displayWidth);this.tweens.add({targets:flash,alpha:0,duration:150,onComplete:()=>flash.destroy()});
     this._lastKillPos={x:e.x,y:e.y};
     this.snacksEarned+=(e.gd||1);
     if(e.etype==='coach'){const dt=this.add.text(W/2,H/2-40,"I'll see you at 6am Monday!!",{fontFamily:'Orbitron',fontSize:'16px',color:'#4488ff',stroke:'#000',strokeThickness:4}).setDepth(201).setOrigin(0.5);this.tweens.add({targets:dt,alpha:0,y:H/2-120,duration:3000,onComplete:()=>dt.destroy()});const fb=this.add.graphics().setDepth(5);fb.fillStyle(0x8B4513,1);fb.fillEllipse(e.x,e.y,24,18);fb.fillStyle(0xffffff,0.8);fb.fillRect(e.x-8,e.y-1,16,2);const fz=this.add.zone(e.x,e.y,30,30).setDepth(5);this.physics.add.existing(fz);this.physics.add.overlap(this.player,fz,()=>{this.pHP=this.pMaxHP;this.updateHP();fb.destroy();fz.destroy();this.floatText(this.player.x,this.player.y-30,'+FULL HEAL!',0x00ff88);});this.time.delayedCall(10000,()=>{if(fb.scene)fb.destroy();if(fz.scene)fz.destroy();});}
@@ -814,7 +855,7 @@ class GameScene extends Phaser.Scene {
     else if(e.isBoss){const qt=this.add.text(W/2,H/2,"...we'll talk about this tomorrow.",{fontFamily:'Orbitron',fontSize:'16px',color:'#ff4444',stroke:'#000',strokeThickness:5,fontStyle:'bold'}).setDepth(201).setOrigin(0.5);this.time.delayedCall(3000,()=>qt.destroy());this.cameras.main.flash(600,255,100,0);this.cameras.main.shake(800,0.025);}
     else{const quips={ew:"I'm telling your mother!",ef:'DETENTION!!',es:'F MINUS!!',et:'SUSPENDED!!'};if(quips[e.etype])this.floatText(e.x,e.y-28,quips[e.etype],0xffdd00);}
     for(let i=0;i<(e.gd||1);i++){const gx=e.x+Phaser.Math.Between(-18,18),gy=e.y+Phaser.Math.Between(-18,18);const gem=this.gems.create(gx,gy,'gem').setDepth(5).setDisplaySize(20,20);gem.xp=1;this.tweens.add({targets:gem,y:gy-22,duration:220,yoyo:true,ease:'Bounce'});}
-    const boom=this.add.graphics().setDepth(7);boom.fillStyle(e.burstColor||0xff4444,0.65);boom.fillCircle(e.x,e.y,e.displayWidth*0.9);this.tweens.add({targets:boom,alpha:0,scaleX:2.2,scaleY:2.2,duration:320,onComplete:()=>boom.destroy()});
+    // (death explosion already handled above with multi-ring)
     if(e.hpGfx){e.hpGfx.destroy();e.hpGfx=null;}if(e.nameLabel){e.nameLabel.destroy();e.nameLabel=null;}if(e.tierDot){e.tierDot.destroy();e.tierDot=null;}if(e.phaseLabel){e.phaseLabel.destroy();e.phaseLabel=null;}if(e._shield){e._shield.destroy();e._shield=null;}
     // Equipment drop (25% chance)
     if(Math.random()<0.25&&!e.isMinion){
@@ -839,7 +880,7 @@ class GameScene extends Phaser.Scene {
     e.destroy();
   }
 
-  pickGem(gem){this.pXP+=gem.xp||1;gem.destroy();SFX.play('collect');if(this.pXP>=this.xpNeeded){this.pXP-=this.xpNeeded;this.xpNeeded=Math.floor(this.xpNeeded*1.45);this.pLevel++;this.lvlTxt.setText(`LV ${this.pLevel}`);SFX.play('levelup');this.showLevelUp();}this.updateXP();}
+  pickGem(gem){this.pXP+=gem.xp||1;gem.destroy();SFX.play('collect');if(this.pXP>=this.xpNeeded){this.pXP-=this.xpNeeded;this.xpNeeded=Math.floor(this.xpNeeded*1.45);this.pLevel++;this.lvlTxt.setText(`LV ${this.pLevel}`);SFX.play('levelup');this.cameras.main.flash(200,255,200,0);this.showLevelUp();}this.updateXP();}
   doMagnet(){if(!this.player)return;this.gems.getChildren().forEach(g=>{const d=Phaser.Math.Distance.Between(this.player.x,this.player.y,g.x,g.y);if(d<this.magnetR){const a=Phaser.Math.Angle.Between(g.x,g.y,this.player.x,this.player.y);g.x+=Math.cos(a)*9;g.y+=Math.sin(a)*9;}});}
   doRegen(){if(this.regenRate>0&&this.pHP<this.pMaxHP){this.pHP=Math.min(this.pMaxHP,this.pHP+this.regenRate);this.updateHP();}}
   doPulse(){if(!this.hasPulse||this.paused||this.dead)return;const r=125;const ring=this.add.graphics().setDepth(8);ring.lineStyle(3,0xff88ff,1);ring.strokeCircle(this.player.x,this.player.y,10);this.tweens.add({targets:ring,scaleX:r/10,scaleY:r/10,alpha:0,duration:420,onComplete:()=>ring.destroy()});this.enemies.getChildren().forEach(e=>{if(e.dead||e.invincible)return;const d=Phaser.Math.Distance.Between(this.player.x,this.player.y,e.x,e.y);if(d<r){const dmg=this.pDmg*0.85;e.hp-=dmg;this.dmgNum(e.x,e.y,Math.floor(dmg));if(e.hp<=0)this.killEnemy(e);}});}
@@ -874,7 +915,14 @@ class GameScene extends Phaser.Scene {
   updateOrbits(delta){this.orbitAng+=delta*0.0032;const n=this.orbitBlades.length;this.orbitBlades.forEach((bl,i)=>{const a=this.orbitAng+(i*Math.PI*2/n);bl.x=this.player.x+Math.cos(a)*bl.orbitR;bl.y=this.player.y+Math.sin(a)*bl.orbitR;bl.angle+=8;this.enemies.getChildren().forEach(e=>{if(e.dead||e.invincible)return;const now=Date.now();if(bl.cd[e.uid]&&now-bl.cd[e.uid]<500)return;if(Phaser.Math.Distance.Between(bl.x,bl.y,e.x,e.y)<32){bl.cd[e.uid]=now;e.hp-=bl.dmg;this.dmgNum(e.x,e.y,Math.floor(bl.dmg));if(e.hp<=0)this.killEnemy(e);}});});}
   updateGlow(){this.glow.clear();const p=0.5+0.3*Math.sin(this.time.now*0.005);this.glow.fillStyle(0xff9900,p*0.18);this.glow.fillCircle(this.player.x,this.player.y,24);}
   updateBossOrbs(delta){if(!this.bossOrbs.length)return;this.bossOrbAng+=delta*0.003;const boss=this.bossOrbs[0].bossRef;if(!boss||boss.dead){this.bossOrbs.forEach(o=>o.destroy());this.bossOrbs=[];return;}this.bossOrbs.forEach((orb,i)=>{const a=this.bossOrbAng+(i*Math.PI*2/this.bossOrbs.length);orb.setPosition(boss.x+Math.cos(a)*65,boss.y+Math.sin(a)*65);});}
-  dmgNum(x,y,amt){const big=amt>50;const t=this.add.text(x,y-12,`-${Math.floor(amt)}`,{fontFamily:'Orbitron',fontSize:big?'17px':'12px',color:big?'#ffcc00':'#ffffff',stroke:'#000',strokeThickness:3}).setDepth(50).setOrigin(0.5);this.tweens.add({targets:t,y:y-55,alpha:0,duration:820,ease:'Power2',onComplete:()=>t.destroy()});}
+  dmgNum(x,y,amt,type='normal'){
+    const isCrit=type==='crit';const drift=Phaser.Math.Between(-25,25);
+    const color=isCrit?'#ffcc00':type==='special'?'#ff8800':'#ffffff';
+    const size=isCrit?'22px':type==='special'?'16px':'13px';
+    const t=this.add.text(x+drift,y-10,isCrit?`${Math.floor(amt)}!`:`${Math.floor(amt)}`,{fontFamily:'Orbitron',fontSize:size,color,stroke:'#000',strokeThickness:4,fontStyle:isCrit?'bold':''}).setDepth(50).setOrigin(0.5);
+    if(isCrit)t.setRotation(Phaser.Math.Between(-15,15)*Math.PI/180);
+    this.tweens.add({targets:t,y:y-70,alpha:0,duration:isCrit?1000:750,ease:'Power2',onComplete:()=>t.destroy()});
+  }
   cleanBullets(){this.bullets.getChildren().forEach(b=>{if(b.x<-60||b.x>W+60||b.y<-60||b.y>H+60)b.destroy();});this.enemies.getChildren().forEach(e=>{if(e.dead){if(e.hpGfx){e.hpGfx.destroy();e.hpGfx=null;}if(e.nameLabel){e.nameLabel.destroy();e.nameLabel=null;}if(e.tierDot){e.tierDot.destroy();e.tierDot=null;}if(e.phaseLabel){e.phaseLabel.destroy();e.phaseLabel=null;}}});}
 
   diePlayer(){

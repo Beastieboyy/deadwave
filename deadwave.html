@@ -76,7 +76,7 @@ const DTM = {
   setPlayer:(p)=>localStorage.setItem('dtm_player',JSON.stringify(p)),
   clearPlayer:()=>{localStorage.removeItem('dtm_player');localStorage.removeItem('dtm_token');},
   isLoggedIn:()=>!!localStorage.getItem('dtm_token')&&!!localStorage.getItem('dtm_player'),
-  _fetch:async(url,opts={})=>{try{const c=new AbortController();const t=setTimeout(()=>c.abort(),10000);const r=await fetch(url,{...opts,signal:c.signal,headers:{...opts.headers,'Accept':'application/json'}});clearTimeout(t);if(!r.ok)return{error:`Server error: ${r.status}`};return await r.json();}catch(e){if(e.name==='AbortError')return{error:'Request timed out'};return{error:'Connection failed: '+e.message};}},
+  _fetch:async(url,opts={})=>{try{const c=new AbortController();const t=setTimeout(()=>c.abort(),10000);const r=await fetch(url,{...opts,mode:'cors',credentials:'omit',signal:c.signal,headers:{...opts.headers,'Accept':'application/json'}});clearTimeout(t);if(!r.ok)return{error:`Server error: ${r.status}`};return await r.json();}catch(e){if(e.name==='AbortError')return{error:'Request timed out'};return{error:'Connection failed: '+e.message};}},
   register:async(username,password,display)=>DTM._fetch(DTM.API+'?action=register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username,password,display})}),
   login:async(username,password)=>DTM._fetch(DTM.API+'?action=login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username,password})}),
   logout:async()=>{const t=DTM.getToken();if(t)try{await DTM._fetch(DTM.API+'?action=logout',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:t})});}catch(e){}DTM.clearPlayer();},

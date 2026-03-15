@@ -146,6 +146,7 @@ class GameScene extends Phaser.Scene {
     this.player.setDisplaySize(58,58).setBodySize(22,22);
     this.player.play('brody_idle');
     this.glow=this.add.graphics().setDepth(9);
+    this.playerLabel=this.add.text(0,0,'BRODY',{fontFamily:'Orbitron',fontSize:'11px',color:'#00ffcc',stroke:'#000',strokeThickness:3}).setDepth(20).setOrigin(0.5,1);
   }
 
   createUI() {
@@ -253,7 +254,12 @@ class GameScene extends Phaser.Scene {
         break;
     }
     e.hpGfx=this.add.graphics().setDepth(7);
-    e.nameTxt=this.add.text(0,0,ENAMES[tex]||'',{fontFamily:'Orbitron',fontSize:'7px',color:'#aaaacc',stroke:'#000',strokeThickness:2}).setDepth(8).setOrigin(0.5);
+    const nColors={ew:'#ffffff',ef:'#ff8800',es:'#ff4444',et:'#ff0000',sister:'#cc44ff',boss:'#ff6600'};
+    const isBig=tex==='sister'||tex==='boss';
+    e.nameLabel=this.add.text(0,0,ENAMES[tex]||'',{fontFamily:'Orbitron',fontSize:isBig?'13px':'10px',color:nColors[tex]||'#ffffff',stroke:'#000',strokeThickness:3,fontStyle:isBig?'bold':''}).setDepth(20).setOrigin(0.5,1);
+    if(tex==='boss'){
+      e.phaseLabel=this.add.text(0,0,'\ud83e\udd24 PHASE 1',{fontFamily:'Orbitron',fontSize:'9px',color:'#ff9900',stroke:'#000',strokeThickness:2}).setDepth(20).setOrigin(0.5,1);
+    }
     return e;
   }
 
@@ -267,7 +273,8 @@ class GameScene extends Phaser.Scene {
     if(tex==='ef')e.play('karen_walk');
     e.hp=hp; e.maxHp=hp; e.spd=tex==='ef'?100:50; e.dmg=tex==='ef'?5:5; e.gd=1; e.sv=5; e.burstColor=0xff6666;
     e.hpGfx=this.add.graphics().setDepth(7);
-    e.nameTxt=this.add.text(0,0,'',{fontFamily:'Orbitron',fontSize:'6px',color:'#777799'}).setDepth(8).setOrigin(0.5);
+    const mName=tex==='ew'?'RODNEY JR.':tex==='ef'?'KAREN':'';
+    e.nameLabel=this.add.text(0,0,mName,{fontFamily:'Orbitron',fontSize:'8px',color:'#aaaaaa',stroke:'#000',strokeThickness:2}).setDepth(20).setOrigin(0.5,1);
     return e;
   }
 
@@ -281,6 +288,7 @@ class GameScene extends Phaser.Scene {
     if(rem<120000)this.timerTxt.setColor('#ff4444');
     if(rem<=0){this.winGame();return;}
     if(this.playerIframes>0)this.playerIframes-=delta;
+    this.playerLabel.setPosition(this.player.x,this.player.y-this.player.displayHeight/2-4);
     if(this.playerFrozen){this.player.setVelocity(0,0);}else{this.movePlayer();}
     this.autoShoot(time);
     if(this.orbitCnt>0)this.updateOrbits(delta);
@@ -490,7 +498,12 @@ class GameScene extends Phaser.Scene {
         const col=e.isPeyton?0xcc44ff:e.isBoss?0xff2244:(p>0.5?0xff9900:p>0.25?0xffaa00:0xff2200);
         e.hpGfx.fillStyle(col,1);e.hpGfx.fillRect(bx,by,Math.floor(bw*p),6);
       }
-      if(e.nameTxt)e.nameTxt.setPosition(e.x,e.y-e.displayHeight/2-22);
+      if(e.nameLabel)e.nameLabel.setPosition(e.x,e.y-e.displayHeight/2-18);
+      if(e.phaseLabel){
+        const pct=e.hp/e.maxHp;
+        const ph=pct>0.6?'\ud83e\udd24 PHASE 1':pct>0.3?'\ud83d\ude21 PHASE 2':'\ud83e\udd2c PHASE 3';
+        e.phaseLabel.setText(ph).setPosition(e.x,e.y-e.displayHeight/2-6);
+      }
     });
   }
 
@@ -541,7 +554,8 @@ class GameScene extends Phaser.Scene {
     boom.fillStyle(e.burstColor||0xff4444,0.65);boom.fillCircle(e.x,e.y,e.displayWidth*0.9);
     this.tweens.add({targets:boom,alpha:0,scaleX:2.2,scaleY:2.2,duration:320,onComplete:()=>boom.destroy()});
     if(e.hpGfx){e.hpGfx.destroy();e.hpGfx=null;}
-    if(e.nameTxt){e.nameTxt.destroy();e.nameTxt=null;}
+    if(e.nameLabel){e.nameLabel.destroy();e.nameLabel=null;}
+    if(e.phaseLabel){e.phaseLabel.destroy();e.phaseLabel=null;}
     if(e._shield){e._shield.destroy();e._shield=null;}
     e.destroy();
   }
@@ -651,7 +665,7 @@ class GameScene extends Phaser.Scene {
 
   cleanBullets() {
     this.bullets.getChildren().forEach(b=>{if(b.x<-60||b.x>W+60||b.y<-60||b.y>H+60)b.destroy();});
-    this.enemies.getChildren().forEach(e=>{if(e.dead){if(e.hpGfx){e.hpGfx.destroy();e.hpGfx=null;}if(e.nameTxt){e.nameTxt.destroy();e.nameTxt=null;}}});
+    this.enemies.getChildren().forEach(e=>{if(e.dead){if(e.hpGfx){e.hpGfx.destroy();e.hpGfx=null;}if(e.nameLabel){e.nameLabel.destroy();e.nameLabel=null;}if(e.phaseLabel){e.phaseLabel.destroy();e.phaseLabel=null;}}});
   }
 
   diePlayer() {

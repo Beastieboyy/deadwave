@@ -14,6 +14,7 @@ try {
 }
 
 $action = $_GET['action'] ?? '';
+$BLACKLIST = ['test','tester','admin','root','debug'];
 
 if ($action === 'ping') {
     echo json_encode(['success'=>true,'message'=>'API alive','time'=>date('H:i:s')]);
@@ -29,6 +30,12 @@ if ($action === 'submit') {
     $stars = (int)($_GET['stars'] ?? 0);
     if (empty($name)) $name = 'Player';
     $pinHash = hash('sha256', $pin);
+
+    if (in_array(strtolower($name), $BLACKLIST)) {
+        $pdo->prepare('INSERT INTO dtm_scores (player_name, pin_hash, score, level_reached, kills, stars) VALUES (?,?,?,?,?,?)')->execute([$name,$pinHash,$score,$level,$kills,$stars]);
+        echo json_encode(['success'=>true,'rank'=>999]);
+        exit;
+    }
 
     $check = $pdo->prepare('SELECT pin_hash FROM dtm_scores WHERE player_name = ? AND pin_hash != ? AND pin_hash != "" LIMIT 1');
     $check->execute([$name, $pinHash]);
@@ -54,7 +61,9 @@ if ($action === 'leaderboard') {
     if ($period === 'today') $where = "WHERE DATE(submitted_at) = CURDATE()";
     if ($period === 'week')  $where = "WHERE submitted_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)";
 
-    $sql = "SELECT player_name, MAX(score) as score, MAX(level_reached) as level_reached, MAX(kills) as kills, MAX(stars) as stars FROM dtm_scores $where GROUP BY player_name ORDER BY score DESC LIMIT 20";
+    $bl = implode(',', array_map(fn($n)=>$pdo->quote($n), $BLACKLIST));
+    $and = $where ? 'AND' : 'WHERE';
+    $sql = "SELECT player_name, MAX(score) as score, MAX(level_reached) as level_reached, MAX(kills) as kills, MAX(stars) as stars FROM dtm_scores $where $and LOWER(player_name) NOT IN ($bl) GROUP BY player_name ORDER BY score DESC LIMIT 20";
     $rows = $pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC);
     echo json_encode(['success'=>true,'scores'=>$rows]);
     exit;

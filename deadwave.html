@@ -477,6 +477,12 @@ class GameScene extends Phaser.Scene {
     this.runGear=[];this.groundGear=[];
     // Apply permanently equipped gear
     const eq=DTM.getEquipped();Object.values(eq).forEach(item=>{if(!item)return;const def=GEAR_DEFS[item.slot];if(!def)return;const v=item.statVal;switch(def.stat){case'dmg':this.pDmg+=v;break;case'maxhp':this.pMaxHP+=v;this.pHP=this.pMaxHP;break;case'magnet':this.magnetR+=v;break;case'speed':this.pSpeed+=v;break;case'firerate':this.fireRate=Math.max(300,this.fireRate-v);break;case'crit':this.critRate+=v;break;}});
+    // Dev mode
+    this.isDevMode=false;
+    if((DTM.getName()||'').toLowerCase().trim()==='vince'&&(DTM.getPin()||'').trim()==='8675'){
+      this.isDevMode=true;this.pDmg*=10;this.pMaxHP=9999;this.pHP=9999;this.pSpeed*=2;this.fireRate=100;this.critRate=0.5;this.critDmg=3.0;this.magnetR=300;
+      console.log('\ud83d\udd25 DEV MODE ACTIVE');
+    }
     const allowed=DTM.enemiesForLevel(L);
     this.activeRounds=ROUNDS.filter(r=>r.enemies.every(eg=>allowed.includes(eg.type)));
   }
@@ -497,6 +503,7 @@ class GameScene extends Phaser.Scene {
     this.cameras.main.fadeIn(500,0,0,0);
     DTM.MUSIC.play('game');
     if(this.comebackBuff)this.time.delayedCall(1500,()=>this.floatText(W/2,H/2,'\ud83d\udcaa COMEBACK BUFF ACTIVE!',0x00ff88));
+    if(this.isDevMode){this.time.delayedCall(500,()=>{const db=this.add.text(W/2,H/2,'\ud83d\ude08 VINCE MODE',{fontFamily:'Orbitron',fontSize:'22px',color:'#ff0000',fontStyle:'bold',stroke:'#000',strokeThickness:6}).setOrigin(0.5).setDepth(300).setAlpha(0);this.tweens.add({targets:db,alpha:1,duration:300,onComplete:()=>{this.time.delayedCall(1500,()=>this.tweens.add({targets:db,alpha:0,duration:500,onComplete:()=>db.destroy()}));}});});}
     this.debugTxt=this.add.text(8,200,'',{fontFamily:'Orbitron',fontSize:'9px',color:'#00ff00'}).setDepth(500);
     // Pause button
     const pauseBtn=this.add.text(W-14,14,'\u23f8',{fontSize:'22px',color:'#ffffff'}).setOrigin(1,0).setDepth(150).setInteractive({useHandCursor:true});
@@ -869,7 +876,7 @@ class GameScene extends Phaser.Scene {
   doPulse(){if(!this.hasPulse||this.paused||this.dead)return;const r=125;const ring=this.add.graphics().setDepth(8);ring.lineStyle(3,0xff88ff,1);ring.strokeCircle(this.player.x,this.player.y,10);this.tweens.add({targets:ring,scaleX:r/10,scaleY:r/10,alpha:0,duration:420,onComplete:()=>ring.destroy()});this.enemies.getChildren().forEach(e=>{if(e.dead||e.invincible)return;const d=Phaser.Math.Distance.Between(this.player.x,this.player.y,e.x,e.y);if(d<r){const dmg=this.pDmg*0.85;e.hp-=dmg;this.dmgNum(e.x,e.y,Math.floor(dmg));if(e.hp<=0)this.killEnemy(e);}});}
 
   hurtPlayer(dmg){
-    if(this.dead||this.playerIframes>0)return;
+    if(this.isDevMode||this.dead||this.playerIframes>0)return;
     this.pHP=Math.max(0,this.pHP-dmg);this.updateHP();this.playerIframes=250;SFX.play('hurt');
     this.player.setAlpha(0.5);this.time.delayedCall(250,()=>{if(!this.dead)this.player.setAlpha(1);});
     const f=this.add.graphics().setDepth(99);f.fillStyle(0xff0000,0.28);f.fillRect(0,0,W,H);this.time.delayedCall(130,()=>f.destroy());
@@ -1020,6 +1027,7 @@ class GameScene extends Phaser.Scene {
     if(item.collected)return;item.collected=true;
     if(item.bg?.scene)item.bg.destroy();if(item.icon?.scene)item.icon.destroy();
     this.groundGear=(this.groundGear||[]).filter(g=>g!==item);
+    if(this.isDevMode){this.floatText(this.player.x,this.player.y-40,`${item.def.icon} nice`,0xff0000);return;}
     const def=item.def,val=item.statVal,rarity=item.rarity;let applied='';
     switch(def.stat){case'dmg':this.pDmg+=val;applied=`+${val} DMG`;break;case'maxhp':this.pMaxHP+=val;this.pHP=Math.min(this.pHP+val,this.pMaxHP);this.updateHP();applied=`+${val} HP`;break;case'magnet':this.magnetR+=val;applied=`+${val} RANGE`;break;case'speed':this.pSpeed+=val;applied=`+${val} SPD`;break;case'firerate':this.fireRate=Math.max(300,this.fireRate-val);applied=`-${val}ms`;break;case'crit':this.critRate+=val;applied=`+${Math.floor(val*100)}% CRIT`;break;}
     this.floatText(this.player.x,this.player.y-50,`${def.icon} ${rarity.name} ${def.name}\n${applied}`,rarity.color);
@@ -1107,9 +1115,9 @@ class ResultScene extends Phaser.Scene {
     const rows=[['SNITCHES CAUGHT',kills],['ROUNDS SURVIVED',rounds||0],['SNACKS COLLECTED',snacksEarned||0],['SCORE',score.toLocaleString()]];
     rows.forEach(([label,val],i)=>{const y=210+i*48;this.add.text(40,y,label,{fontFamily:'Orbitron',fontSize:'11px',color:'#888899'});this.add.text(W-40,y,String(val),{fontFamily:'Orbitron',fontSize:'18px',color:'#ffffff',fontStyle:'bold'}).setOrigin(1,0);if(i<rows.length-1){const lg=this.add.graphics();lg.lineStyle(1,0x1e1e3a);lg.lineBetween(40,y+30,W-40,y+30);}});
     if(win&&snacksEarned>0)this.add.text(W/2,418,`+${snacksEarned} \ud83c\udf55 SNACKS EARNED`,{fontFamily:'Orbitron',fontSize:'13px',color:'#ffcc00',fontStyle:'bold'}).setOrigin(0.5);
-    const rankTxt=this.add.text(W/2,450,'\u23f3 Submitting score...',{fontFamily:'Orbitron',fontSize:'12px',color:'#888899'}).setOrigin(0.5);
-    const result=await DTM.submitScore(score,level,kills,stars);
-    if(result.rank)rankTxt.setText(`\ud83c\udfc6 YOUR RANK: #${result.rank} on the Snitch List!`).setColor('#ffcc00');
+    const rankTxt=this.add.text(W/2,450,'',{fontFamily:'Orbitron',fontSize:'12px',color:'#888899'}).setOrigin(0.5);
+    if((DTM.getName()||'').toLowerCase()==='vince'){rankTxt.setText('\ud83d\ude08 Dev mode \u2014 not ranked').setColor('#ff0000');}
+    else{rankTxt.setText('\u23f3 Submitting score...');const result=await DTM.submitScore(score,level,kills,stars);if(result?.rank)rankTxt.setText(`\ud83c\udfc6 YOUR RANK: #${result.rank} on the Snitch List!`).setColor('#ffcc00');else rankTxt.setText('\ud83d\udce1 Score saved locally').setColor('#888899');}
     else rankTxt.setText('\ud83d\udce1 Score saved locally').setColor('#888899');
     if(gearRewards.length>0){this.add.text(W/2,428,'\ud83c\udf81 GEAR EARNED:',{fontFamily:'Orbitron',fontSize:'12px',color:'#ffcc00'}).setOrigin(0.5);gearRewards.forEach((gi,i)=>{const rar=RARITIES[gi.rarityIdx];const col='#'+rar.color.toString(16).padStart(6,'0');const def=GEAR_DEFS[gi.slot];this.add.text(W/2,450+i*20,`${def.icon} ${gi.name}`,{fontFamily:'Orbitron',fontSize:'11px',color:col}).setOrigin(0.5);});}
     const retryBtn=DTM.makeBtn(this,20,510,(W-52)/2,56,'\u21ba RETRY');

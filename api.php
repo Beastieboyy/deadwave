@@ -14,7 +14,7 @@ try {
 }
 
 $action = $_GET['action'] ?? '';
-$BLACKLIST = ['test','tester','admin','root','debug'];
+$BLACKLIST = ['test','tester','admin','root','debug','vince'];
 
 if ($action === 'ping') {
     echo json_encode(['success'=>true,'message'=>'API alive','time'=>date('H:i:s')]);

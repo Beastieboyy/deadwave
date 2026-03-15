@@ -455,7 +455,7 @@ class GameScene extends Phaser.Scene {
     this.score=0;this.kills=0;this.elapsed=0;this.totalTime=15*60*1000;
     this.roundNum=0;this.roundActive=false;this.roundEnemies=[];
     this.paused=false;this.dead=false;this.playerFrozen=false;this.forcedRun=false;
-    this.playerIframes=0;this.lastHurtTime=0;
+    this.playerIframes=0;this.lastHurtTime=0;this.transitioning=false;
     this.bossOrbs=[];this.bossOrbAng=0;
     this.joyActive=false;this.joyAng=0;this.joyDist=0;this.joyBaseX=0;this.joyBaseY=0;
     this.uidCounter=0;this.projectiles=[];
@@ -539,7 +539,7 @@ class GameScene extends Phaser.Scene {
   }
 
   startRound(n){
-    this.roundNum=n;this.roundActive=true;this.roundEnemies=[];this.roundEnemiesExpected=-1;
+    this.roundNum=n;this.roundActive=true;this.roundEnemies=[];this.roundEnemiesExpected=0;
     const rd=this.activeRounds[n-1];
     if(!rd){this.winGame();return;}
     this.roundTxt.setText(`ROUND ${n}/${this.activeRounds.length}`);
@@ -570,41 +570,24 @@ class GameScene extends Phaser.Scene {
   }
 
   checkRoundClear(){
-    if(!this.roundActive||this.dead)return;
-    // Don't check until all expected enemies have spawned
-    if(this.roundEnemiesExpected<0||this.roundEnemies.length<this.roundEnemiesExpected)return;
-    const alive=this.roundEnemies.filter(e=>e&&!e.dead);
+    if(!this.roundActive||this.dead||this.transitioning)return;
+    if(this.roundEnemiesExpected<=0||this.roundEnemies.length<this.roundEnemiesExpected)return;
+    const alive=this.roundEnemies.filter(e=>e&&e.active&&!e.dead);
     if(alive.length>0)return;
-    // Minimum round timer — if enemies died too fast, respawn
-    if(!this.roundMinTimeMet&&this.roundStartTime>0){
-      const rElapsed=this.elapsed-this.roundStartTime;
-      const remaining=Math.ceil((BALANCE.minRoundTime-rElapsed)/1000);
-      if(!this._surviveText){
-        this._surviveText=this.add.text(W/2,H/2+40,'',{fontFamily:'Orbitron',fontSize:'14px',color:'#ff9900',stroke:'#000',strokeThickness:3}).setDepth(150).setOrigin(0.5);
-      }
-      this._surviveText.setText(`SURVIVING... ${remaining}s`);
-      // Respawn after 3s delay
-      if(!this._respawnScheduled){
-        this._respawnScheduled=true;
-        const rd=this.activeRounds[this.roundNum-1];
-        if(rd){this.time.delayedCall(3000,()=>{
-          if(this.dead||this.roundMinTimeMet)return;
-          rd.enemies.forEach(grp=>{for(let i=0;i<grp.count;i++){const e=this.spawnEnemy(grp.type);if(e)this.roundEnemies.push(e);}});
-          this._respawnScheduled=false;
-        });}
-      }
-      return;
-    }
-    if(this._surviveText){this._surviveText.destroy();this._surviveText=null;}
-    this._respawnScheduled=false;
-    this.roundActive=false;this.roundsCompleted++;
-    const lk=this._lastKillPos||{x:W/2,y:H/2};
-    for(let i=0;i<8;i++){const gx=lk.x+Phaser.Math.Between(-40,40),gy=lk.y+Phaser.Math.Between(-40,40);const gem=this.gems.create(gx,gy,'gem').setDepth(5).setDisplaySize(20,20);gem.xp=1;this.tweens.add({targets:gem,y:gy-22,duration:220,yoyo:true,ease:'Bounce'});}
+    // Round complete
+    this.transitioning=true;this.roundActive=false;this.roundsCompleted++;
     SFX.play('roundclear');
-    this.cameras.main.flash(200,0,255,100);
-    this.physics.world.timeScale=3;this.time.delayedCall(400,()=>{this.physics.world.timeScale=1;});
-    const ct=this.add.text(W/2,H/2,'\u2713 ROUND CLEAR!',{fontFamily:'Orbitron',fontSize:'26px',color:'#00ff88',fontStyle:'bold',stroke:'#000',strokeThickness:6}).setDepth(201).setOrigin(0.5);
-    this.time.delayedCall(2500,()=>{ct.destroy();this.startRound(this.roundNum+1);});
+    this.cameras.main.flash(300,255,255,255);
+    // Drop snacks
+    const lk=this._lastKillPos||{x:W/2,y:H/2};
+    for(let i=0;i<6;i++){const gx=lk.x+Phaser.Math.Between(-40,40),gy=lk.y+Phaser.Math.Between(-40,40);const gem=this.gems.create(gx,gy,'gem').setDepth(5).setDisplaySize(20,20);gem.xp=2;this.tweens.add({targets:gem,y:gy-22,duration:220,yoyo:true,ease:'Bounce'});}
+    const ct=this.add.text(W/2,H/2,'\u2713 ROUND CLEAR!',{fontFamily:'Orbitron',fontSize:'26px',color:'#00ff88',fontStyle:'bold',stroke:'#000',strokeThickness:6}).setDepth(201).setOrigin(0.5).setAlpha(0);
+    this.tweens.add({targets:ct,alpha:1,duration:300});
+    this.time.delayedCall(2500,()=>{
+      if(ct.scene)this.tweens.add({targets:ct,alpha:0,duration:300,onComplete:()=>{if(ct.scene)ct.destroy();}});
+      if(this.roundNum>=this.activeRounds.length){this.winGame();return;}
+      this.time.delayedCall(500,()=>{this.transitioning=false;this.startRound(this.roundNum+1);});
+    });
   }
 
   randEdge(){const s=Phaser.Math.Between(0,3);switch(s){case 0:return{x:Phaser.Math.Between(0,W),y:-40};case 1:return{x:W+40,y:Phaser.Math.Between(0,H)};case 2:return{x:Phaser.Math.Between(0,W),y:H+40};case 3:return{x:-40,y:Phaser.Math.Between(0,H)};}}
@@ -696,7 +679,7 @@ class GameScene extends Phaser.Scene {
     this.updateBossOrbs(delta);
     this.updateGlow();
     this.cleanBullets();
-    this.checkRoundClear();
+    if(!this.transitioning)this.checkRoundClear();
     // Combo decay after 3s
     if(this.comboCount>0&&this.time.now-this.lastComboTime>3000){this.comboCount=0;this.scoreMult=1;}
     this.multTxt.setText(this.scoreMult>1?`x${this.scoreMult}`:'');

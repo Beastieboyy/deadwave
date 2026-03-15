@@ -346,16 +346,24 @@ class LeaderboardScene extends Phaser.Scene {
     const loadBoard=async(period)=>{
       if(listContainer&&listContainer.scene)listContainer.destroy();
       listContainer=this.add.container(0,0);
-      const dbgTxt=this.add.text(W/2,H/2-20,'Connecting...',{fontFamily:'Orbitron',fontSize:'14px',color:'#ffff00',stroke:'#000',strokeThickness:3}).setOrigin(0.5).setDepth(999);
+      const dbgTxt=this.add.text(W/2,H/2-20,'Connecting...\nOrigin: '+window.location.origin,{fontFamily:'Orbitron',fontSize:'11px',color:'#ffff00',stroke:'#000',strokeThickness:3,align:'center',wordWrap:{width:360}}).setOrigin(0.5).setDepth(999);
       let data=null,fetchErr=null;
       try{
         const url=DTM.API+'?action=leaderboard&period='+period;
-        dbgTxt.setText('Fetching: '+url.substring(0,40)+'...');
-        data=await DTM._xget(url);
+        dbgTxt.setText('XHR to:\n'+url);
+        data=await new Promise((resolve)=>{
+          const xhr=new XMLHttpRequest();
+          xhr.open('GET',url,true);
+          xhr.timeout=10000;
+          xhr.onload=()=>{dbgTxt.setText('XHR status:'+xhr.status+'\nLen:'+xhr.responseText.length);try{resolve(JSON.parse(xhr.responseText));}catch(e){resolve({error:'Parse:'+e.message});}};
+          xhr.onerror=(ev)=>{dbgTxt.setText('XHR onerror\nreadyState:'+xhr.readyState+'\nstatus:'+xhr.status);resolve({error:'XHR onerror status:'+xhr.status});};
+          xhr.ontimeout=()=>{dbgTxt.setText('XHR timeout');resolve({error:'timeout'});};
+          xhr.send();
+        });
         if(data.error){fetchErr=data.error;dbgTxt.setText('ERR: '+fetchErr);}
         else dbgTxt.setText('Got '+(data.scores?.length||0)+' scores');
       }catch(e){fetchErr=e.message;dbgTxt.setText('CATCH: '+e.message);}
-      this.time.delayedCall(3000,()=>{if(dbgTxt.scene)dbgTxt.destroy();});
+      this.time.delayedCall(8000,()=>{if(dbgTxt?.scene)dbgTxt.destroy();});
       if(loadTxt&&loadTxt.scene)loadTxt.destroy();
       if(fetchErr){listContainer.add(this.add.text(W/2,H/2,`Fetch error:\n${fetchErr}`,{fontFamily:'Orbitron',fontSize:'11px',color:'#ff4444',align:'center',wordWrap:{width:320}}).setOrigin(0.5));return;}
       if(!data){listContainer.add(this.add.text(W/2,H/2,'No response from server',{fontFamily:'Orbitron',fontSize:'12px',color:'#ff4444'}).setOrigin(0.5));return;}

@@ -13,7 +13,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/phaser/3.60.0/phaser.min.js"></script>
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
-  html, body { width:100%; height:100%; overflow:hidden; background:#000; position:fixed; top:0; left:0; }
+  html, body { width:100%; height:100%; overflow:hidden; background:#000; }
   canvas { display:block; margin:0 auto; padding-top:env(safe-area-inset-top); padding-bottom:env(safe-area-inset-bottom); padding-left:env(safe-area-inset-left); padding-right:env(safe-area-inset-right); }
   input.dtm-input { -webkit-text-size-adjust:100%; font-size:16px !important; }
 </style>
@@ -202,9 +202,14 @@ class AuthScene extends Phaser.Scene {
     this.add.text(W/2,122,'MAMA',{fontFamily:'Orbitron',fontSize:'52px',color:'#ffffff',fontStyle:'bold',stroke:'#ff9900',strokeThickness:3}).setOrigin(0.5);
     this.add.text(W/2,175,"Brody's Great Escape",{fontFamily:'Orbitron',fontSize:'13px',color:'#888899'}).setOrigin(0.5);
     let activeTab='login';const formObjs=[];
-    const clearForm=()=>{formObjs.forEach(o=>{if(o&&o.remove)o.remove();else if(o&&o.destroy)o.destroy();});formObjs.length=0;document.querySelectorAll('.dtm-input').forEach(el=>el.remove());};
-    const makeInput=(placeholder,yPct,type='text')=>{const el=document.createElement('input');el.type=type;el.placeholder=placeholder;el.className='dtm-input';el.maxLength=type==='password'?50:30;el.setAttribute('autocomplete',type==='password'?'current-password':'username');const cv=document.querySelector('canvas');const rect=cv?cv.getBoundingClientRect():{left:0,top:0,width:window.innerWidth,height:window.innerHeight};const sx=rect.width/W,sy=rect.height/H;const iw=Math.min(300*sx,rect.width-40);const ix=rect.left+(rect.width-iw)/2;const iy=rect.top+(yPct*rect.height);el.style.cssText=`position:fixed;left:${ix}px;top:${iy}px;width:${iw}px;padding:${12*sy}px ${16*sx}px;font-size:16px;font-family:Orbitron,sans-serif;background:#1a1a2e;color:#ffffff;border:2px solid #333355;border-radius:10px;outline:none;z-index:9999;box-sizing:border-box;-webkit-appearance:none;appearance:none;`;el.addEventListener('focus',()=>el.style.borderColor='#ff9900');el.addEventListener('blur',()=>el.style.borderColor='#333355');document.body.appendChild(el);formObjs.push(el);return el;};
-    // Tabs
+    const clearForm=()=>{formObjs.forEach(o=>{if(o&&o.destroy)o.destroy();else if(o&&o.remove)o.remove();});formObjs.length=0;document.querySelectorAll('.dtm-input').forEach(el=>el.remove());};
+    const makeInput=(placeholder,yPos,type='text')=>{
+      const el=this.add.dom(W/2,yPos,'input','width:300px;padding:13px 16px;font-size:16px;font-family:Orbitron,sans-serif;background:#1a1a2e;color:#ffffff;border:2px solid #333355;border-radius:10px;outline:none;box-sizing:border-box;-webkit-appearance:none;text-align:left;').setOrigin(0.5);
+      el.node.type=type;el.node.placeholder=placeholder;el.node.maxLength=type==='password'?50:30;
+      el.node.addEventListener('focus',()=>el.node.style.borderColor='#ff9900');
+      el.node.addEventListener('blur',()=>el.node.style.borderColor='#333355');
+      formObjs.push(el);return el;
+    };
     const ltBg=this.add.graphics(),stBg=this.add.graphics();
     const drawTabs=(a)=>{ltBg.clear();stBg.clear();ltBg.fillStyle(a==='login'?0xff9900:0x1a1a2e,1);ltBg.fillRoundedRect(20,205,165,36,8);stBg.fillStyle(a==='signup'?0xff9900:0x1a1a2e,1);stBg.fillRoundedRect(205,205,165,36,8);};
     drawTabs('login');
@@ -213,28 +218,26 @@ class AuthScene extends Phaser.Scene {
     const ltZ=this.add.zone(20,205,165,36).setOrigin(0,0).setInteractive({useHandCursor:true});
     const stZ=this.add.zone(205,205,165,36).setOrigin(0,0).setInteractive({useHandCursor:true});
     const showLogin=()=>{clearForm();activeTab='login';drawTabs('login');ltTxt.setColor('#000');stTxt.setColor('#ff9900');
-      const ui=makeInput('Username',36),pi=makeInput('Password',43,'password');
+      const ui=makeInput('Username',310),pi=makeInput('Password',375,'password');
       const mt=this.add.text(W/2,430,'',{fontFamily:'Orbitron',fontSize:'11px',color:'#ff4444',wordWrap:{width:300},align:'center'}).setOrigin(0.5);formObjs.push(mt);
       const lb=DTM.makeBtn(this,40,460,W-80,52,'\u25b6 LOG IN',0xff9900);formObjs.push(lb.bg,lb.text);
-      const doLogin=async()=>{const u=ui.value.trim(),p=pi.value;if(!u||!p){mt.setText('Please fill in all fields').setColor('#ff4444');return;}mt.setText('Logging in...').setColor('#888899');lb.text.setText('...');const r=await DTM.login(u,p);if(r.error){mt.setText(r.error).setColor('#ff4444');lb.text.setText('\u25b6 LOG IN');return;}DTM.setToken(r.token);DTM.setPlayer(r.player);DTM.setName(r.player.display_name||r.player.username);await DTM.validateSession();clearForm();this.cameras.main.fadeOut(300,0,0,0);this.time.delayedCall(300,()=>this.scene.start('HubScene'));};
-      lb.bg.on('pointerdown',doLogin);pi.addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
+      const doLogin=async()=>{const u=ui.node.value.trim(),p=pi.node.value;if(!u||!p){mt.setText('Please fill in all fields').setColor('#ff4444');return;}mt.setText('Logging in...').setColor('#888899');lb.text.setText('...');const r=await DTM.login(u,p);if(r.error){mt.setText(r.error).setColor('#ff4444');lb.text.setText('\u25b6 LOG IN');return;}DTM.setToken(r.token);DTM.setPlayer(r.player);DTM.setName(r.player.display_name||r.player.username);await DTM.validateSession();clearForm();this.cameras.main.fadeOut(300,0,0,0);this.time.delayedCall(300,()=>this.scene.start('HubScene'));};
+      lb.bg.on('pointerdown',doLogin);pi.node.addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
       const gb=this.add.text(W/2,534,'Play as Guest (no cloud save)',{fontFamily:'Orbitron',fontSize:'11px',color:'#888899'}).setOrigin(0.5).setInteractive({useHandCursor:true});
       gb.on('pointerover',()=>gb.setColor('#ffffff'));gb.on('pointerout',()=>gb.setColor('#888899'));
       gb.on('pointerdown',()=>{clearForm();DTM.setName('Guest_'+Math.floor(Math.random()*9999));this.cameras.main.fadeOut(300,0,0,0);this.time.delayedCall(300,()=>this.scene.start('HubScene'));});
       formObjs.push(gb);
     };
     const showSignup=()=>{clearForm();activeTab='signup';drawTabs('signup');ltTxt.setColor('#ff9900');stTxt.setColor('#000');
-      const ni=makeInput('Display Name',34),ui=makeInput('Username',41),pi=makeInput('Password',48,'password'),p2=makeInput('Confirm Password',55,'password');
-      const mt=this.add.text(W/2,525,'',{fontFamily:'Orbitron',fontSize:'11px',color:'#ff4444',wordWrap:{width:300},align:'center'}).setOrigin(0.5);formObjs.push(mt);
-      const sb=DTM.makeBtn(this,40,555,W-80,52,'\u2713 CREATE ACCOUNT',0x00aa44);formObjs.push(sb.bg,sb.text);
-      const doSignup=async()=>{const d=ni.value.trim(),u=ui.value.trim(),p=pi.value,p2v=p2.value;if(!d||!u||!p){mt.setText('Please fill in all fields').setColor('#ff4444');return;}if(p!==p2v){mt.setText("Passwords don't match!").setColor('#ff4444');return;}if(p.length<4){mt.setText('Password must be at least 4 characters').setColor('#ff4444');return;}mt.setText('Creating account...').setColor('#888899');sb.text.setText('...');const r=await DTM.register(u,p,d);if(r.error){mt.setText(r.error).setColor('#ff4444');sb.text.setText('\u2713 CREATE ACCOUNT');return;}DTM.setToken(r.token);DTM.setPlayer(r.player);DTM.setName(d||u);clearForm();this.add.text(W/2,H/2,`Welcome, ${d}! \ud83c\udfae`,{fontFamily:'Orbitron',fontSize:'18px',color:'#00ff88',fontStyle:'bold'}).setOrigin(0.5).setDepth(10);this.time.delayedCall(1500,()=>{this.cameras.main.fadeOut(300,0,0,0);this.time.delayedCall(300,()=>this.scene.start('HubScene'));});};
-      sb.bg.on('pointerdown',doSignup);p2.addEventListener('keydown',e=>{if(e.key==='Enter')doSignup();});
+      const ni=makeInput('Display Name',290),ui=makeInput('Username',355),pi=makeInput('Password',420,'password'),p2=makeInput('Confirm Password',485,'password');
+      const mt=this.add.text(W/2,535,'',{fontFamily:'Orbitron',fontSize:'11px',color:'#ff4444',wordWrap:{width:300},align:'center'}).setOrigin(0.5);formObjs.push(mt);
+      const sb=DTM.makeBtn(this,40,565,W-80,52,'\u2713 CREATE ACCOUNT',0x00aa44);formObjs.push(sb.bg,sb.text);
+      const doSignup=async()=>{const d=ni.node.value.trim(),u=ui.node.value.trim(),p=pi.node.value,p2v=p2.node.value;if(!d||!u||!p){mt.setText('Please fill in all fields').setColor('#ff4444');return;}if(p!==p2v){mt.setText("Passwords don't match!").setColor('#ff4444');return;}if(p.length<4){mt.setText('Password must be at least 4 characters').setColor('#ff4444');return;}mt.setText('Creating account...').setColor('#888899');sb.text.setText('...');const r=await DTM.register(u,p,d);if(r.error){mt.setText(r.error).setColor('#ff4444');sb.text.setText('\u2713 CREATE ACCOUNT');return;}DTM.setToken(r.token);DTM.setPlayer(r.player);DTM.setName(d||u);clearForm();this.add.text(W/2,H/2,`Welcome, ${d}! \ud83c\udfae`,{fontFamily:'Orbitron',fontSize:'18px',color:'#00ff88',fontStyle:'bold'}).setOrigin(0.5).setDepth(10);this.time.delayedCall(1500,()=>{this.cameras.main.fadeOut(300,0,0,0);this.time.delayedCall(300,()=>this.scene.start('HubScene'));});};
+      sb.bg.on('pointerdown',doSignup);p2.node.addEventListener('keydown',e=>{if(e.key==='Enter')doSignup();});
     };
     ltZ.on('pointerdown',showLogin);stZ.on('pointerdown',showSignup);
     showLogin();
-    const repoInputs=()=>document.querySelectorAll('.dtm-input').forEach(el=>{el.style.position='fixed';});
-    window.addEventListener('scroll',repoInputs);window.addEventListener('resize',repoInputs);
-    this.events.on('shutdown',()=>{window.removeEventListener('scroll',repoInputs);window.removeEventListener('resize',repoInputs);document.querySelectorAll('.dtm-input').forEach(el=>el.remove());});
+    this.events.on('shutdown',()=>{document.querySelectorAll('.dtm-input').forEach(el=>el.remove());});
     this.cameras.main.fadeIn(400,0,0,0);
   }
 }
@@ -1065,7 +1068,7 @@ async function stripWhiteBGs(){
 
 stripWhiteBGs().then(()=>{
   new Phaser.Game({
-    type:Phaser.AUTO,width:W,height:H,backgroundColor:'#07070f',
+    type:Phaser.AUTO,width:W,height:H,backgroundColor:'#07070f',dom:{createContainer:true},
     physics:{default:'arcade',arcade:{debug:false,gravity:{y:0}}},
     scene:[MenuScene,AuthScene,HubScene,ChapterScene,GameScene,ResultScene,LeaderboardScene,UpgradeScene],
     scale:{mode:Phaser.Scale.FIT,autoCenter:Phaser.Scale.CENTER_BOTH,width:W,height:H,expandParent:true},

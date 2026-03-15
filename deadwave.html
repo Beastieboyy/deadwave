@@ -439,42 +439,33 @@ class GameScene extends Phaser.Scene {
   }
 
   init(data){
-    // ══ LEVEL & DIFFICULTY ══
     this.levelNum=data?.level||DTM.getCurrentLevel()||1;
     const L=this.levelNum;
-    this.diffScale=Math.pow(L,0.52)*0.82+0.18;
-    this.diffScale*=({11:0.88,21:0.85,31:0.82,41:0.85,51:0.82}[L]||1.0);
-    // ══ PLAYER STATS — single source of truth ══
-    this.pDmg=5+Math.floor(L*0.22);
-    this.fireRate=Math.max(400,1400-Math.floor(L*5));
-    this.pMaxHP=150;this.pHP=150;this.pSpeed=170;
+    const lb=Math.floor(L/10);
+    // ══ PLAYER — hardcoded simple stats ══
+    this.pDmg=1+lb;this.fireRate=Math.max(400,1000-lb*50);
+    this.pMaxHP=50;this.pHP=50;this.pSpeed=170;
     this.piercing=false;this.orbitCnt=0;this.hasPulse=false;
-    this.magnetR=70;this.regenRate=0;
-    this.critRate=0.05;this.critDmg=1.5;
+    this.magnetR=70;this.regenRate=0;this.critRate=0;this.critDmg=1;
     this.orbitBlades=[];this.orbitAng=0;
-    // ══ LOCKER UPGRADES (flat additive, never multiplicative) ══
+    // Locker — flat
     const u=DTM.getUpgrades();
-    this.pSpeed+=(u.sneakers||0)*12;
-    this.pDmg+=Math.floor((u.backpack||0)*0.8);
-    this.fireRate=Math.max(400,this.fireRate-(u.phone||0)*35);
-    this.pMaxHP+=(u.hoodie||0)*30;this.pHP=this.pMaxHP;
+    this.pSpeed+=(u.sneakers||0)*10;this.pDmg+=(u.backpack||0);
+    this.fireRate=Math.max(400,this.fireRate-(u.phone||0)*30);
+    this.pMaxHP+=(u.hoodie||0)*20;this.pHP=this.pMaxHP;
     // ══ GAME STATE ══
     this.lastShot=0;this.pXP=0;this.pLevel=1;this.xpNeeded=10;
     this.score=0;this.kills=0;this.elapsed=0;this.totalTime=15*60*1000;
     this.roundNum=0;this.roundActive=false;this.roundEnemies=[];
     this.paused=false;this.dead=false;this.playerFrozen=false;this.forcedRun=false;
-    this.playerIframes=0;this.xpMult=1;
+    this.playerIframes=0;this.lastHurtTime=0;
     this.bossOrbs=[];this.bossOrbAng=0;
     this.joyActive=false;this.joyAng=0;this.joyDist=0;this.joyBaseX=0;this.joyBaseY=0;
     this.uidCounter=0;this.projectiles=[];
     this.comboCount=0;this.comboTimer=0;this.scoreMult=1;this.lastComboTime=0;
     this.roundsCompleted=0;this.snacksEarned=0;this.specialHitCount=0;
     this.roundStartTime=0;this.roundMinTimeMet=false;this.roundTimerTxt=null;
-    // ══ COMEBACK BUFF ══
-    const lossKey=`dtm_losses_${L}`;this.comebackBuff=false;
-    const losses=parseInt(localStorage.getItem(lossKey)||'0');
-    if(losses>=2){this.comebackBuff=true;this.pMaxHP=Math.floor(this.pMaxHP*1.3);this.pHP=this.pMaxHP;this.pDmg+=3;}
-    // ══ ROUND FILTER ══
+    this.comebackBuff=false;
     const allowed=DTM.enemiesForLevel(L);
     this.activeRounds=ROUNDS.filter(r=>r.enemies.every(eg=>allowed.includes(eg.type)));
   }
@@ -485,8 +476,7 @@ class GameScene extends Phaser.Scene {
     this.bgG=this.add.graphics().setDepth(1);this.drawBG();
     this.enemies=this.physics.add.group();this.bullets=this.physics.add.group();this.gems=this.physics.add.group();
     this.createAnims();this.createPlayer();this.createUI();this.setupInput();this.setupJoystick();
-    this.lastHurtTime=0;
-    this.physics.add.overlap(this.player,this.enemies,(_p,e)=>{if(e.dead)return;const now=this.time.now;if(now-this.lastHurtTime<500||this.playerIframes>0)return;this.lastHurtTime=now;this.hurtPlayer(e.chargeDmg&&e.isCharging?e.chargeDmg:e.dmg||10);});
+    this.physics.add.overlap(this.player,this.enemies,(_p,e)=>{if(e.dead)return;const now=this.time.now;if(now-this.lastHurtTime<600)return;this.lastHurtTime=now;this.hurtPlayer(e.dmg||8);});
     this.physics.add.overlap(this.bullets,this.enemies,(b,e)=>this.bulletHit(b,e));
     this.physics.add.overlap(this.player,this.gems,(_p,g)=>this.pickGem(g));
     this.time.addEvent({delay:3000,callback:this.doPulse,callbackScope:this,loop:true});
@@ -617,12 +607,7 @@ class GameScene extends Phaser.Scene {
 
   randEdge(){const s=Phaser.Math.Between(0,3);switch(s){case 0:return{x:Phaser.Math.Between(0,W),y:-40};case 1:return{x:W+40,y:Phaser.Math.Between(0,H)};case 2:return{x:Phaser.Math.Between(0,W),y:H+40};case 3:return{x:-40,y:Phaser.Math.Between(0,H)};}}
 
-  getEnemyStats(type){
-    const d=this.diffScale,ss=1+(d-1)*0.35;
-    const base={ew:{hp:260,spd:38,dmg:12,gd:2,sv:50,bc:0xaaaaaa},ef:{hp:200,spd:85,dmg:10,gd:2,sv:60,bc:0xff8800},es:{hp:320,spd:55,dmg:14,gd:3,sv:80,bc:0x4444ff},et:{hp:580,spd:28,dmg:25,gd:5,sv:150,bc:0xff0000},coach:{hp:400,spd:70,dmg:16,gd:4,sv:120,bc:0x4488ff},sister:{hp:480,spd:65,dmg:14,gd:6,sv:200,bc:0xcc44ff},boss:{hp:1100,spd:50,dmg:30,gd:15,sv:500,bc:0xff6600}};
-    const b=base[type]||base.ew;
-    return{...b,hp:Math.floor(b.hp*d),spd:Math.floor(b.spd*ss),maxHp:Math.floor(b.hp*d)};
-  }
+  // getEnemyStats removed — stats hardcoded in spawnEnemy
 
   spawnEnemy(tex){
     const{x,y}=this.randEdge();
@@ -634,18 +619,18 @@ class GameScene extends Phaser.Scene {
     e.spawnedMinions=0;e.patrolTarget=null;
     const ln=this.levelNum||1;
     e.tier=ln<=10?1:ln<=30?2:3;
-    const st=this.getEnemyStats(tex);
-    e.hp=st.hp;e.maxHp=st.hp;e.spd=st.spd;e.dmg=st.dmg;e.gd=st.gd;e.sv=st.sv;e.burstColor=st.bc;
+    const hm=1+Math.floor(ln/10)*0.2;
     switch(tex){
-      case 'ew':e.setDisplaySize(100,100);break;
-      case 'ef':e.setDisplaySize(95,95);e.play('karen_walk');break;
-      case 'es':e.setDisplaySize(95,95);e.play('steiner_walk');e.patrolTarget={x:Phaser.Math.Between(60,W-60),y:Phaser.Math.Between(100,H-100)};break;
-      case 'et':e.setDisplaySize(120,120);e.chargeDmg=50;break;
-      case 'coach':e.setDisplaySize(108,108);e.play('coach_run');e.lastWhistle=0;e.lastDrill=0;break;
-      case 'sister':e.setDisplaySize(100,100);e.play('peyton_snitch');break;
-      case 'boss':e.setDisplaySize(155,155);e.play('mama_charge');e.chargeDmg=45;
+      case 'ew':e.setDisplaySize(100,100);e.hp=Math.floor(100*hm);e.spd=38;e.dmg=8;e.gd=2;e.sv=50;e.burstColor=0xaaaaaa;break;
+      case 'ef':e.setDisplaySize(95,95);e.play('karen_walk');e.hp=Math.floor(80*hm);e.spd=85;e.dmg=10;e.gd=2;e.sv=60;e.burstColor=0xff8800;break;
+      case 'es':e.setDisplaySize(95,95);e.play('steiner_walk');e.hp=Math.floor(120*hm);e.spd=55;e.dmg=12;e.gd=3;e.sv=80;e.burstColor=0x4444ff;e.patrolTarget={x:Phaser.Math.Between(60,W-60),y:Phaser.Math.Between(100,H-100)};break;
+      case 'et':e.setDisplaySize(120,120);e.hp=Math.floor(200*hm);e.spd=28;e.dmg=20;e.gd=5;e.sv=150;e.burstColor=0xff0000;e.chargeDmg=30;break;
+      case 'coach':e.setDisplaySize(108,108);e.play('coach_run');e.hp=Math.floor(140*hm);e.spd=70;e.dmg=14;e.gd=4;e.sv=120;e.burstColor=0x4488ff;e.lastWhistle=0;e.lastDrill=0;break;
+      case 'sister':e.setDisplaySize(100,100);e.play('peyton_snitch');e.hp=Math.floor(160*hm);e.spd=65;e.dmg=12;e.gd=6;e.sv=200;e.burstColor=0xcc44ff;break;
+      case 'boss':e.setDisplaySize(155,155);e.play('mama_charge');e.hp=Math.floor(400*hm);e.spd=50;e.dmg=25;e.gd=15;e.sv=500;e.burstColor=0xff6600;e.chargeDmg=35;
         this.bossOrbs=[0xff9900,0xff4400,0xff2244,0xffdd00].map(c=>{const o=this.add.graphics().setDepth(7);o.fillStyle(c,0.85);o.fillCircle(0,0,6);o.bossRef=e;return o;});break;
     }
+    e.maxHp=e.hp;
     e.hpGfx=this.add.graphics().setDepth(7);
     const isBoss=tex==='sister'||tex==='boss'||tex==='coach';
     e.nameLabel=this.add.text(0,0,ENAMES[tex]||'',{fontFamily:'Orbitron',fontSize:isBoss?'15px':'13px',color:'#ffffff',stroke:'#000',strokeThickness:4,fontStyle:'bold'}).setDepth(20).setOrigin(0.5,1);
@@ -705,8 +690,10 @@ class GameScene extends Phaser.Scene {
     // Combo decay after 3s
     if(this.comboCount>0&&this.time.now-this.lastComboTime>3000){this.comboCount=0;this.scoreMult=1;}
     this.multTxt.setText(this.scoreMult>1?`x${this.scoreMult}`:'');
-    const _dps=(this.pDmg/(this.fireRate/1000)).toFixed(1);const _e0=this.enemies?.getChildren?.()?.find?.(e=>!e.dead);
-    this.debugTxt?.setText?.(`LVL:${this.levelNum} SCALE:${this.diffScale?.toFixed(2)}\nDMG:${this.pDmg} RATE:${this.fireRate}ms DPS:${_dps}/s\nENEMY HP:${_e0?Math.ceil(_e0.hp)+'/'+_e0.maxHp:'\u2014'}\nTTK:${_e0?(_e0.hp/parseFloat(_dps)).toFixed(0)+'s':'\u2014'}`);
+    const _e0=this.enemies?.getChildren?.()?.find?.(e=>!e?.dead);
+    const _stk=_e0?Math.ceil(_e0.hp/this.pDmg):0;
+    const _ttk=_stk*(this.fireRate/1000);
+    this.debugTxt?.setText?.(`DMG:${this.pDmg} RATE:${(this.fireRate/1000).toFixed(1)}s/shot\nENEMY HP:${_e0?Math.ceil(_e0.hp)+'/'+(_e0.maxHp||'?'):'\u2014'}\nSHOTS TO KILL:${_stk}  TTK:${_ttk.toFixed(0)}s`);
     // Low HP vignette
     if(!this.vigGfx)this.vigGfx=this.add.graphics().setDepth(95);
     this.vigGfx.clear();
@@ -728,8 +715,7 @@ class GameScene extends Phaser.Scene {
   autoShoot(time){
     if(time-this.lastShot<this.fireRate)return;const t=this.nearestEnemy();if(!t)return;this.lastShot=time;
     const b=this.bullets.create(this.player.x,this.player.y,'bullet').setDepth(8).setDisplaySize(28,12).setFlipX(true);
-    const isCrit=Math.random()<this.critRate;
-    b.pdmg=isCrit?Math.floor(this.pDmg*this.critDmg):this.pDmg;b.isCrit=isCrit;b.pierce=this.piercing?3:1;b.hits=0;b.hitSet=new Set();
+    b.pdmg=this.pDmg;b.pierce=this.piercing?3:1;b.hits=0;b.hitSet=new Set();
     const ang=Phaser.Math.Angle.Between(this.player.x,this.player.y,t.x,t.y);
     b.setRotation(ang).setVelocity(Math.cos(ang)*460,Math.sin(ang)*460);
     SFX.play('shoot');
@@ -752,14 +738,11 @@ class GameScene extends Phaser.Scene {
     if(!b.hitSet)b.hitSet=new Set();
     if(b.hitSet.has(e.uid))return;
     b.hitSet.add(e.uid);
-    const dmg=b.pdmg||this.pDmg;
+    const dmg=this.pDmg;
     e.hp-=dmg;SFX.play('hit');
-    this.dmgNum(e.x,e.y-20,dmg,b.isCrit?'crit':'normal');
-    e.setTint(0xffffff);this.time.delayedCall(80,()=>{if(e&&!e.dead)e.clearTint();});
-    const hs=Math.min(3+Math.floor(dmg/10),12);const hg=this.add.graphics().setDepth(15);hg.fillStyle(b.isCrit?0xffcc00:0xffffff,0.9);hg.fillCircle(e.x,e.y,hs);this.tweens.add({targets:hg,scaleX:2.5,scaleY:2.5,alpha:0,duration:180,onComplete:()=>hg.destroy()});
+    this.dmgNum(e.x,e.y-20,dmg,'normal');
+    e.setTint(0xffffff);this.time.delayedCall(80,()=>{if(e?.active&&!e.dead)e.clearTint();});
     this.spawnHitParticles(e.x,e.y,e.burstColor||0xffff00);
-    this.cameras.main.shake(60,0.003);
-    if(b.isCrit)this.cameras.main.shake(80,0.005);
     b.hits=(b.hits||0)+1;
     if(b.hits>=(b.pierce||1)){b.setActive(false).setVisible(false);b.body.enable=false;b.destroy();}
     if(e.hp<=0)this.killEnemy(e);
@@ -857,7 +840,7 @@ class GameScene extends Phaser.Scene {
       this.physics.add.overlap(this.player,ez,()=>{
         const baseGain=BALANCE.equipGain[eq.key]||eq.val;
         const v=eq.stat==='damage'?baseGain*rm:Math.floor(baseGain*rm);
-        if(eq.stat==='speed')this.pSpeed+=v;else if(eq.stat==='damage')this.pDmg+=Math.max(1,Math.floor(v*10));else if(eq.stat==='firerate')this.fireRate=Math.max(400,this.fireRate-v);else if(eq.stat==='maxhp'){this.pMaxHP+=v;this.pHP=Math.min(this.pHP+v,this.pMaxHP);this.updateHP();}else if(eq.stat==='magnet')this.magnetR+=v;
+        if(eq.stat==='speed')this.pSpeed+=v;else if(eq.stat==='damage')this.pDmg+=1;else if(eq.stat==='firerate')this.fireRate=Math.max(400,this.fireRate-Math.floor(v));else if(eq.stat==='maxhp'){this.pMaxHP+=Math.floor(v);this.pHP=Math.min(this.pHP+Math.floor(v),this.pMaxHP);this.updateHP();}else if(eq.stat==='magnet')this.magnetR+=Math.floor(v);
         SFX.play('equip');this.floatText(this.player.x,this.player.y-40,`+${eq.icon} ${rarity.toUpperCase()}`,rarCol);
         if(rarity==='legendary'){SFX.play('legendary');this.cameras.main.flash(400,255,215,0);const lt=this.add.text(W/2,H/2,'LEGENDARY DROP!! \ud83d\udd25',{fontFamily:'Orbitron',fontSize:'18px',color:'#ffd700',stroke:'#000',strokeThickness:5,fontStyle:'bold'}).setDepth(201).setOrigin(0.5);this.time.delayedCall(2000,()=>lt.destroy());}
         eg.destroy();ei.destroy();ez.destroy();
@@ -895,7 +878,7 @@ class GameScene extends Phaser.Scene {
     const kh=(ev)=>{const idx=['1','2','3'].indexOf(ev.key);if(idx>=0&&chosen[idx])this.applySkill(chosen[idx]);};this.input.keyboard.on('keydown',kh);this._kh=kh;
   }
 
-  applySkill(sk){this.children.list.filter(c=>c.depth>=200).forEach(c=>c.destroy());if(this._kh){this.input.keyboard.off('keydown',this._kh);this._kh=null;}this.paused=false;this.physics.resume();switch(sk.id){case'dmg':this.pDmg=Math.floor(this.pDmg*1.45);break;case'rate':this.fireRate=Math.max(400,Math.floor(this.fireRate*0.65));break;case'spd':this.pSpeed=Math.floor(this.pSpeed*1.25);break;case'pierce':this.piercing=true;break;case'orbit':this.addOrbit();break;case'pulse':this.hasPulse=true;break;case'mag':this.magnetR*=2;break;case'regen':this.regenRate+=3;break;case'maxhp':this.pMaxHP+=60;this.pHP=Math.min(this.pHP+60,this.pMaxHP);this.updateHP();break;}this.cameras.main.flash(250,0,255,160);}
+  applySkill(sk){this.children.list.filter(c=>c.depth>=200).forEach(c=>c.destroy());if(this._kh){this.input.keyboard.off('keydown',this._kh);this._kh=null;}this.paused=false;this.physics.resume();switch(sk.id){case'dmg':this.pDmg+=1;break;case'rate':this.fireRate=Math.max(400,this.fireRate-150);break;case'spd':this.pSpeed+=30;break;case'pierce':this.piercing=true;break;case'orbit':this.addOrbit();break;case'pulse':this.hasPulse=true;break;case'mag':this.magnetR+=60;break;case'regen':this.regenRate+=2;break;case'maxhp':this.pMaxHP+=20;this.pHP=Math.min(this.pHP+20,this.pMaxHP);this.updateHP();break;}this.cameras.main.flash(250,0,255,160);}
 
   addOrbit(){this.orbitCnt++;const blade=this.add.sprite(this.player.x,this.player.y,'blade').setDepth(9).setDisplaySize(30,30);blade.orbitR=58;blade.dmg=this.pDmg*0.55;blade.cd={};this.orbitBlades.push(blade);}
 

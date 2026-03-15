@@ -28,10 +28,8 @@ class MenuScene extends Phaser.Scene {
     for(let x=0;x<W;x+=50) g.lineBetween(x,0,x,H);
     for(let y=0;y<H;y+=50) g.lineBetween(0,y,W,y);
 
-    // Scanline overlay
     for(let y=0;y<H;y+=4) { g.lineStyle(1,0x000000,0.3); g.lineBetween(0,y,W,y); }
 
-    // Warm orange glow orbs BG
     [
       [80,200,0xff6600,80],[310,260,0xff9900,60],[195,500,0xff4400,50],
     ].forEach(([x,y,c,r])=>{
@@ -80,7 +78,6 @@ class MenuScene extends Phaser.Scene {
       fontFamily:'Orbitron', fontSize:'8px', color:'#333344', fontStyle:'italic'
     }).setOrigin(0.5);
 
-    // Corner brackets — orange
     const bg = this.add.graphics().setDepth(1);
     [[0,0],[W,0],[0,H],[W,H]].forEach(([cx,cy])=>{
       bg.lineStyle(2,0xff9900,0.25);
@@ -98,18 +95,14 @@ class GameScene extends Phaser.Scene {
   constructor() { super('GameScene'); }
 
   preload() {
-    // Brody (player) — 2 cols x 4 rows = 8 frames, 896x1190
     this.load.spritesheet('player', 'thekid.png', { frameWidth: 448, frameHeight: 297 });
-    // Rodney (basic slow) — single image
     this.load.image('ew', 'gary.png');
-    // Karen (fast) — 4-frame horizontal strip, 1408x768
     this.load.spritesheet('ef', 'karen.png', { frameWidth: 352, frameHeight: 768 });
-    // Mrs. Steiner (mid tier) — 4-frame horizontal strip, 1008x1051
     this.load.spritesheet('es', 'steiner.png', { frameWidth: 252, frameHeight: 1051 });
-    // Mr. Berg (tank) — single image
     this.load.image('et', 'mrberg.png');
-    // Mama (boss) — 2x2 grid, 864x1229
     this.load.spritesheet('boss', 'mama.png', { frameWidth: 432, frameHeight: 614 });
+    // Peyton (sister mid-boss) — 2x2 grid, 896x1195
+    this.load.spritesheet('sister', 'sister.png', { frameWidth: 448, frameHeight: 597 });
     this.load.image('gem', 'shard.png');
     this.load.image('bg', 'bg.png');
     this.load.image('bullet', 'bullet.png');
@@ -136,7 +129,10 @@ class GameScene extends Phaser.Scene {
     this.elapsed   = 0;
     this.totalTime = 15*60*1000;
     this.waveNum   = 0;
-    this.boss10    = false;
+    this.peytonSpawned = false;
+    this.mamaSpawned   = false;
+    this.peytonRef     = null;
+    this.peytonSnitchProgress = 0;
     this.paused    = false;
     this.dead      = false;
     this.orbitBlades = [];
@@ -152,14 +148,12 @@ class GameScene extends Phaser.Scene {
   }
 
   create() {
-    // BG
     const bgTile = this.add.tileSprite(0, 0, W, H, 'bg').setOrigin(0, 0).setDepth(0).setAlpha(0.7);
     bgTile.tileScaleX = 0.18;
     bgTile.tileScaleY = 0.18;
     this.bgG = this.add.graphics().setDepth(1);
     this.drawBG();
 
-    // Physics groups
     this.enemies = this.physics.add.group();
     this.bullets = this.physics.add.group();
     this.gems    = this.physics.add.group();
@@ -170,14 +164,12 @@ class GameScene extends Phaser.Scene {
     this.setupInput();
     this.setupJoystick();
 
-    // Overlaps
     this.physics.add.overlap(this.player, this.enemies, (_p, e) => {
       if(!e.dead) this.hurtPlayer(e.dmg||10);
     });
     this.physics.add.overlap(this.bullets, this.enemies, (b,e) => this.bulletHit(b,e));
     this.physics.add.overlap(this.player, this.gems, (_p,g) => this.pickGem(g));
 
-    // Timers — first 3 waves use 9000ms, then 7500ms
     this.waveTimer = this.time.addEvent({ delay:9000, callback:this.spawnWave, callbackScope:this, loop:true });
     this.spawnWave();
 
@@ -190,7 +182,6 @@ class GameScene extends Phaser.Scene {
 
   drawBG() {
     this.bgG.clear();
-    // Corner bracket decorations — orange
     [[0,0],[W,0],[0,H],[W,H]].forEach(([cx,cy])=>{
       this.bgG.lineStyle(2,0xff9900,0.25);
       const sx=cx===0?1:-1, sy=cy===0?1:-1;
@@ -205,6 +196,7 @@ class GameScene extends Phaser.Scene {
       this.anims.create({ key: 'karen_walk', frames: this.anims.generateFrameNumbers('ef', { start: 0, end: 3 }), frameRate: 10, repeat: -1 });
       this.anims.create({ key: 'steiner_walk', frames: this.anims.generateFrameNumbers('es', { start: 0, end: 3 }), frameRate: 8, repeat: -1 });
       this.anims.create({ key: 'mama_charge', frames: this.anims.generateFrameNumbers('boss', { start: 0, end: 3 }), frameRate: 6, repeat: -1 });
+      this.anims.create({ key: 'peyton_snitch', frames: this.anims.generateFrameNumbers('sister', { start: 0, end: 3 }), frameRate: 7, repeat: -1 });
     }
   }
 
@@ -212,33 +204,35 @@ class GameScene extends Phaser.Scene {
     this.player = this.physics.add.sprite(W/2, H/2, 'player').setDepth(10).setCollideWorldBounds(true);
     this.player.setDisplaySize(42, 42);
     this.player.setBodySize(22, 22);
-    this.player.setBlendMode(Phaser.BlendModes.MULTIPLY);
+
     this.player.play('brody_idle');
     this.glow = this.add.graphics().setDepth(9);
   }
 
   createUI() {
     const D=100;
-    // HP bar — top left, orange themed
     this.add.graphics().setDepth(D).fillStyle(0x0d0d1a,0.92).fillRoundedRect(8,8,160,18,4)
       .lineStyle(1,0xff9900,0.5).strokeRoundedRect(8,8,160,18,4);
     this.hpBar  = this.add.graphics().setDepth(D+1);
     this.hpTxt  = this.add.text(88,9,'',{fontFamily:'Orbitron',fontSize:'9px',color:'#ffccaa'}).setDepth(D+2).setOrigin(0.5,0);
     this.add.text(12,9,'HP',{fontFamily:'Orbitron',fontSize:'8px',color:'#ff9900'}).setDepth(D+2);
 
-    // XP bar — below HP, yellow HUSTLE bar
     this.add.graphics().setDepth(D).fillStyle(0x0d0d1a,0.92).fillRoundedRect(8,30,160,8,3)
       .lineStyle(1,0xffdd00,0.4).strokeRoundedRect(8,30,160,8,3);
     this.xpBar  = this.add.graphics().setDepth(D+1);
     this.lvlTxt = this.add.text(173,8,'LV 1',{fontFamily:'Orbitron',fontSize:'11px',color:'#ffdd00',fontStyle:'bold'}).setDepth(D+2);
 
-    // Timer — centered at top
     this.timerTxt = this.add.text(W/2,10,'15:00',{fontFamily:'Orbitron',fontSize:'17px',color:'#ffffff',fontStyle:'bold'}).setDepth(D).setOrigin(0.5,0);
-
-    // Snitches — top right
     this.killTxt  = this.add.text(W-10,10,'SNITCHES: 0',{fontFamily:'Orbitron',fontSize:'10px',color:'#ffcc00'}).setDepth(D).setOrigin(1,0);
 
     this.waveTxt  = this.add.text(W/2,H/2-80,'',{fontFamily:'Orbitron',fontSize:'22px',color:'#ff6600',fontStyle:'bold',stroke:'#000',strokeThickness:5}).setDepth(D).setOrigin(0.5).setAlpha(0);
+
+    // Peyton's snitching bar — hidden until she spawns
+    this.peytonBarBg = this.add.graphics().setDepth(D).setAlpha(0);
+    this.peytonBarBg.fillStyle(0x0d0d1a,0.92); this.peytonBarBg.fillRoundedRect(20,H-42,W-40,16,4);
+    this.peytonBarBg.lineStyle(1,0xcc44ff,0.5); this.peytonBarBg.strokeRoundedRect(20,H-42,W-40,16,4);
+    this.peytonBarFill = this.add.graphics().setDepth(D+1).setAlpha(0);
+    this.peytonBarLbl = this.add.text(W/2,H-44,"PEYTON'S SNITCHING",{fontFamily:'Orbitron',fontSize:'7px',color:'#cc44ff'}).setDepth(D+2).setOrigin(0.5,1).setAlpha(0);
 
     this.updateHP(); this.updateXP();
   }
@@ -249,7 +243,6 @@ class GameScene extends Phaser.Scene {
   }
 
   setupJoystick() {
-    // Dynamic follow-touch joystick on LEFT half of screen (Survivor.io style)
     this.jBase = this.add.graphics().setDepth(151).setAlpha(0);
     this.jThumb = this.add.graphics().setDepth(152).setAlpha(0);
     const JOY_RADIUS = 60;
@@ -289,22 +282,35 @@ class GameScene extends Phaser.Scene {
   update(time, delta) {
     if(this.paused||this.dead) return;
 
-    // Timer countdown
     this.elapsed += delta;
     const rem = Math.max(0, this.totalTime - this.elapsed);
     const m=Math.floor(rem/60000), s=Math.floor((rem%60000)/1000);
     this.timerTxt.setText(`${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`);
     if(rem < 120000) this.timerTxt.setColor('#ff4444');
 
-    // Switch to faster wave spawns after wave 3
     if(this.waveNum === 3 && this.waveTimer.delay !== 7500) {
       this.waveTimer.destroy();
       this.waveTimer = this.time.addEvent({ delay:7500, callback:this.spawnWave, callbackScope:this, loop:true });
     }
 
+    // Peyton at 5 min elapsed (10 min remaining)
+    if(this.elapsed >= 5*60*1000 && !this.peytonSpawned) { this.peytonSpawned=true; this.spawnPeyton(); }
     // Mama at 5 min remaining
-    if(rem <= 5*60*1000 && !this.boss10) { this.boss10=true; this.spawnBoss(); }
+    if(rem <= 5*60*1000 && !this.mamaSpawned) { this.mamaSpawned=true; this.spawnBoss(); }
     if(rem <= 0) { this.winGame(); return; }
+
+    // Update Peyton's snitching bar
+    if(this.peytonRef && !this.peytonRef.dead) {
+      this.peytonSnitchProgress += delta;
+      const prog = Math.min(1, this.peytonSnitchProgress / 12000);
+      this.peytonBarFill.clear();
+      this.peytonBarFill.fillStyle(0xcc44ff,0.85);
+      this.peytonBarFill.fillRoundedRect(21, H-41, Math.floor((W-42)*prog), 14, 3);
+      if(this.peytonSnitchProgress >= 12000) {
+        this.peytonSnitchProgress = 0;
+        this.peytonSnitchWave();
+      }
+    }
 
     this.movePlayer();
     this.autoShoot(time);
@@ -340,7 +346,7 @@ class GameScene extends Phaser.Scene {
     const b = this.bullets.create(this.player.x, this.player.y, 'bullet');
     b.setDepth(8);
     b.setDisplaySize(28, 12);
-    b.setBlendMode(Phaser.BlendModes.ADD);
+
     b.setFlipX(true);
     b.pdmg = this.pDmg;
     b.pierce = this.piercing ? 3 : 1;
@@ -349,7 +355,6 @@ class GameScene extends Phaser.Scene {
     const ang = Phaser.Math.Angle.Between(this.player.x,this.player.y,t.x,t.y);
     b.setRotation(ang);
     b.setVelocity(Math.cos(ang)*460, Math.sin(ang)*460);
-    // Muzzle flash
     const f = this.add.graphics().setDepth(11);
     f.fillStyle(0xffff00,0.75); f.fillCircle(this.player.x,this.player.y,9);
     this.time.delayedCall(70,()=>f.destroy());
@@ -367,6 +372,8 @@ class GameScene extends Phaser.Scene {
 
   bulletHit(b, e) {
     if(e.dead || b.hitSet.has(e.uid)) return;
+    // Invincible check (Peyton on the phone)
+    if(e.invincible) return;
     b.hitSet.add(e.uid);
     const dmg=b.pdmg;
     this.dmgNum(e.x,e.y,dmg);
@@ -384,24 +391,58 @@ class GameScene extends Phaser.Scene {
     this.score+=e.sv||10;
     this.killTxt.setText(`SNITCHES: ${this.kills}`);
 
-    // Death flavor text
-    const quips = { ew:"I'm telling your mother!", ef:'DETENTION!!', es:'F MINUS!!', et:'SUSPENDED!!', boss:'...we\'ll talk later.' };
-    const quip = quips[e.etype] || '';
-    if(quip) {
-      const qt = this.add.text(e.x, e.y-28, quip, {
-        fontFamily:'Orbitron', fontSize:'10px', color:'#ffdd00', stroke:'#000', strokeThickness:3, fontStyle:'bold'
+    // Special Peyton death
+    if(e.isPeyton) {
+      const qt = this.add.text(e.x, e.y-28, "FINE!! I'm telling Dad too!!", {
+        fontFamily:'Orbitron', fontSize:'13px', color:'#cc44ff', stroke:'#000', strokeThickness:4, fontStyle:'bold'
       }).setDepth(51).setOrigin(0.5);
-      this.tweens.add({targets:qt, y:e.y-80, alpha:0, duration:1400, ease:'Power2', onComplete:()=>qt.destroy()});
+      this.tweens.add({targets:qt, y:e.y-100, alpha:0, duration:2000, ease:'Power2', onComplete:()=>qt.destroy()});
+      this.cameras.main.flash(400, 128, 0, 255);
+      this.cameras.main.shake(500, 0.02);
+      // Spawn 15 snacks
+      for(let i=0;i<15;i++) {
+        const gx=e.x+Phaser.Math.Between(-50,50), gy=e.y+Phaser.Math.Between(-50,50);
+        const gem=this.gems.create(gx,gy,'gem').setDepth(5);
+        gem.setDisplaySize(20,20);
+  
+        gem.xp=1;
+        this.tweens.add({targets:gem,y:gy-22,duration:220,yoyo:true,ease:'Bounce'});
+      }
+      // Hide Peyton HUD bar
+      this.peytonBarBg.setAlpha(0);
+      this.peytonBarFill.setAlpha(0);
+      this.peytonBarLbl.setAlpha(0);
+      this.peytonRef = null;
+    }
+    // Special Mama death
+    else if(e.isBoss) {
+      const qt = this.add.text(e.x, e.y-28, "...we'll talk about this tomorrow.", {
+        fontFamily:'Orbitron', fontSize:'11px', color:'#ff4444', stroke:'#000', strokeThickness:4, fontStyle:'bold'
+      }).setDepth(51).setOrigin(0.5);
+      this.tweens.add({targets:qt, y:e.y-100, alpha:0, duration:2000, ease:'Power2', onComplete:()=>qt.destroy()});
+    }
+    // Normal enemy death quips
+    else {
+      const quips = { ew:"I'm telling your mother!", ef:'DETENTION!!', es:'F MINUS!!', et:'SUSPENDED!!' };
+      const quip = quips[e.etype] || '';
+      if(quip) {
+        const qt = this.add.text(e.x, e.y-28, quip, {
+          fontFamily:'Orbitron', fontSize:'10px', color:'#ffdd00', stroke:'#000', strokeThickness:3, fontStyle:'bold'
+        }).setDepth(51).setOrigin(0.5);
+        this.tweens.add({targets:qt, y:e.y-80, alpha:0, duration:1400, ease:'Power2', onComplete:()=>qt.destroy()});
+      }
     }
 
-    // Drop snacks
-    for(let i=0;i<(e.gd||1);i++) {
-      const gx=e.x+Phaser.Math.Between(-18,18), gy=e.y+Phaser.Math.Between(-18,18);
-      const gem=this.gems.create(gx,gy,'gem').setDepth(5);
-      gem.setDisplaySize(20,20);
-      gem.setBlendMode(Phaser.BlendModes.MULTIPLY);
-      gem.xp=1;
-      this.tweens.add({targets:gem,y:gy-22,duration:220,yoyo:true,ease:'Bounce'});
+    // Drop snacks (normal enemies only — Peyton handled above)
+    if(!e.isPeyton) {
+      for(let i=0;i<(e.gd||1);i++) {
+        const gx=e.x+Phaser.Math.Between(-18,18), gy=e.y+Phaser.Math.Between(-18,18);
+        const gem=this.gems.create(gx,gy,'gem').setDepth(5);
+        gem.setDisplaySize(20,20);
+  
+        gem.xp=1;
+        this.tweens.add({targets:gem,y:gy-22,duration:220,yoyo:true,ease:'Bounce'});
+      }
     }
     // Death burst
     const boom=this.add.graphics().setDepth(7);
@@ -450,7 +491,7 @@ class GameScene extends Phaser.Scene {
     ring.lineStyle(3,0xff88ff,1); ring.strokeCircle(this.player.x,this.player.y,10);
     this.tweens.add({targets:ring,scaleX:r/10,scaleY:r/10,alpha:0,duration:420,onComplete:()=>ring.destroy()});
     this.enemies.getChildren().forEach(e=>{
-      if(e.dead) return;
+      if(e.dead||e.invincible) return;
       const d=Phaser.Math.Distance.Between(this.player.x,this.player.y,e.x,e.y);
       if(d<r){ const dmg=this.pDmg*0.85; e.hp-=dmg; this.dmgNum(e.x,e.y,Math.floor(dmg)); if(e.hp<=0) this.killEnemy(e); }
     });
@@ -505,7 +546,6 @@ class GameScene extends Phaser.Scene {
     const pool=[...SKILLS], chosen=[];
     for(let i=0;i<3;i++) chosen.push(pool.splice(Phaser.Math.Between(0,pool.length-1),1)[0]);
 
-    // Vertical card layout for narrow screen
     const cW=W-40, cH=120, startX=20, startY=170;
 
     chosen.forEach((sk,i)=>{
@@ -568,7 +608,6 @@ class GameScene extends Phaser.Scene {
     this.orbitCnt++;
     const blade=this.add.sprite(this.player.x,this.player.y,'blade').setDepth(9);
     blade.setDisplaySize(30,30);
-    blade.setBlendMode(Phaser.BlendModes.ADD);
     blade.orbitR=58; blade.dmg=this.pDmg*0.55; blade.cd={};
     this.orbitBlades.push(blade);
   }
@@ -582,7 +621,7 @@ class GameScene extends Phaser.Scene {
       bl.y=this.player.y+Math.sin(a)*bl.orbitR;
       bl.angle+=8;
       this.enemies.getChildren().forEach(e=>{
-        if(e.dead) return;
+        if(e.dead||e.invincible) return;
         const now=Date.now();
         if(bl.cd[e.uid]&&now-bl.cd[e.uid]<500) return;
         if(Phaser.Math.Distance.Between(bl.x,bl.y,e.x,e.y)<32){
@@ -628,31 +667,89 @@ class GameScene extends Phaser.Scene {
     const e=this.enemies.create(x,y,tex).setDepth(6);
     e.uid = ++this.uidCounter;
     e.dead=false;
+    e.invincible=false;
     e.etype=tex;
     const sc=1+this.waveNum*0.04;
     switch(tex){
-      case 'ew': e.setDisplaySize(36,36); e.setBlendMode(Phaser.BlendModes.MULTIPLY); e.hp=(32+this.waveNum*9)*sc; e.spd=60+Phaser.Math.Between(0,25); e.dmg=8;  e.gd=1; e.sv=10; e.burstColor=0xff3333; break;
-      case 'ef': e.setDisplaySize(36,36); e.setBlendMode(Phaser.BlendModes.MULTIPLY); e.play('karen_walk'); e.hp=(14+this.waveNum*5)*sc; e.spd=85+Phaser.Math.Between(0,15); e.dmg=5; e.gd=1; e.sv=15; e.burstColor=0xff8800; break;
-      case 'es': e.setDisplaySize(38,38); e.setBlendMode(Phaser.BlendModes.MULTIPLY); e.play('steiner_walk'); e.hp=(60+this.waveNum*10)*sc; e.spd=95+Phaser.Math.Between(0,15); e.dmg=12; e.gd=2; e.sv=30; e.burstColor=0xcc44ff; break;
-      case 'et': e.setDisplaySize(52,52); e.setBlendMode(Phaser.BlendModes.MULTIPLY); e.hp=(130+this.waveNum*22)*sc; e.spd=38; e.dmg=22; e.gd=4; e.sv=55; e.burstColor=0xaa0000; break;
+      case 'ew': e.setDisplaySize(36,36); e.hp=(32+this.waveNum*9)*sc; e.spd=60+Phaser.Math.Between(0,25); e.dmg=8;  e.gd=1; e.sv=10; e.burstColor=0xff3333; break;
+      case 'ef': e.setDisplaySize(36,36); e.play('karen_walk'); e.hp=(14+this.waveNum*5)*sc; e.spd=85+Phaser.Math.Between(0,15); e.dmg=5; e.gd=1; e.sv=15; e.burstColor=0xff8800; break;
+      case 'es': e.setDisplaySize(38,38); e.play('steiner_walk'); e.hp=(60+this.waveNum*10)*sc; e.spd=95+Phaser.Math.Between(0,15); e.dmg=12; e.gd=2; e.sv=30; e.burstColor=0xcc44ff; break;
+      case 'et': e.setDisplaySize(52,52); e.hp=(130+this.waveNum*22)*sc; e.spd=38; e.dmg=22; e.gd=4; e.sv=55; e.burstColor=0xaa0000; break;
     }
     e.maxHp=e.hp;
     e.hpGfx=this.add.graphics().setDepth(7);
     return e;
   }
 
+  // ── PEYTON MID-BOSS ────────────────────────────
+  spawnPeyton() {
+    const e=this.enemies.create(W/2,-70,'sister').setDepth(6);
+    e.setDisplaySize(72,72);
+
+    e.play('peyton_snitch');
+    e.uid=++this.uidCounter;
+    e.dead=false; e.isPeyton=true; e.invincible=false;
+    e.etype='sister';
+    e.hp=500; e.maxHp=e.hp;
+    e.spd=88; e.dmg=15; e.gd=12; e.sv=300; e.burstColor=0xcc44ff;
+    e.hpGfx=this.add.graphics().setDepth(7);
+    this.peytonRef = e;
+    this.peytonSnitchProgress = 0;
+
+    // Show Peyton HUD bar
+    this.peytonBarBg.setAlpha(1);
+    this.peytonBarFill.setAlpha(1);
+    this.peytonBarLbl.setAlpha(1);
+
+    const ann=this.add.text(W/2,H/2,'⚠  PEYTON IS SNITCHING  ⚠',{fontFamily:'Orbitron',fontSize:'18px',color:'#cc44ff',fontStyle:'bold',stroke:'#000',strokeThickness:6}).setDepth(201).setOrigin(0.5);
+    this.cameras.main.shake(400,0.015);
+    this.tweens.add({targets:ann,alpha:0,y:H/2-90,duration:2500,onComplete:()=>ann.destroy()});
+
+    // Peyton phone invincibility — every 8 seconds, invincible for 3 seconds
+    const phoneTimer = this.time.addEvent({
+      delay:8000, loop:true,
+      callback:()=>{
+        if(!e||e.dead){phoneTimer.destroy();return;}
+        e.invincible=true;
+        e.setAlpha(0.6);
+        const pt = this.add.text(e.x, e.y-50, "shhhh I'm on the phone", {
+          fontFamily:'Orbitron', fontSize:'8px', color:'#cc44ff', stroke:'#000', strokeThickness:2, fontStyle:'bold'
+        }).setDepth(51).setOrigin(0.5);
+        this.tweens.add({targets:pt, y:e.y-80, alpha:0, duration:3000, onComplete:()=>pt.destroy()});
+        this.time.delayedCall(3000,()=>{
+          if(!e||e.dead) return;
+          e.invincible=false;
+          e.setAlpha(1);
+        });
+      }
+    });
+
+    return e;
+  }
+
+  peytonSnitchWave() {
+    // Peyton calls in 6 Rodneys
+    const pt = this.add.text(this.peytonRef.x, this.peytonRef.y-50, "I'm calling for backup!!", {
+      fontFamily:'Orbitron', fontSize:'9px', color:'#cc44ff', stroke:'#000', strokeThickness:2, fontStyle:'bold'
+    }).setDepth(51).setOrigin(0.5);
+    this.tweens.add({targets:pt, y:this.peytonRef.y-90, alpha:0, duration:1200, onComplete:()=>pt.destroy()});
+    for(let i=0;i<6;i++) {
+      this.time.delayedCall(i*120, ()=>{ if(!this.dead) this.spawnEnemy('ew'); });
+    }
+  }
+
+  // ── MAMA BOSS ──────────────────────────────────
   spawnBoss() {
     const e=this.enemies.create(W/2,-70,'boss').setDepth(6);
     e.setDisplaySize(100,100);
-    e.setBlendMode(Phaser.BlendModes.MULTIPLY);
+
     e.play('mama_charge');
     e.uid=++this.uidCounter;
-    e.dead=false; e.isBoss=true; e.etype='boss';
+    e.dead=false; e.isBoss=true; e.invincible=false; e.etype='boss';
     e.hp=1200; e.maxHp=e.hp;
     e.spd=52; e.dmg=28; e.gd=20; e.sv=600; e.burstColor=0xff0000;
     e.hpGfx=this.add.graphics().setDepth(7);
 
-    // Orbiting colored circles
     const orbColors = [0xff9900, 0xff4400, 0xff2244, 0xffdd00];
     this.bossOrbs = orbColors.map(c => {
       const orb = this.add.graphics().setDepth(7);
@@ -665,14 +762,18 @@ class GameScene extends Phaser.Scene {
     this.cameras.main.shake(600,0.018);
     this.tweens.add({targets:ann,alpha:0,y:H/2-90,duration:2500,onComplete:()=>ann.destroy()});
 
-    // Mama charge
+    // Mama charge — every 4 seconds, speed 320 for 0.8s with "WHERE ARE YOU??" text
     const chargeTimer=this.time.addEvent({
-      delay:3200, loop:true,
+      delay:4000, loop:true,
       callback:()=>{
         if(!e||e.dead){chargeTimer.destroy();return;}
         const a=Phaser.Math.Angle.Between(e.x,e.y,this.player.x,this.player.y);
-        e.setVelocity(Math.cos(a)*300,Math.sin(a)*300);
-        this.time.delayedCall(650,()=>{ if(!e||e.dead) return; e.setVelocity(0,0); });
+        e.setVelocity(Math.cos(a)*320,Math.sin(a)*320);
+        const ct = this.add.text(e.x, e.y-60, 'WHERE ARE YOU??', {
+          fontFamily:'Orbitron', fontSize:'10px', color:'#ff4444', stroke:'#000', strokeThickness:3, fontStyle:'bold'
+        }).setDepth(51).setOrigin(0.5);
+        this.tweens.add({targets:ct, y:e.y-100, alpha:0, duration:1000, onComplete:()=>ct.destroy()});
+        this.time.delayedCall(800,()=>{ if(!e||e.dead) return; e.setVelocity(0,0); });
       }
     });
     return e;
@@ -681,15 +782,18 @@ class GameScene extends Phaser.Scene {
   moveEnemies() {
     this.enemies.getChildren().forEach(e=>{
       if(e.dead) return;
-      if(!e.isBoss || e.body.speed<10) {
-        const a=Phaser.Math.Angle.Between(e.x,e.y,this.player.x,this.player.y);
-        e.setVelocity(Math.cos(a)*e.spd, Math.sin(a)*e.spd);
+      if(!e.isBoss && !e.isPeyton || (e.isBoss && e.body.speed<10) || (e.isPeyton)) {
+        if(!e.isBoss || e.body.speed<10) {
+          const a=Phaser.Math.Angle.Between(e.x,e.y,this.player.x,this.player.y);
+          e.setVelocity(Math.cos(a)*e.spd, Math.sin(a)*e.spd);
+        }
       }
       if(e.hpGfx){
         e.hpGfx.clear();
         const p=e.hp/e.maxHp, bw=e.displayWidth+12, bx=e.x-bw/2, by=e.y-e.displayHeight/2-10;
         e.hpGfx.fillStyle(0x2a2a2a,0.9); e.hpGfx.fillRect(bx,by,bw,5);
-        e.hpGfx.fillStyle(p>0.5?0xff9900:p>0.25?0xffaa00:0xff2200,1);
+        const barCol = e.isPeyton ? 0xcc44ff : (p>0.5?0xff9900:p>0.25?0xffaa00:0xff2200);
+        e.hpGfx.fillStyle(barCol,1);
         e.hpGfx.fillRect(bx,by,Math.floor(bw*p),5);
       }
     });
@@ -795,7 +899,6 @@ class EndScene extends Phaser.Scene {
     btn1.on('pointerdown',()=>{ this.cameras.main.fadeOut(300,0,0,0); this.time.delayedCall(300,()=>this.scene.start('GameScene')); });
     btn2.on('pointerdown',()=>{ this.cameras.main.fadeOut(300,0,0,0); this.time.delayedCall(300,()=>this.scene.start('MenuScene')); });
 
-    // Corner brackets — orange
     const bg = this.add.graphics().setDepth(1);
     [[0,0],[W,0],[0,H],[W,H]].forEach(([cx,cy])=>{
       bg.lineStyle(2,0xff9900,0.25);

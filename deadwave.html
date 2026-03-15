@@ -203,7 +203,7 @@ class GameScene extends Phaser.Scene {
 
   createPlayer() {
     this.player = this.physics.add.sprite(W/2, H/2, 'player').setDepth(10).setCollideWorldBounds(true);
-    this.player.setDisplaySize(42, 42);
+    this.player.setDisplaySize(58, 58);
     this.player.setBodySize(22, 22);
 
     this.player.play('brody_idle');
@@ -672,10 +672,10 @@ class GameScene extends Phaser.Scene {
     e.etype=tex;
     const sc=1+this.waveNum*0.04;
     switch(tex){
-      case 'ew': e.setDisplaySize(36,36); e.hp=(32+this.waveNum*9)*sc; e.spd=60+Phaser.Math.Between(0,25); e.dmg=8;  e.gd=1; e.sv=10; e.burstColor=0xff3333; break;
-      case 'ef': e.setDisplaySize(36,36); e.play('karen_walk'); e.hp=(14+this.waveNum*5)*sc; e.spd=85+Phaser.Math.Between(0,15); e.dmg=5; e.gd=1; e.sv=15; e.burstColor=0xff8800; break;
-      case 'es': e.setDisplaySize(38,38); e.play('steiner_walk'); e.hp=(60+this.waveNum*10)*sc; e.spd=95+Phaser.Math.Between(0,15); e.dmg=12; e.gd=2; e.sv=30; e.burstColor=0xcc44ff; break;
-      case 'et': e.setDisplaySize(52,52); e.hp=(130+this.waveNum*22)*sc; e.spd=38; e.dmg=22; e.gd=4; e.sv=55; e.burstColor=0xaa0000; break;
+      case 'ew': e.setDisplaySize(52,52); e.hp=(32+this.waveNum*9)*sc; e.spd=60+Phaser.Math.Between(0,25); e.dmg=8;  e.gd=1; e.sv=10; e.burstColor=0xff3333; break;
+      case 'ef': e.setDisplaySize(52,52); e.play('karen_walk'); e.hp=(14+this.waveNum*5)*sc; e.spd=85+Phaser.Math.Between(0,15); e.dmg=5; e.gd=1; e.sv=15; e.burstColor=0xff8800; break;
+      case 'es': e.setDisplaySize(54,54); e.play('steiner_walk'); e.hp=(60+this.waveNum*10)*sc; e.spd=95+Phaser.Math.Between(0,15); e.dmg=12; e.gd=2; e.sv=30; e.burstColor=0xcc44ff; break;
+      case 'et': e.setDisplaySize(68,68); e.hp=(130+this.waveNum*22)*sc; e.spd=38; e.dmg=22; e.gd=4; e.sv=55; e.burstColor=0xaa0000; break;
     }
     e.maxHp=e.hp;
     e.hpGfx=this.add.graphics().setDepth(7);
@@ -685,7 +685,7 @@ class GameScene extends Phaser.Scene {
   // ── PEYTON MID-BOSS ────────────────────────────
   spawnPeyton() {
     const e=this.enemies.create(W/2,-70,'sister').setDepth(6);
-    e.setDisplaySize(72,72);
+    e.setDisplaySize(58,58);
 
     e.play('peyton_snitch');
     e.uid=++this.uidCounter;
@@ -742,7 +742,7 @@ class GameScene extends Phaser.Scene {
   // ── MAMA BOSS ──────────────────────────────────
   spawnBoss() {
     const e=this.enemies.create(W/2,-70,'boss').setDepth(6);
-    e.setDisplaySize(100,100);
+    e.setDisplaySize(120,120);
 
     e.play('mama_charge');
     e.uid=++this.uidCounter;

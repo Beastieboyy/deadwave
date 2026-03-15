@@ -122,7 +122,7 @@ DTM.MUSIC={current:null,_lastKey:'menu',
 };
 
 const ROUNDS = [
-  {label:"RODNEY'S WATCHING",enemies:[{type:'ew',count:1}],quote:"I'm watching you..."},
+  {label:"NOSEY NEIGHBOR'S WATCHING",enemies:[{type:'ew',count:1}],quote:"I'm watching you..."},
   {label:"KAREN IS JOGGING",enemies:[{type:'ef',count:1}],quote:"No running in the halls!"},
   {label:"MRS. STEINER PATROL",enemies:[{type:'es',count:1}],quote:"Show your work!"},
   {label:"MR. BERG IS COMING",enemies:[{type:'et',count:1}],quote:"My office. Now."},
@@ -135,7 +135,7 @@ const ROUNDS = [
   {label:"\u2620 MAMA IS AWAKE \u2620",enemies:[{type:'boss',count:1}],quote:"WHERE HAVE YOU BEEN??"},
 ];
 const TIER_QUOTES={ew:['Neighborhood watch','Got night vision','Running the block'],ef:['Hall monitor','Vice principal energy','The warden'],es:['Pop quiz','Midterm mode','Final exam'],et:['Office hours','Suspension notice','Expelled'],coach:['Practice time','Two-a-days','Championship run'],sister:['Snitching','Going live','Nuclear option'],boss:['Disappointed','Furious','Full name mode']};
-const ENAMES={ew:'RODNEY',ef:'KAREN',es:'MRS. STEINER',et:'MR. BERG',coach:'COACH ANDREWS',sister:'PEYTON',boss:'MAMA'};
+const ENAMES={ew:'NOSEY NEIGHBOR',ef:'KAREN',es:'MRS. STEINER',et:'MR. BERG',coach:'COACH ANDREWS',sister:'PEYTON',boss:'MAMA'};
 const BALANCE={
   rarityMult:{'beat-up':1.0,decent:1.2,fresh:1.45,drip:1.8,heat:2.3,legendary:3.2},
   equipGain:{shoes:8,backpack:0.08,phone:45,hat:25,chain:30},
@@ -659,7 +659,7 @@ class GameScene extends Phaser.Scene {
     e.setDisplaySize(size,size);if(tex==='ef')e.play('karen_walk');
     e.hp=hp;e.maxHp=hp;e.spd=tex==='ef'?100:50;e.dmg=5;e.gd=1;e.sv=5;e.burstColor=0xff6666;
     e.hpGfx=this.add.graphics().setDepth(7);
-    e.nameLabel=this.add.text(0,0,tex==='ew'?'RODNEY JR.':tex==='ef'?'KAREN':'',{fontFamily:'Orbitron',fontSize:'8px',color:'#aaaaaa',stroke:'#000',strokeThickness:2}).setDepth(20).setOrigin(0.5,1);
+    e.nameLabel=this.add.text(0,0,tex==='ew'?'NOSEY JR.':tex==='ef'?'KAREN':'',{fontFamily:'Orbitron',fontSize:'8px',color:'#aaaaaa',stroke:'#000',strokeThickness:2}).setDepth(20).setOrigin(0.5,1);
     return e;
   }
 
@@ -764,7 +764,7 @@ class GameScene extends Phaser.Scene {
       if(e.etype==='es'&&!e.isMinion&&e.abilityTimer>=12000){e.abilityTimer=0;this.floatText(e.x,e.y-40,'SHOW YOUR WORK!',0xcc44ff);const ang=Phaser.Math.Angle.Between(e.x,e.y,px,py);const book=this.add.graphics().setDepth(8);book.fillStyle(0x8B4513);book.fillRect(-15,-10,30,20);book.setPosition(e.x,e.y);book.vx=Math.cos(ang)*280;book.vy=Math.sin(ang)*280;book.life=3000;book.dmg=35;this.projectiles.push(book);}
       if(e.etype==='et'&&!e.isMinion){e.abilityTimer2=(e.abilityTimer2||0)+delta;if(e.abilityTimer2>=7000){e.abilityTimer2=0;const karens=this.enemies.getChildren().filter(m=>m.etype==='ef'&&m.isMinion&&!m.dead);if(karens.length<2){this.floatText(e.x,e.y-40,'BACKUP REQUESTED',0xff8800);this.spawnMinion('ef',50,80);}}if(e.abilityTimer>=14000&&!e.isCharging){e.abilityTimer=0;e.isCharging=true;const a=Phaser.Math.Angle.Between(e.x,e.y,px,py);e.setVelocity(Math.cos(a)*340,Math.sin(a)*340);e.setTint(0xff4444);this.specialHitCount++;this.time.delayedCall(1200,()=>{if(!e.dead){e.isCharging=false;e.clearTint();e.setVelocity(0,0);}});}}
       if(e.etype==='coach'&&!e.isMinion){const now=this.time.now;if(now-e.lastWhistle>8000){e.lastWhistle=now;this.floatText(e.x,e.y-30,'HUSTLE UP!!',0x4488ff);const orig=this.pSpeed;this.pSpeed=Math.floor(orig*1.8);this.cameras.main.flash(200,68,136,255);this.time.delayedCall(2000,()=>{this.pSpeed=orig;});}if(now-e.lastDrill>13000){e.lastDrill=now;this.floatText(e.x,e.y-50,'RUN IT AGAIN!!',0xff8800);if(!this.forcedRun){this.forcedRun=true;const ang=Phaser.Math.Between(0,360)*Math.PI/180;this.player.setVelocity(Math.cos(ang)*this.pSpeed*1.4,Math.sin(ang)*this.pSpeed*1.4);this.time.delayedCall(1500,()=>{this.forcedRun=false;});}}}
-      if(e.isPeyton){if(e.abilityTimer>=8000&&!e.invincible){e.abilityTimer=0;e.invincible=true;e.setAlpha(0.5);this.floatText(e.x,e.y-50,"shhhh I'm on the phone",0xcc44ff);e._shield=this.add.graphics().setDepth(8);e._shield.lineStyle(2,0xcc44ff,0.6);e._shield.strokeCircle(0,0,50);this.time.delayedCall(3000,()=>{if(!e.dead){e.invincible=false;e.setAlpha(1);if(e._shield){e._shield.destroy();e._shield=null;}}});}if(e._shield&&!e.dead)e._shield.setPosition(e.x,e.y);e.abilityTimer2=(e.abilityTimer2||0)+delta;if(e.abilityTimer2>=15000){e.abilityTimer2=0;this.floatText(e.x,e.y-40,"I'm calling Rodney!",0xcc44ff);this.spawnMinion('ew',45,60);}}
+      if(e.isPeyton){if(e.abilityTimer>=8000&&!e.invincible){e.abilityTimer=0;e.invincible=true;e.setAlpha(0.5);this.floatText(e.x,e.y-50,"shhhh I'm on the phone",0xcc44ff);e._shield=this.add.graphics().setDepth(8);e._shield.lineStyle(2,0xcc44ff,0.6);e._shield.strokeCircle(0,0,50);this.time.delayedCall(3000,()=>{if(!e.dead){e.invincible=false;e.setAlpha(1);if(e._shield){e._shield.destroy();e._shield=null;}}});}if(e._shield&&!e.dead)e._shield.setPosition(e.x,e.y);e.abilityTimer2=(e.abilityTimer2||0)+delta;if(e.abilityTimer2>=15000){e.abilityTimer2=0;this.floatText(e.x,e.y-40,"I'm calling the neighbor!",0xcc44ff);this.spawnMinion('ew',45,60);}}
       if(e.isBoss){const pct=e.hp/e.maxHp;if(pct>0.6&&e.abilityTimer>=5000){e.abilityTimer=0;const d=Phaser.Math.Distance.Between(e.x,e.y,px,py);if(d<120){this.floatText(e.x,e.y-60,'WHERE HAVE YOU BEEN??',0xff4444);this.hurtPlayer(60);const a=Phaser.Math.Angle.Between(e.x,e.y,px,py);this.player.x+=Math.cos(a)*80;this.player.y+=Math.sin(a)*80;}}if(pct<=0.6&&pct>0.3){e.abilityTimer2=(e.abilityTimer2||0)+delta;if(e.abilityTimer2>=8000){e.abilityTimer2=0;this.floatText(e.x,e.y-60,"I'm texting your father!!",0xff8800);const f=this.add.graphics().setDepth(99);f.fillStyle(0xff6600,0.2);f.fillRect(0,0,W,H);this.time.delayedCall(300,()=>f.destroy());this.spawnMinion('et',60,150);}}if(pct<=0.3){e.setTint(0xff8844);if(e.abilityTimer>=4000&&!e.isCharging){e.abilityTimer=0;e.isCharging=true;this.floatText(e.x,e.y-60,'GET BACK HERE!!',0xff2244);const a=Phaser.Math.Angle.Between(e.x,e.y,px,py);e.setVelocity(Math.cos(a)*380,Math.sin(a)*380);this.cameras.main.shake(300,0.012);this.time.delayedCall(1000,()=>{if(!e.dead){e.isCharging=false;e.setVelocity(0,0);}});}}}
       if(e.hpGfx){e.hpGfx.clear();const p=Phaser.Math.Clamp(e.hp/e.maxHp,0,1),bw=e.displayWidth+30,bh=10,bx=e.x-bw/2,by=e.y-e.displayHeight/2-20;e.hpGfx.fillStyle(0x2a2a2a,0.9);e.hpGfx.fillRoundedRect(bx,by,bw,bh,4);const col=p>0.6?0x00ee44:p>0.3?0xffaa00:0xff2200;e.hpGfx.fillStyle(col,1);e.hpGfx.fillRoundedRect(bx,by,Math.floor(bw*p),bh,4);e.hpGfx.lineStyle(1,0x000000,0.5);e.hpGfx.strokeRoundedRect(bx,by,bw,bh,4);if(!e.hpTxt){e.hpTxt=this.add.text(e.x,by-2,`${Math.ceil(e.hp)}/${e.maxHp}`,{fontFamily:'Orbitron',fontSize:'8px',color:'#ffffff',stroke:'#000',strokeThickness:2}).setOrigin(0.5,1).setDepth(8);}else{e.hpTxt.setText(`${Math.ceil(e.hp)}/${e.maxHp}`).setPosition(e.x,by-2);}}
       if(e.nameLabel)e.nameLabel.setPosition(e.x,e.y-e.displayHeight/2-18);
@@ -949,7 +949,7 @@ class GameScene extends Phaser.Scene {
   }
 
   showNewEnemyIntro(type){
-    const nameMap={ew:'RODNEY',ef:'KAREN',es:'MRS. STEINER',et:'MR. BERG',coach:'COACH ANDREWS',sister:'PEYTON'};
+    const nameMap={ew:'NOSEY NEIGHBOR',ef:'KAREN',es:'MRS. STEINER',et:'MR. BERG',coach:'COACH ANDREWS',sister:'PEYTON'};
     const quoteMap={ew:'"I\'m telling your mother!"',ef:'"Do you have a hall pass??"',es:'"Show your work!!"',et:'"My office. NOW."',coach:'"Drop and give me 20!"',sister:'"I\'m TELLIIIING!!"'};
     const ic=this.add.graphics().setDepth(205);ic.fillStyle(0x0d0d1a,0.95);ic.fillRoundedRect(W/2-140,H/2-80,280,140,12);ic.lineStyle(2,0xff9900,1);ic.strokeRoundedRect(W/2-140,H/2-80,280,140,12);
     const nt=this.add.text(W/2,H/2-58,'\u26a0 NEW SNITCH!',{fontFamily:'Orbitron',fontSize:'13px',color:'#ff9900'}).setOrigin(0.5).setDepth(206);

@@ -342,53 +342,32 @@ class LeaderboardScene extends Phaser.Scene {
       const zone=this.add.zone(tx,70,90,24).setOrigin(0,0).setDepth(6).setInteractive({useHandCursor:true});
       zone.on('pointerdown',()=>{activePeriod=periodKeys[i];tabBtns.forEach((b,j)=>{const isAct=b.key===activePeriod;b.bg.clear();b.bg.fillStyle(isAct?0xffcc00:0x1a1a2e,1);b.bg.fillRoundedRect(30+j*115,70,90,24,6);b.txt.setColor(isAct?'#000':'#888899');});loadBoard(activePeriod);});
     });
-    let listContainer=this.add.container(0,0);
+    this._lbObjs=[];
     const loadBoard=async(period)=>{
-      if(listContainer&&listContainer.scene)listContainer.destroy();
-      listContainer=this.add.container(0,0);
-      const dbgTxt=this.add.text(W/2,H/2-20,'Connecting...\nOrigin: '+window.location.origin,{fontFamily:'Orbitron',fontSize:'11px',color:'#ffff00',stroke:'#000',strokeThickness:3,align:'center',wordWrap:{width:360}}).setOrigin(0.5).setDepth(999);
+      this._lbObjs.forEach(o=>{if(o?.scene)try{o.destroy();}catch(e){}});this._lbObjs=[];
+      const loadTxt=this.add.text(W/2,H/2,'\u23f3 Loading...',{fontFamily:'Orbitron',fontSize:'16px',color:'#888899'}).setOrigin(0.5).setDepth(10);
+      this._lbObjs.push(loadTxt);
       let data=null,fetchErr=null;
-      try{
-        const url=DTM.API+'?action=leaderboard&period='+period;
-        dbgTxt.setText('XHR to:\n'+url);
-        data=await new Promise((resolve)=>{
-          const xhr=new XMLHttpRequest();
-          xhr.open('GET',url,true);
-          xhr.timeout=10000;
-          xhr.onload=()=>{dbgTxt.setText('XHR status:'+xhr.status+'\nLen:'+xhr.responseText.length);try{resolve(JSON.parse(xhr.responseText));}catch(e){resolve({error:'Parse:'+e.message});}};
-          xhr.onerror=(ev)=>{dbgTxt.setText('XHR onerror\nreadyState:'+xhr.readyState+'\nstatus:'+xhr.status);resolve({error:'XHR onerror status:'+xhr.status});};
-          xhr.ontimeout=()=>{dbgTxt.setText('XHR timeout');resolve({error:'timeout'});};
-          xhr.send();
-        });
-        if(data.error){fetchErr=data.error;dbgTxt.setText('ERR: '+fetchErr);}
-        else dbgTxt.setText('Got '+(data.scores?.length||0)+' scores');
-      }catch(e){fetchErr=e.message;dbgTxt.setText('CATCH: '+e.message);}
-      this.time.delayedCall(8000,()=>{if(dbgTxt?.scene)dbgTxt.destroy();});
-      if(loadTxt&&loadTxt.scene)loadTxt.destroy();
-      if(fetchErr){listContainer.add(this.add.text(W/2,H/2,`Fetch error:\n${fetchErr}`,{fontFamily:'Orbitron',fontSize:'11px',color:'#ff4444',align:'center',wordWrap:{width:320}}).setOrigin(0.5));return;}
-      if(!data){listContainer.add(this.add.text(W/2,H/2,'No response from server',{fontFamily:'Orbitron',fontSize:'12px',color:'#ff4444'}).setOrigin(0.5));return;}
-      if(data.error){listContainer.add(this.add.text(W/2,H/2,`API error: ${data.error}`,{fontFamily:'Orbitron',fontSize:'11px',color:'#ff4444',wordWrap:{width:320},align:'center'}).setOrigin(0.5));return;}
-      const scores=data.scores||[];
-      if(scores.length===0){listContainer.add(this.add.text(W/2,H/2-40,'\ud83c\udfc6',{fontSize:'48px'}).setOrigin(0.5));listContainer.add(this.add.text(W/2,H/2+20,'No scores yet!\nBe the FIRST on the\nNorthwood Snitch List!',{fontFamily:'Orbitron',fontSize:'14px',color:'#ff9900',align:'center',lineSpacing:8}).setOrigin(0.5));return;}
-      const myName=(DTM.getName()||'').toLowerCase();let myRank=-1;
-      const LW=DTM.W;
+      try{data=await DTM._xget(DTM.API+'?action=leaderboard&period='+period);if(data.error)fetchErr=data.error;}catch(e){fetchErr=e.message;}
+      if(loadTxt?.scene)loadTxt.destroy();
+      if(fetchErr){const et=this.add.text(W/2,H/2,'Error: '+fetchErr,{fontFamily:'Orbitron',fontSize:'11px',color:'#ff4444',wordWrap:{width:320},align:'center'}).setOrigin(0.5).setDepth(10);this._lbObjs.push(et);return;}
+      const scores=data?.scores||[];
+      if(scores.length===0){const t1=this.add.text(W/2,H/2-40,'\ud83c\udfc6',{fontSize:'48px'}).setOrigin(0.5).setDepth(10);const t2=this.add.text(W/2,H/2+20,'No scores yet!\nBe the FIRST on the\nNorthwood Snitch List!',{fontFamily:'Orbitron',fontSize:'14px',color:'#ff9900',align:'center',lineSpacing:8}).setOrigin(0.5).setDepth(10);this._lbObjs.push(t1,t2);return;}
+      const myName=(DTM.getName()||'').toLowerCase();let myRank=-1;const LW=DTM.W;
       scores.forEach((s,i)=>{
-        const y=105+i*54;
-        console.log('Render score:',i,(s.player_name||'?'),s.score,'y:',y);
-        const isMe=(s.player_name||'').toLowerCase()===myName;
-        if(isMe)myRank=i+1;
-        const rowBg=this.add.graphics().setDepth(5);
-        rowBg.fillStyle(isMe?0x2a1a00:i%2===0?0x0d0d1a:0x111122,1);rowBg.fillRoundedRect(12,y,LW-24,48,6);
-        if(isMe){rowBg.lineStyle(1,0xff9900,0.8);rowBg.strokeRoundedRect(12,y,LW-24,48,6);}
+        const y=110+i*58;const isMe=(s.player_name||'').toLowerCase()===myName;if(isMe)myRank=i+1;
+        const rb=this.add.graphics().setDepth(10);rb.fillStyle(isMe?0x2a1a00:i%2===0?0x0d0d1a:0x111122,1);rb.fillRoundedRect(12,y,LW-24,50,6);
+        if(isMe){rb.lineStyle(2,0xff9900,1);rb.strokeRoundedRect(12,y,LW-24,50,6);}
+        this._lbObjs.push(rb);
         const rc=i===0?'#ffd700':i===1?'#c0c0c0':i===2?'#cd7f32':'#ffffff';
-        const nm=(s.player_name||'???').toUpperCase().substring(0,16);
+        const nm=(s.player_name||'???').toUpperCase().substring(0,14);
         const sc=parseInt(s.score||0).toLocaleString();
-        this.add.text(30,y+24,`#${i+1}`,{fontFamily:'Orbitron',fontSize:'14px',color:rc,fontStyle:'bold'}).setOrigin(0,0.5).setDepth(6);
-        this.add.text(72,y+16,nm,{fontFamily:'Orbitron',fontSize:'12px',color:isMe?'#ff9900':'#ffffff'}).setOrigin(0,0.5).setDepth(6);
-        this.add.text(72,y+34,`Night ${s.level_reached||1}`,{fontFamily:'Orbitron',fontSize:'10px',color:'#666688'}).setOrigin(0,0.5).setDepth(6);
-        this.add.text(LW-24,y+24,sc,{fontFamily:'Orbitron',fontSize:'14px',color:'#ff9900',fontStyle:'bold'}).setOrigin(1,0.5).setDepth(6);
+        this._lbObjs.push(this.add.text(28,y+25,`#${i+1}`,{fontFamily:'Orbitron',fontSize:'15px',color:rc,fontStyle:'bold'}).setOrigin(0,0.5).setDepth(11));
+        this._lbObjs.push(this.add.text(68,y+14,nm,{fontFamily:'Orbitron',fontSize:'13px',color:isMe?'#ff9900':'#ffffff',fontStyle:isMe?'bold':''}).setOrigin(0,0.5).setDepth(11));
+        this._lbObjs.push(this.add.text(68,y+36,`Night ${s.level_reached||1}`,{fontFamily:'Orbitron',fontSize:'10px',color:'#666688'}).setOrigin(0,0.5).setDepth(11));
+        this._lbObjs.push(this.add.text(LW-16,y+25,sc,{fontFamily:'Orbitron',fontSize:'15px',color:'#ff9900',fontStyle:'bold'}).setOrigin(1,0.5).setDepth(11));
       });
-      if(myRank>0){const pb=this.add.graphics().setDepth(5);pb.fillStyle(0x1a0d00,0.97);pb.fillRect(0,H-130,LW,50);pb.lineStyle(1,0xff9900,0.5);pb.lineBetween(0,H-130,LW,H-130);this.add.text(LW/2,H-105,`YOU: #${myRank} \u2022 ${DTM.getName().toUpperCase()}`,{fontFamily:'Orbitron',fontSize:'13px',color:'#ff9900',fontStyle:'bold'}).setOrigin(0.5).setDepth(6);}
+      if(myRank>0){const pb=this.add.graphics().setDepth(10);pb.fillStyle(0x1a0d00,0.97);pb.fillRect(0,H-128,LW,48);pb.lineStyle(1,0xff9900,0.5);pb.lineBetween(0,H-128,LW,H-128);this._lbObjs.push(pb);this._lbObjs.push(this.add.text(LW/2,H-104,`\ud83d\udc3e YOU: #${myRank} \u00b7 ${DTM.getName().toUpperCase()}`,{fontFamily:'Orbitron',fontSize:'13px',color:'#ff9900',fontStyle:'bold'}).setOrigin(0.5).setDepth(11));}
     };
     loadBoard('all');
     this.time.addEvent({delay:30000,callback:()=>loadBoard(activePeriod),loop:true});

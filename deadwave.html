@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>DEADWAVE</title>
+<title>DON'T TELL MAMA</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/phaser/3.60.0/phaser.min.js"></script>
 <style>
@@ -31,36 +31,36 @@ class MenuScene extends Phaser.Scene {
     // Scanline overlay
     for(let y=0;y<H;y+=4) { g.lineStyle(1,0x000000,0.3); g.lineBetween(0,y,W,y); }
 
-    // Glow orbs BG
+    // Warm orange glow orbs BG
     [
-      [80,200,0xff0044,80],[310,260,0x0044ff,60],[195,500,0xff6600,50],
+      [80,200,0xff6600,80],[310,260,0xff9900,60],[195,500,0xff4400,50],
     ].forEach(([x,y,c,r])=>{
       const og=this.add.graphics();
       og.fillStyle(c,0.06); og.fillCircle(x,y,r);
     });
 
-    this.add.text(W/2, 220, 'DEAD', {
-      fontFamily:'Orbitron', fontSize:'64px', fontStyle:'bold',
-      color:'#ff2244', stroke:'#ff0022', strokeThickness:6
+    this.add.text(W/2, 200, "DON'T TELL", {
+      fontFamily:'Orbitron', fontSize:'38px', fontStyle:'bold',
+      color:'#ff9900', stroke:'#ff6600', strokeThickness:5
     }).setOrigin(0.5);
 
-    this.add.text(W/2, 298, 'WAVE', {
-      fontFamily:'Orbitron', fontSize:'64px', fontStyle:'bold',
-      color:'#ffffff', stroke:'#00eeff', strokeThickness:4
+    this.add.text(W/2, 268, 'MAMA', {
+      fontFamily:'Orbitron', fontSize:'72px', fontStyle:'bold',
+      color:'#ff2244', stroke:'#cc0022', strokeThickness:6
     }).setOrigin(0.5);
 
-    this.add.text(W/2, 370, 'SURVIVE · LEVEL UP · DOMINATE', {
-      fontFamily:'Orbitron', fontSize:'11px', color:'#00ccff', letterSpacing:3
+    this.add.text(W/2, 345, "BRODY'S GREAT ESCAPE", {
+      fontFamily:'Orbitron', fontSize:'12px', color:'#ff9900', letterSpacing:3
     }).setOrigin(0.5);
 
     const hs = localStorage.getItem('dw_hs')||0;
-    this.add.text(W/2, 410, `BEST KILLS: ${hs}`, {
-      fontFamily:'Orbitron', fontSize:'14px', color:'#ffaa00'
+    this.add.text(W/2, 390, `BEST SNITCH COUNT: ${hs}`, {
+      fontFamily:'Orbitron', fontSize:'13px', color:'#ffaa00'
     }).setOrigin(0.5);
 
-    const btn = this.add.text(W/2, 500, '[ PRESS TO SURVIVE ]', {
-      fontFamily:'Orbitron', fontSize:'20px', fontStyle:'bold',
-      color:'#00ff88', stroke:'#00ff88', strokeThickness:1
+    const btn = this.add.text(W/2, 480, '[ SNEAK OUT ]', {
+      fontFamily:'Orbitron', fontSize:'22px', fontStyle:'bold',
+      color:'#ff9900', stroke:'#ff9900', strokeThickness:1
     }).setOrigin(0.5).setInteractive({useHandCursor:true});
 
     this.tweens.add({ targets:btn, alpha:0.25, duration:700, yoyo:true, repeat:-1 });
@@ -72,9 +72,22 @@ class MenuScene extends Phaser.Scene {
     btn.on('pointerdown', start);
     this.input.keyboard.once('keydown', start);
 
-    this.add.text(W/2, H-30, 'Joystick to move  •  Auto-attacks\nPick skills on level up', {
-      fontFamily:'Orbitron', fontSize:'9px', color:'#444466', align:'center'
+    this.add.text(W/2, H-50, 'Drag left side to move\nAuto-throws homework  •  Pick powers on level up', {
+      fontFamily:'Orbitron', fontSize:'8px', color:'#444466', align:'center'
     }).setOrigin(0.5);
+
+    this.add.text(W/2, H-18, '"based on true events"', {
+      fontFamily:'Orbitron', fontSize:'8px', color:'#333344', fontStyle:'italic'
+    }).setOrigin(0.5);
+
+    // Corner brackets — orange
+    const bg = this.add.graphics().setDepth(1);
+    [[0,0],[W,0],[0,H],[W,H]].forEach(([cx,cy])=>{
+      bg.lineStyle(2,0xff9900,0.25);
+      const sx=cx===0?1:-1, sy=cy===0?1:-1;
+      bg.lineBetween(cx,cy,cx+sx*40,cy);
+      bg.lineBetween(cx,cy,cx,cy+sy*40);
+    });
   }
 }
 
@@ -85,11 +98,18 @@ class GameScene extends Phaser.Scene {
   constructor() { super('GameScene'); }
 
   preload() {
-    this.load.image('player', 'axiom_single.png');
-    this.load.image('ew', 'drone.png');
-    this.load.spritesheet('et', 'hulk.png', { frameWidth: 256, frameHeight: 1024 });
-    this.load.spritesheet('ef', 'runner.png', { frameWidth: 512, frameHeight: 512 });
-    this.load.spritesheet('boss', 'boss.png', { frameWidth: 256, frameHeight: 1024 });
+    // Brody (player) — 2 cols x 4 rows = 8 frames, 896x1190
+    this.load.spritesheet('player', 'thekid.png', { frameWidth: 448, frameHeight: 297 });
+    // Rodney (basic slow) — single image
+    this.load.image('ew', 'gary.png');
+    // Karen (fast) — 4-frame horizontal strip, 1408x768
+    this.load.spritesheet('ef', 'karen.png', { frameWidth: 352, frameHeight: 768 });
+    // Mrs. Steiner (mid tier) — 4-frame horizontal strip, 1008x1051
+    this.load.spritesheet('es', 'steiner.png', { frameWidth: 252, frameHeight: 1051 });
+    // Mr. Berg (tank) — single image
+    this.load.image('et', 'mrberg.png');
+    // Mama (boss) — 2x2 grid, 864x1229
+    this.load.spritesheet('boss', 'mama.png', { frameWidth: 432, frameHeight: 614 });
     this.load.image('gem', 'shard.png');
     this.load.image('bg', 'bg.png');
     this.load.image('bullet', 'bullet.png');
@@ -144,7 +164,6 @@ class GameScene extends Phaser.Scene {
     this.bullets = this.physics.add.group();
     this.gems    = this.physics.add.group();
 
-    this.makeTextures();
     this.createAnims();
     this.createPlayer();
     this.createUI();
@@ -171,56 +190,55 @@ class GameScene extends Phaser.Scene {
 
   drawBG() {
     this.bgG.clear();
-    // Corner bracket decorations
+    // Corner bracket decorations — orange
     [[0,0],[W,0],[0,H],[W,H]].forEach(([cx,cy])=>{
-      this.bgG.lineStyle(2,0x00ccff,0.25);
+      this.bgG.lineStyle(2,0xff9900,0.25);
       const sx=cx===0?1:-1, sy=cy===0?1:-1;
       this.bgG.lineBetween(cx,cy,cx+sx*40,cy);
       this.bgG.lineBetween(cx,cy,cx,cy+sy*40);
     });
   }
 
-  makeTextures() {
-  }
-
   createAnims() {
-    if(!this.anims.exists('player_idle')) {
-      this.anims.create({ key: 'hulk_walk', frames: this.anims.generateFrameNumbers('et', { start: 0, end: 3 }), frameRate: 6, repeat: -1 });
-      this.anims.create({ key: 'runner_walk', frames: this.anims.generateFrameNumbers('ef', { start: 0, end: 3 }), frameRate: 10, repeat: -1 });
-      this.anims.create({ key: 'boss_float', frames: this.anims.generateFrameNumbers('boss', { start: 0, end: 3 }), frameRate: 5, repeat: -1 });
+    if(!this.anims.exists('brody_idle')) {
+      this.anims.create({ key: 'brody_idle', frames: this.anims.generateFrameNumbers('player', { start: 0, end: 7 }), frameRate: 8, repeat: -1 });
+      this.anims.create({ key: 'karen_walk', frames: this.anims.generateFrameNumbers('ef', { start: 0, end: 3 }), frameRate: 10, repeat: -1 });
+      this.anims.create({ key: 'steiner_walk', frames: this.anims.generateFrameNumbers('es', { start: 0, end: 3 }), frameRate: 8, repeat: -1 });
+      this.anims.create({ key: 'mama_charge', frames: this.anims.generateFrameNumbers('boss', { start: 0, end: 3 }), frameRate: 6, repeat: -1 });
     }
   }
 
   createPlayer() {
     this.player = this.physics.add.sprite(W/2, H/2, 'player').setDepth(10).setCollideWorldBounds(true);
-    this.player.setDisplaySize(32, 32);
+    this.player.setDisplaySize(42, 42);
     this.player.setBodySize(22, 22);
     this.player.setBlendMode(Phaser.BlendModes.MULTIPLY);
+    this.player.play('brody_idle');
     this.glow = this.add.graphics().setDepth(9);
   }
 
   createUI() {
     const D=100;
-    // HP bar — top left
+    // HP bar — top left, orange themed
     this.add.graphics().setDepth(D).fillStyle(0x0d0d1a,0.92).fillRoundedRect(8,8,160,18,4)
-      .lineStyle(1,0xff3333,0.5).strokeRoundedRect(8,8,160,18,4);
+      .lineStyle(1,0xff9900,0.5).strokeRoundedRect(8,8,160,18,4);
     this.hpBar  = this.add.graphics().setDepth(D+1);
-    this.hpTxt  = this.add.text(88,9,'',{fontFamily:'Orbitron',fontSize:'9px',color:'#ffaaaa'}).setDepth(D+2).setOrigin(0.5,0);
-    this.add.text(12,9,'HP',{fontFamily:'Orbitron',fontSize:'8px',color:'#ff5555'}).setDepth(D+2);
+    this.hpTxt  = this.add.text(88,9,'',{fontFamily:'Orbitron',fontSize:'9px',color:'#ffccaa'}).setDepth(D+2).setOrigin(0.5,0);
+    this.add.text(12,9,'HP',{fontFamily:'Orbitron',fontSize:'8px',color:'#ff9900'}).setDepth(D+2);
 
-    // XP bar — below HP
+    // XP bar — below HP, yellow HUSTLE bar
     this.add.graphics().setDepth(D).fillStyle(0x0d0d1a,0.92).fillRoundedRect(8,30,160,8,3)
-      .lineStyle(1,0x00ff88,0.4).strokeRoundedRect(8,30,160,8,3);
+      .lineStyle(1,0xffdd00,0.4).strokeRoundedRect(8,30,160,8,3);
     this.xpBar  = this.add.graphics().setDepth(D+1);
-    this.lvlTxt = this.add.text(173,8,'LV 1',{fontFamily:'Orbitron',fontSize:'11px',color:'#00ff88',fontStyle:'bold'}).setDepth(D+2);
+    this.lvlTxt = this.add.text(173,8,'LV 1',{fontFamily:'Orbitron',fontSize:'11px',color:'#ffdd00',fontStyle:'bold'}).setDepth(D+2);
 
     // Timer — centered at top
     this.timerTxt = this.add.text(W/2,10,'15:00',{fontFamily:'Orbitron',fontSize:'17px',color:'#ffffff',fontStyle:'bold'}).setDepth(D).setOrigin(0.5,0);
 
-    // Kills — top right
-    this.killTxt  = this.add.text(W-10,10,'KILLS: 0',{fontFamily:'Orbitron',fontSize:'11px',color:'#ffcc00'}).setDepth(D).setOrigin(1,0);
+    // Snitches — top right
+    this.killTxt  = this.add.text(W-10,10,'SNITCHES: 0',{fontFamily:'Orbitron',fontSize:'10px',color:'#ffcc00'}).setDepth(D).setOrigin(1,0);
 
-    this.waveTxt  = this.add.text(W/2,H/2-80,'',{fontFamily:'Orbitron',fontSize:'26px',color:'#ff4444',fontStyle:'bold',stroke:'#000',strokeThickness:5}).setDepth(D).setOrigin(0.5).setAlpha(0);
+    this.waveTxt  = this.add.text(W/2,H/2-80,'',{fontFamily:'Orbitron',fontSize:'22px',color:'#ff6600',fontStyle:'bold',stroke:'#000',strokeThickness:5}).setDepth(D).setOrigin(0.5).setAlpha(0);
 
     this.updateHP(); this.updateXP();
   }
@@ -237,15 +255,14 @@ class GameScene extends Phaser.Scene {
     const JOY_RADIUS = 60;
 
     this.input.on('pointerdown', (p) => {
-      // Only left half of screen for movement
       if(p.x > W/2) return;
       if(this.paused || this.dead) return;
       this.joyActive = true;
       this.joyBaseX = p.x;
       this.joyBaseY = p.y;
       this.joyPointerId = p.id;
-      this.jBase.setAlpha(0.35).clear().lineStyle(3,0x00ffcc).strokeCircle(p.x,p.y,JOY_RADIUS);
-      this.jThumb.setAlpha(0.65).clear().fillStyle(0x00ffcc).fillCircle(p.x,p.y,22);
+      this.jBase.setAlpha(0.35).clear().lineStyle(3,0xff9900).strokeCircle(p.x,p.y,JOY_RADIUS);
+      this.jThumb.setAlpha(0.65).clear().fillStyle(0xff9900).fillCircle(p.x,p.y,22);
     });
 
     this.input.on('pointermove', (p) => {
@@ -257,7 +274,7 @@ class GameScene extends Phaser.Scene {
       this.joyDist = Math.min(d, JOY_RADIUS) / JOY_RADIUS;
       const tx = this.joyBaseX + Math.cos(this.joyAng) * Math.min(d, JOY_RADIUS);
       const ty = this.joyBaseY + Math.sin(this.joyAng) * Math.min(d, JOY_RADIUS);
-      this.jThumb.clear().fillStyle(0x00ffcc).fillCircle(tx, ty, 22);
+      this.jThumb.clear().fillStyle(0xff9900).fillCircle(tx, ty, 22);
     });
 
     this.input.on('pointerup', (p) => {
@@ -285,7 +302,7 @@ class GameScene extends Phaser.Scene {
       this.waveTimer = this.time.addEvent({ delay:7500, callback:this.spawnWave, callbackScope:this, loop:true });
     }
 
-    // Boss at 5 min remaining
+    // Mama at 5 min remaining
     if(rem <= 5*60*1000 && !this.boss10) { this.boss10=true; this.spawnBoss(); }
     if(rem <= 0) { this.winGame(); return; }
 
@@ -365,8 +382,19 @@ class GameScene extends Phaser.Scene {
     e.dead=true;
     this.kills++;
     this.score+=e.sv||10;
-    this.killTxt.setText(`KILLS: ${this.kills}`);
-    // Drop gems
+    this.killTxt.setText(`SNITCHES: ${this.kills}`);
+
+    // Death flavor text
+    const quips = { ew:"I'm telling your mother!", ef:'DETENTION!!', es:'F MINUS!!', et:'SUSPENDED!!', boss:'...we\'ll talk later.' };
+    const quip = quips[e.etype] || '';
+    if(quip) {
+      const qt = this.add.text(e.x, e.y-28, quip, {
+        fontFamily:'Orbitron', fontSize:'10px', color:'#ffdd00', stroke:'#000', strokeThickness:3, fontStyle:'bold'
+      }).setDepth(51).setOrigin(0.5);
+      this.tweens.add({targets:qt, y:e.y-80, alpha:0, duration:1400, ease:'Power2', onComplete:()=>qt.destroy()});
+    }
+
+    // Drop snacks
     for(let i=0;i<(e.gd||1);i++) {
       const gx=e.x+Phaser.Math.Between(-18,18), gy=e.y+Phaser.Math.Between(-18,18);
       const gem=this.gems.create(gx,gy,'gem').setDepth(5);
@@ -442,7 +470,7 @@ class GameScene extends Phaser.Scene {
   updateHP() {
     this.hpBar.clear();
     const p=this.pHP/this.pMaxHP;
-    const c=p>0.5?0x00ee44:p>0.25?0xffaa00:0xff2200;
+    const c=p>0.5?0xff9900:p>0.25?0xffaa00:0xff2200;
     this.hpBar.fillStyle(c,0.88); this.hpBar.fillRoundedRect(9,9,Math.floor(158*p),16,3);
     this.hpTxt.setText(`${Math.ceil(this.pHP)}/${this.pMaxHP}`);
   }
@@ -450,7 +478,7 @@ class GameScene extends Phaser.Scene {
   updateXP() {
     this.xpBar.clear();
     const p=Math.min(1,this.pXP/this.xpNeeded);
-    this.xpBar.fillStyle(0x00ff88,0.8); this.xpBar.fillRoundedRect(9,31,Math.floor(158*p),6,2);
+    this.xpBar.fillStyle(0xffdd00,0.8); this.xpBar.fillRoundedRect(9,31,Math.floor(158*p),6,2);
   }
 
   // ── LEVEL UP SKILL SELECTION ───────────────────
@@ -460,19 +488,19 @@ class GameScene extends Phaser.Scene {
     const ov=this.add.graphics().setDepth(200);
     ov.fillStyle(0x000000,0.78); ov.fillRect(0,0,W,H);
 
-    this.add.text(W/2,100,'⚡  LEVEL UP!',{fontFamily:'Orbitron',fontSize:'28px',color:'#ffcc00',fontStyle:'bold',stroke:'#000',strokeThickness:6}).setDepth(201).setOrigin(0.5);
-    this.add.text(W/2,138,'CHOOSE YOUR POWER',{fontFamily:'Orbitron',fontSize:'11px',color:'#8888bb',letterSpacing:4}).setDepth(201).setOrigin(0.5);
+    this.add.text(W/2,100,'BRODY LEVELED UP!',{fontFamily:'Orbitron',fontSize:'22px',color:'#ffcc00',fontStyle:'bold',stroke:'#000',strokeThickness:6}).setDepth(201).setOrigin(0.5);
+    this.add.text(W/2,135,'CHOOSE YOUR MOVE',{fontFamily:'Orbitron',fontSize:'11px',color:'#8888bb',letterSpacing:4}).setDepth(201).setOrigin(0.5);
 
     const SKILLS=[
-      {id:'dmg',  name:'OVERDRIVE',   desc:'+30% Bullet Damage',       icon:'💥',col:0xff4444},
-      {id:'rate', name:'RAPID FIRE',  desc:'+28% Fire Rate',           icon:'⚡',col:0xffaa00},
-      {id:'spd',  name:'AFTERBURN',   desc:'+20% Move Speed',          icon:'🏃',col:0x00ccff},
-      {id:'pierce',name:'PENETRATOR', desc:'Bullets Pierce 3 Enemies', icon:'🔱',col:0xcc44ff},
-      {id:'orbit',name:'ORBIT BLADES',desc:'Add Spinning Blade',       icon:'🌀',col:0x00ff88},
-      {id:'pulse',name:'SHOCKWAVE',   desc:'Area Pulse Every 3s',      icon:'💫',col:0xff88ff},
-      {id:'mag',  name:'VORTEX',      desc:'2x Gem Pickup Range',      icon:'🧲',col:0xffff44},
-      {id:'regen',name:'NANOBOTS',    desc:'+3 HP Regeneration/sec',   icon:'❤️‍🔥',col:0xff6688},
-      {id:'maxhp',name:'FORTIFY',     desc:'+50 Max HP + Full Heal',   icon:'🛡️',col:0x44aaff},
+      {id:'dmg',  name:'SUGAR RUSH',    desc:'Ate too much candy — +30% throw speed', icon:'🍬',col:0xff4444},
+      {id:'rate', name:'PANIC MODE',    desc:'Throwing homework faster',               icon:'📝',col:0xffaa00},
+      {id:'spd',  name:'SPRINT HOME',   desc:'+20% Move Speed',                        icon:'👟',col:0x00ccff},
+      {id:'pierce',name:'HALL PASS',    desc:'Papers go through snitches',             icon:'📋',col:0xcc44ff},
+      {id:'orbit',name:'BACKPACK SPIN', desc:'Spinning bag knocks snitches away',      icon:'🎒',col:0xff9900},
+      {id:'pulse',name:'ALARM CLOCK',   desc:'Stun burst freezes nearby snitches',     icon:'⏰',col:0xff88ff},
+      {id:'mag',  name:'SNACK RADAR',   desc:'2x snack pickup range',                  icon:'🍕',col:0xffff44},
+      {id:'regen',name:'ENERGY DRINK',  desc:'+3 HP regen per second',                 icon:'🥤',col:0xff6688},
+      {id:'maxhp',name:"MOM'S COOKING", desc:'+50 max HP + full heal',                 icon:'🍲',col:0x44aaff},
     ];
     const pool=[...SKILLS], chosen=[];
     for(let i=0;i<3;i++) chosen.push(pool.splice(Phaser.Math.Between(0,pool.length-1),1)[0]);
@@ -487,21 +515,20 @@ class GameScene extends Phaser.Scene {
         card.clear();
         card.fillStyle(hover?0x1c1c38:0x0e0e22,0.97);
         card.fillRoundedRect(cx,cy,cW,cH,9);
-        card.lineStyle(hover?3:2,sk.col,hover?1:0.7);
+        card.lineStyle(hover?3:2,0xff9900,hover?1:0.7);
         card.strokeRoundedRect(cx,cy,cW,cH,9);
         if(hover){
-          card.lineStyle(1,sk.col,0.2);
-          for(let s=8;s<24;s+=6){card.lineStyle(1,sk.col,0.07);card.strokeRoundedRect(cx-s/3,cy-s/3,cW+s*0.66,cH+s*0.66,9+s/3);}
+          card.lineStyle(1,0xff9900,0.2);
+          for(let s=8;s<24;s+=6){card.lineStyle(1,0xff9900,0.07);card.strokeRoundedRect(cx-s/3,cy-s/3,cW+s*0.66,cH+s*0.66,9+s/3);}
         }
       };
 
       const card=this.add.graphics().setDepth(201);
       drawCard(false);
 
-      // Horizontal layout within each card: icon left, text center-right
       this.add.text(cx+35, cy+cH/2, sk.icon, {fontSize:'34px'}).setDepth(202).setOrigin(0.5);
       this.add.text(cx+cW/2+20, cy+30, sk.name, {fontFamily:'Orbitron',fontSize:'13px',color:'#'+sk.col.toString(16).padStart(6,'0'),fontStyle:'bold',wordWrap:{width:cW-90}}).setDepth(202).setOrigin(0.5);
-      this.add.text(cx+cW/2+20, cy+58, sk.desc, {fontFamily:'Orbitron',fontSize:'10px',color:'#9999bb',wordWrap:{width:cW-90}}).setDepth(202).setOrigin(0.5);
+      this.add.text(cx+cW/2+20, cy+58, sk.desc, {fontFamily:'Orbitron',fontSize:'9px',color:'#9999bb',wordWrap:{width:cW-90}}).setDepth(202).setOrigin(0.5);
       this.add.text(cx+cW/2+20, cy+85, `[ ${i+1} ]`, {fontFamily:'Orbitron',fontSize:'11px',color:'#555577'}).setDepth(202).setOrigin(0.5);
 
       const zone=this.add.zone(cx,cy,cW,cH).setOrigin(0,0).setDepth(203).setInteractive({useHandCursor:true});
@@ -519,7 +546,6 @@ class GameScene extends Phaser.Scene {
   }
 
   applySkill(sk) {
-    // clean overlay
     this.children.list.filter(c=>c.depth>=200).forEach(c=>c.destroy());
     if(this._kh){ this.input.keyboard.off('keydown',this._kh); this._kh=null; }
     this.paused=false; this.physics.resume();
@@ -572,7 +598,9 @@ class GameScene extends Phaser.Scene {
   spawnWave() {
     if(this.paused||this.dead) return;
     this.waveNum++;
-    this.waveTxt.setText(`WAVE ${this.waveNum}`).setAlpha(1).setY(H/2-80);
+    const waveTexts = ['SNITCHES INCOMING!','MORE SNITCHES!','THEY KEEP COMING!'];
+    const wtxt = this.waveNum <= 3 ? waveTexts[this.waveNum-1] : `WAVE ${this.waveNum} — SNITCHES!`;
+    this.waveTxt.setText(wtxt).setAlpha(1).setY(H/2-80);
     this.tweens.add({targets:this.waveTxt,alpha:0,y:H/2-130,duration:2200,ease:'Power2'});
 
     const count=Math.min(6+this.waveNum*3,45);
@@ -581,7 +609,8 @@ class GameScene extends Phaser.Scene {
         if(this.dead) return;
         const r=Math.random();
         if(this.waveNum>2&&r<0.08) this.spawnEnemy('et');
-        else if(this.waveNum>1&&r<0.32) this.spawnEnemy('ef');
+        else if(this.waveNum>3&&r<0.22) this.spawnEnemy('es');
+        else if(this.waveNum>1&&r<0.35) this.spawnEnemy('ef');
         else this.spawnEnemy('ew');
       });
     }
@@ -599,11 +628,13 @@ class GameScene extends Phaser.Scene {
     const e=this.enemies.create(x,y,tex).setDepth(6);
     e.uid = ++this.uidCounter;
     e.dead=false;
+    e.etype=tex;
     const sc=1+this.waveNum*0.04;
     switch(tex){
-      case 'ew': e.setDisplaySize(32,32); e.setBlendMode(Phaser.BlendModes.MULTIPLY); e.hp=(32+this.waveNum*9)*sc; e.spd=60+Phaser.Math.Between(0,25); e.dmg=8;  e.gd=1; e.sv=10; e.burstColor=0xff3333; break;
-      case 'ef': e.setDisplaySize(28,28); e.setBlendMode(Phaser.BlendModes.MULTIPLY); e.play('runner_walk'); e.hp=(14+this.waveNum*5)*sc; e.spd=85+Phaser.Math.Between(0,15); e.dmg=5; e.gd=1; e.sv=15; e.burstColor=0xff8800; break;
-      case 'et': e.setDisplaySize(52,52); e.setBlendMode(Phaser.BlendModes.MULTIPLY); e.play('hulk_walk'); e.hp=(130+this.waveNum*22)*sc; e.spd=38; e.dmg=22; e.gd=4; e.sv=55; e.burstColor=0xaa0000; break;
+      case 'ew': e.setDisplaySize(36,36); e.setBlendMode(Phaser.BlendModes.MULTIPLY); e.hp=(32+this.waveNum*9)*sc; e.spd=60+Phaser.Math.Between(0,25); e.dmg=8;  e.gd=1; e.sv=10; e.burstColor=0xff3333; break;
+      case 'ef': e.setDisplaySize(36,36); e.setBlendMode(Phaser.BlendModes.MULTIPLY); e.play('karen_walk'); e.hp=(14+this.waveNum*5)*sc; e.spd=85+Phaser.Math.Between(0,15); e.dmg=5; e.gd=1; e.sv=15; e.burstColor=0xff8800; break;
+      case 'es': e.setDisplaySize(38,38); e.setBlendMode(Phaser.BlendModes.MULTIPLY); e.play('steiner_walk'); e.hp=(60+this.waveNum*10)*sc; e.spd=95+Phaser.Math.Between(0,15); e.dmg=12; e.gd=2; e.sv=30; e.burstColor=0xcc44ff; break;
+      case 'et': e.setDisplaySize(52,52); e.setBlendMode(Phaser.BlendModes.MULTIPLY); e.hp=(130+this.waveNum*22)*sc; e.spd=38; e.dmg=22; e.gd=4; e.sv=55; e.burstColor=0xaa0000; break;
     }
     e.maxHp=e.hp;
     e.hpGfx=this.add.graphics().setDepth(7);
@@ -612,17 +643,17 @@ class GameScene extends Phaser.Scene {
 
   spawnBoss() {
     const e=this.enemies.create(W/2,-70,'boss').setDepth(6);
-    e.setDisplaySize(96,96);
+    e.setDisplaySize(100,100);
     e.setBlendMode(Phaser.BlendModes.MULTIPLY);
-    e.play('boss_float');
+    e.play('mama_charge');
     e.uid=++this.uidCounter;
-    e.dead=false; e.isBoss=true;
-    e.hp=900+this.waveNum*60; e.maxHp=e.hp;
+    e.dead=false; e.isBoss=true; e.etype='boss';
+    e.hp=1200; e.maxHp=e.hp;
     e.spd=52; e.dmg=28; e.gd=20; e.sv=600; e.burstColor=0xff0000;
     e.hpGfx=this.add.graphics().setDepth(7);
 
     // Orbiting colored circles
-    const orbColors = [0x00ffff, 0xff8800, 0xff2244, 0xaa44ff];
+    const orbColors = [0xff9900, 0xff4400, 0xff2244, 0xffdd00];
     this.bossOrbs = orbColors.map(c => {
       const orb = this.add.graphics().setDepth(7);
       orb.fillStyle(c, 0.85); orb.fillCircle(0, 0, 6);
@@ -630,11 +661,11 @@ class GameScene extends Phaser.Scene {
       return orb;
     });
 
-    const ann=this.add.text(W/2,H/2,'☠  BOSS INCOMING  ☠',{fontFamily:'Orbitron',fontSize:'22px',color:'#ff0000',fontStyle:'bold',stroke:'#000',strokeThickness:6}).setDepth(201).setOrigin(0.5);
+    const ann=this.add.text(W/2,H/2,'☠  MAMA IS AWAKE  ☠',{fontFamily:'Orbitron',fontSize:'22px',color:'#ff0000',fontStyle:'bold',stroke:'#000',strokeThickness:6}).setDepth(201).setOrigin(0.5);
     this.cameras.main.shake(600,0.018);
     this.tweens.add({targets:ann,alpha:0,y:H/2-90,duration:2500,onComplete:()=>ann.destroy()});
 
-    // Boss charge
+    // Mama charge
     const chargeTimer=this.time.addEvent({
       delay:3200, loop:true,
       callback:()=>{
@@ -658,7 +689,7 @@ class GameScene extends Phaser.Scene {
         e.hpGfx.clear();
         const p=e.hp/e.maxHp, bw=e.displayWidth+12, bx=e.x-bw/2, by=e.y-e.displayHeight/2-10;
         e.hpGfx.fillStyle(0x2a2a2a,0.9); e.hpGfx.fillRect(bx,by,bw,5);
-        e.hpGfx.fillStyle(p>0.5?0x00ee44:p>0.25?0xffaa00:0xff2200,1);
+        e.hpGfx.fillStyle(p>0.5?0xff9900:p>0.25?0xffaa00:0xff2200,1);
         e.hpGfx.fillRect(bx,by,Math.floor(bw*p),5);
       }
     });
@@ -667,7 +698,7 @@ class GameScene extends Phaser.Scene {
   updateGlow() {
     this.glow.clear();
     const p=0.5+0.3*Math.sin(this.time.now*0.005);
-    this.glow.fillStyle(0x00ffcc,p*0.18); this.glow.fillCircle(this.player.x,this.player.y,24);
+    this.glow.fillStyle(0xff9900,p*0.18); this.glow.fillCircle(this.player.x,this.player.y,24);
   }
 
   updateBossOrbs(delta) {
@@ -734,37 +765,44 @@ class EndScene extends Phaser.Scene {
     for(let y=0;y<H;y+=50) g.lineBetween(0,y,W,y);
 
     const col=win?'#00ff88':'#ff2244';
-    const title=win?'✓  YOU SURVIVED  ✓':'✗  YOU DIED  ✗';
-    this.add.text(W/2,160,title,{fontFamily:'Orbitron',fontSize:'28px',fontStyle:'bold',color:col,stroke:'#000',strokeThickness:7}).setOrigin(0.5);
-
-    if(win){
-      this.add.text(W/2,210,'15 MINUTES OF HELL — COMPLETE',{fontFamily:'Orbitron',fontSize:'11px',color:'#888888',letterSpacing:2}).setOrigin(0.5);
-    }
+    const title=win?'BRODY MADE IT HOME!':'MAMA FOUND OUT';
+    const subtitle=win?'Slipped into bed just in time.':'Brody got caught sneaking out...';
+    this.add.text(W/2,150,title,{fontFamily:'Orbitron',fontSize:win?'22px':'28px',fontStyle:'bold',color:col,stroke:'#000',strokeThickness:7}).setOrigin(0.5);
+    this.add.text(W/2,195,subtitle,{fontFamily:'Orbitron',fontSize:'11px',color:'#888888',letterSpacing:1}).setOrigin(0.5);
 
     const m=Math.floor(elapsed/60000), s=Math.floor((elapsed%60000)/1000);
-    const rows=[['KILLS',kills],['LEVEL REACHED',level],['TIME',`${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`]];
+    const rows=[['SNITCHES CAUGHT',kills],['LEVEL REACHED',level],['TIME SURVIVED',`${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`]];
 
     const panelX=20, panelW=W-40;
     const panel=this.add.graphics();
-    panel.fillStyle(0x0e0e22,0.9); panel.fillRoundedRect(panelX,250,panelW,200,8);
-    panel.lineStyle(1,0x2a2a55); panel.strokeRoundedRect(panelX,250,panelW,200,8);
+    panel.fillStyle(0x0e0e22,0.9); panel.fillRoundedRect(panelX,240,panelW,210,8);
+    panel.lineStyle(1,0x2a2a55); panel.strokeRoundedRect(panelX,240,panelW,210,8);
 
     rows.forEach(([lbl,val],i)=>{
-      const y=290+i*56;
-      this.add.text(W/2-10,y,lbl,{fontFamily:'Orbitron',fontSize:'11px',color:'#666688',letterSpacing:2}).setOrigin(1,0.5);
-      this.add.text(W/2+10,y,String(val),{fontFamily:'Orbitron',fontSize:'22px',fontStyle:'bold',color:'#ffffff'}).setOrigin(0,0.5);
-      if(i<rows.length-1){ const line=this.add.graphics(); line.lineStyle(1,0x1e1e3a); line.lineBetween(panelX+20,y+26,panelX+panelW-20,y+26); }
+      const y=280+i*60;
+      this.add.text(W/2,y-8,lbl,{fontFamily:'Orbitron',fontSize:'10px',color:'#666688',letterSpacing:2}).setOrigin(0.5);
+      this.add.text(W/2,y+16,String(val),{fontFamily:'Orbitron',fontSize:'24px',fontStyle:'bold',color:'#ffffff'}).setOrigin(0.5);
+      if(i<rows.length-1){ const line=this.add.graphics(); line.lineStyle(1,0x1e1e3a); line.lineBetween(panelX+20,y+38,panelX+panelW-20,y+38); }
     });
 
     const hs=localStorage.getItem('dw_hs')||0;
-    this.add.text(W/2,490,`BEST KILLS: ${hs}`,{fontFamily:'Orbitron',fontSize:'13px',color:'#ffaa00'}).setOrigin(0.5);
+    this.add.text(W/2,490,`BEST SNITCH COUNT: ${hs}`,{fontFamily:'Orbitron',fontSize:'13px',color:'#ffaa00'}).setOrigin(0.5);
 
-    const btn1=this.add.text(W/2,550,'[ PLAY AGAIN ]',{fontFamily:'Orbitron',fontSize:'17px',fontStyle:'bold',color:'#00ff88'}).setOrigin(0.5).setInteractive({useHandCursor:true});
+    const btn1=this.add.text(W/2,550,'[ SNEAK OUT AGAIN ]',{fontFamily:'Orbitron',fontSize:'16px',fontStyle:'bold',color:'#ff9900'}).setOrigin(0.5).setInteractive({useHandCursor:true});
     const btn2=this.add.text(W/2,600,'[ MENU ]',{fontFamily:'Orbitron',fontSize:'17px',color:'#8888aa'}).setOrigin(0.5).setInteractive({useHandCursor:true});
 
     [btn1,btn2].forEach(b=>{ b.on('pointerover',()=>b.setAlpha(0.65)); b.on('pointerout',()=>b.setAlpha(1)); });
     btn1.on('pointerdown',()=>{ this.cameras.main.fadeOut(300,0,0,0); this.time.delayedCall(300,()=>this.scene.start('GameScene')); });
     btn2.on('pointerdown',()=>{ this.cameras.main.fadeOut(300,0,0,0); this.time.delayedCall(300,()=>this.scene.start('MenuScene')); });
+
+    // Corner brackets — orange
+    const bg = this.add.graphics().setDepth(1);
+    [[0,0],[W,0],[0,H],[W,H]].forEach(([cx,cy])=>{
+      bg.lineStyle(2,0xff9900,0.25);
+      const sx=cx===0?1:-1, sy=cy===0?1:-1;
+      bg.lineBetween(cx,cy,cx+sx*40,cy);
+      bg.lineBetween(cx,cy,cx,cy+sy*40);
+    });
 
     this.cameras.main.fadeIn(400,0,0,0);
   }

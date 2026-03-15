@@ -80,12 +80,10 @@ const DTM = {
     return{name:"BRODY'S HOUSE",color:'#ff4444'};
   },
   enemiesForLevel:(n)=>{
-    if(n<=10) return['ew'];
-    if(n<=20) return['ew','ef'];
-    if(n<=30) return['ew','ef','es'];
-    if(n<=40) return['ew','ef','es','et'];
-    if(n<=50) return['ew','ef','es','et','coach'];
-    return['ew','ef','es','et','coach','sister'];
+    if(n<=10) return['ew','sister','ef','es','coach','et','boss'];
+    if(n<=20) return['ew','sister','ef','es','coach','et','boss'];
+    if(n<=30) return['ew','sister','ef','es','coach','et','boss'];
+    return['ew','sister','ef','es','coach','et','boss'];
   },
   calcScore:(kills,rounds,timeLeft,stars,level)=>(kills*100)+(rounds*500)+(Math.floor(timeLeft/1000)*10)+(stars*1000)+(level*200),
   submitScore:async(score,level,kills,stars)=>{const n=DTM.getName(),p=DTM.getPin();if(!n||n.startsWith('Guest_'))return{error:'guest'};return DTM._gfetch(`${DTM.API}?action=submit&name=${encodeURIComponent(n)}&pin=${p}&score=${score}&level=${level}&kills=${kills}&stars=${stars}`);},
@@ -122,17 +120,16 @@ DTM.MUSIC={current:null,_lastKey:'menu',
 };
 
 const ROUNDS = [
-  {label:"NOSEY NEIGHBOR'S WATCHING",enemies:[{type:'ew',count:1}],quote:"I'm watching you..."},
-  {label:"KAREN IS JOGGING",enemies:[{type:'ef',count:1}],quote:"No running in the halls!"},
-  {label:"MRS. STEINER PATROL",enemies:[{type:'es',count:1}],quote:"Show your work!"},
-  {label:"MR. BERG IS COMING",enemies:[{type:'et',count:1}],quote:"My office. Now."},
-  {label:"\ud83c\udfc8 ANDREWS SPOTTED YOU",enemies:[{type:'coach',count:1}],quote:"You skipping practice??"},
-  {label:"KAREN RETURNS",enemies:[{type:'ef',count:1}],quote:"I said STOP!"},
-  {label:"STEINER'S REVENGE",enemies:[{type:'es',count:1}],quote:"Pop quiz!"},
-  {label:"BERG'S BACKUP",enemies:[{type:'et',count:1},{type:'ew',count:1}],quote:"Backup requested."},
-  {label:"DOUBLE TROUBLE",enemies:[{type:'ef',count:1},{type:'es',count:1}],quote:"Two can play this game."},
-  {label:"\u26a0 PEYTON IS SNITCHING",enemies:[{type:'sister',count:1}],quote:"I'm telling..."},
-  {label:"\u2620 MAMA IS AWAKE \u2620",enemies:[{type:'boss',count:1}],quote:"WHERE HAVE YOU BEEN??"},
+  {label:"PEYTON SAW YOU",sub:"She saw you sneak out the window...",enemies:[{type:'sister',count:1}],loc:"\ud83d\udccd BRODY'S HOUSE"},
+  {label:"NOSEY NEIGHBOR'S WATCHING",sub:"His porch light just came on.",enemies:[{type:'ew',count:1}],loc:"\ud83d\udccd THE STREET"},
+  {label:"SHE CALLED THE NEIGHBORS",sub:"Peyton already texted everyone.",enemies:[{type:'sister',count:1},{type:'ew',count:1}],loc:"\ud83d\udccd THE STREET"},
+  {label:"HALL MONITOR ON DUTY",sub:"Karen never actually goes home.",enemies:[{type:'ef',count:1}],loc:"\ud83d\udccd NORTHWOOD HIGH"},
+  {label:"STEINER'S GRADING PAPERS",sub:"At 3am. On a Friday.",enemies:[{type:'es',count:1}],loc:"\ud83d\udccd NORTHWOOD HIGH"},
+  {label:"AFTER SCHOOL SPECIAL",sub:"They coordinated. Of course they did.",enemies:[{type:'ef',count:1},{type:'es',count:1}],loc:"\ud83d\udccd NORTHWOOD HIGH"},
+  {label:"COACH NEVER SLEEPS",sub:"He was already running suicides.",enemies:[{type:'coach',count:1}],loc:"\ud83d\udccd NORTHWOOD FIELD"},
+  {label:"BERG IS COMING",sub:"The VP has been notified.",enemies:[{type:'et',count:1}],loc:"\ud83d\udccd MAIN ST ROASTERS"},
+  {label:"PEYTON TEXTED MR. BERG",sub:"She has his personal number somehow.",enemies:[{type:'sister',count:1},{type:'et',count:1}],loc:"\ud83d\udccd THE STREETS"},
+  {label:"\u2620 MAMA IS AWAKE \u2620",sub:"Peyton woke her up. Obviously.",enemies:[{type:'boss',count:1},{type:'sister',count:1}],loc:"\ud83d\udccd BRODY'S HOUSE"},
 ];
 const TIER_QUOTES={ew:['Neighborhood watch','Got night vision','Running the block'],ef:['Hall monitor','Vice principal energy','The warden'],es:['Pop quiz','Midterm mode','Final exam'],et:['Office hours','Suspension notice','Expelled'],coach:['Practice time','Two-a-days','Championship run'],sister:['Snitching','Going live','Nuclear option'],boss:['Disappointed','Furious','Full name mode']};
 const ENAMES={ew:'NOSEY NEIGHBOR',ef:'KAREN',es:'MRS. STEINER',et:'MR. BERG',coach:'COACH ANDREWS',sister:'PEYTON',boss:'MAMA'};
@@ -552,15 +549,15 @@ class GameScene extends Phaser.Scene {
     if(mainEnemy==='boss'){SFX.play('boss');DTM.MUSIC.play('boss');}else if(mainEnemy==='sister')SFX.play('boss');
     const tierColors={1:'#888888',2:'#4488ff',3:'#aa44ff'};
     const tierNames={1:'TIER 1',2:'TIER 2',3:'TIER 3'};
-    const tq=(TIER_QUOTES[mainEnemy]||['','',''])[tier-1]||rd.quote||'';
+    const tq=rd.sub||(TIER_QUOTES[mainEnemy]||['','',''])[tier-1]||'';
     const ov=this.add.graphics().setDepth(200);ov.fillStyle(0x000000,0.85);ov.fillRect(0,0,W,H);
     const card=this.add.graphics().setDepth(201);card.fillStyle(0x1a1a2e,0.97);card.fillRoundedRect(40,H/2-100,W-80,200,14);card.lineStyle(2,0xff9900,0.7);card.strokeRoundedRect(40,H/2-100,W-80,200,14);
     const rt=this.add.text(W/2,H/2-75,`ROUND ${n}`,{fontFamily:'Orbitron',fontSize:'14px',color:'#ff9900'}).setDepth(202).setOrigin(0.5);
     const sep=this.add.graphics().setDepth(202);sep.lineStyle(1,0x333355);sep.lineBetween(60,H/2-55,W-60,H/2-55);
     const en=this.add.text(W/2,H/2-25,ename,{fontFamily:'Orbitron',fontSize:'22px',color:'#ffffff',fontStyle:'bold'}).setDepth(202).setOrigin(0.5);
     const qt=this.add.text(W/2,H/2+10,`"${tq}"`,{fontFamily:'Orbitron',fontSize:'10px',color:'#888899',fontStyle:'italic'}).setDepth(202).setOrigin(0.5);
-    const ti=this.add.text(W/2,H/2+50,tierNames[tier],{fontFamily:'Orbitron',fontSize:'12px',color:tierColors[tier],fontStyle:'bold'}).setDepth(202).setOrigin(0.5);
-    const tierDotG=this.add.graphics().setDepth(202);tierDotG.fillStyle({1:0x888888,2:0x4488ff,3:0xaa44ff}[tier],1);tierDotG.fillCircle(W/2-ti.width/2-14,H/2+50,6);
+    const ti=this.add.text(W/2,H/2+45,rd.loc||'',{fontFamily:'Orbitron',fontSize:'11px',color:'#ff9900'}).setDepth(202).setOrigin(0.5);
+    const tierDotG=this.add.graphics().setDepth(202); // placeholder for cleanup array
     this.time.delayedCall(2000,()=>{[ov,card,rt,sep,en,qt,ti,tierDotG].forEach(o=>o.destroy());
       this.roundStartTime=this.elapsed;this.roundMinTimeMet=false;this._respawnScheduled=false;
       this.waveTxt.setText(rd.label).setAlpha(1).setY(H/2-80);
@@ -631,7 +628,12 @@ class GameScene extends Phaser.Scene {
       case 'es':e.setDisplaySize(95,95);e.play('steiner_walk');e.hp=Math.floor(700*hm);e.spd=55;e.dmg=12;e.gd=4;e.sv=80;e.burstColor=0x4444ff;e.patrolTarget={x:Phaser.Math.Between(60,W-60),y:Phaser.Math.Between(100,H-100)};break;
       case 'et':e.setDisplaySize(120,120);e.hp=Math.floor(1200*hm);e.spd=28;e.dmg=20;e.gd=6;e.sv=150;e.burstColor=0xff0000;e.chargeDmg=30;break;
       case 'coach':e.setDisplaySize(108,108);e.play('coach_run');e.hp=Math.floor(800*hm);e.spd=70;e.dmg=14;e.gd=5;e.sv=120;e.burstColor=0x4488ff;e.lastWhistle=0;e.lastDrill=0;break;
-      case 'sister':e.setDisplaySize(100,100);e.play('peyton_snitch');e.hp=Math.floor(800*hm);e.spd=65;e.dmg=12;e.gd=6;e.sv=200;e.burstColor=0xcc44ff;break;
+      case 'sister':e.setDisplaySize(100,100);e.play('peyton_snitch');
+        if(this.roundNum<=1){e.hp=Math.floor(300*hm);e.spd=55;e.dmg=8;e._invDur=1500;e._invCD=10000;}
+        else if(this.roundNum<=3){e.hp=Math.floor(600*hm);e.spd=60;e.dmg=10;e._invDur=2000;e._invCD=9000;}
+        else if(this.roundNum>=9){e.hp=Math.floor(900*hm);e.spd=70;e.dmg=14;e._invDur=3000;e._invCD=7000;}
+        else{e.hp=Math.floor(800*hm);e.spd=65;e.dmg=12;e._invDur=2500;e._invCD=8000;}
+        e.gd=6;e.sv=200;e.burstColor=0xcc44ff;break;
       case 'boss':e.setDisplaySize(155,155);e.play('mama_charge');e.hp=Math.floor(2400*hm);e.spd=50;e.dmg=25;e.gd=15;e.sv=500;e.burstColor=0xff6600;e.chargeDmg=35;
         this.bossOrbs=[0xff9900,0xff4400,0xff2244,0xffdd00].map(c=>{const o=this.add.graphics().setDepth(7);o.fillStyle(c,0.85);o.fillCircle(0,0,6);o.bossRef=e;return o;});break;
     }
@@ -767,7 +769,7 @@ class GameScene extends Phaser.Scene {
       if(e.etype==='es'&&!e.isMinion&&e.abilityTimer>=12000){e.abilityTimer=0;this.floatText(e.x,e.y-40,'SHOW YOUR WORK!',0xcc44ff);const ang=Phaser.Math.Angle.Between(e.x,e.y,px,py);const book=this.add.graphics().setDepth(8);book.fillStyle(0x8B4513);book.fillRect(-15,-10,30,20);book.setPosition(e.x,e.y);book.vx=Math.cos(ang)*280;book.vy=Math.sin(ang)*280;book.life=3000;book.dmg=35;this.projectiles.push(book);}
       if(e.etype==='et'&&!e.isMinion){e.abilityTimer2=(e.abilityTimer2||0)+delta;if(e.abilityTimer2>=7000){e.abilityTimer2=0;const karens=this.enemies.getChildren().filter(m=>m.etype==='ef'&&m.isMinion&&!m.dead);if(karens.length<2){this.floatText(e.x,e.y-40,'BACKUP REQUESTED',0xff8800);this.spawnMinion('ef',50,80);}}if(e.abilityTimer>=14000&&!e.isCharging){e.abilityTimer=0;e.isCharging=true;const a=Phaser.Math.Angle.Between(e.x,e.y,px,py);e.setVelocity(Math.cos(a)*340,Math.sin(a)*340);e.setTint(0xff4444);this.specialHitCount++;this.time.delayedCall(1200,()=>{if(!e.dead){e.isCharging=false;e.clearTint();e.setVelocity(0,0);}});}}
       if(e.etype==='coach'&&!e.isMinion){const now=this.time.now;if(now-e.lastWhistle>8000){e.lastWhistle=now;this.floatText(e.x,e.y-30,'HUSTLE UP!!',0x4488ff);const orig=this.pSpeed;this.pSpeed=Math.floor(orig*1.8);this.cameras.main.flash(200,68,136,255);this.time.delayedCall(2000,()=>{this.pSpeed=orig;});}if(now-e.lastDrill>13000){e.lastDrill=now;this.floatText(e.x,e.y-50,'RUN IT AGAIN!!',0xff8800);if(!this.forcedRun){this.forcedRun=true;const ang=Phaser.Math.Between(0,360)*Math.PI/180;this.player.setVelocity(Math.cos(ang)*this.pSpeed*1.4,Math.sin(ang)*this.pSpeed*1.4);this.time.delayedCall(1500,()=>{this.forcedRun=false;});}}}
-      if(e.isPeyton){if(e.abilityTimer>=8000&&!e.invincible){e.abilityTimer=0;e.invincible=true;e.setAlpha(0.5);this.floatText(e.x,e.y-50,"shhhh I'm on the phone",0xcc44ff);e._shield=this.add.graphics().setDepth(8);e._shield.lineStyle(2,0xcc44ff,0.6);e._shield.strokeCircle(0,0,50);this.time.delayedCall(3000,()=>{if(!e.dead){e.invincible=false;e.setAlpha(1);if(e._shield){e._shield.destroy();e._shield=null;}}});}if(e._shield&&!e.dead)e._shield.setPosition(e.x,e.y);e.abilityTimer2=(e.abilityTimer2||0)+delta;if(e.abilityTimer2>=15000){e.abilityTimer2=0;this.floatText(e.x,e.y-40,"I'm calling the neighbor!",0xcc44ff);this.spawnMinion('ew',45,60);}}
+      if(e.isPeyton){const iCD=e._invCD||8000,iDur=e._invDur||2500;if(e.abilityTimer>=iCD&&!e.invincible){e.abilityTimer=0;e.invincible=true;e.setAlpha(0.5);this.floatText(e.x,e.y-50,"shhhh I'm on the phone",0xcc44ff);e._shield=this.add.graphics().setDepth(8);e._shield.lineStyle(2,0xcc44ff,0.6);e._shield.strokeCircle(0,0,50);this.time.delayedCall(iDur,()=>{if(!e.dead){e.invincible=false;e.setAlpha(1);if(e._shield){e._shield.destroy();e._shield=null;}}});}if(e._shield&&!e.dead)e._shield.setPosition(e.x,e.y);e.abilityTimer2=(e.abilityTimer2||0)+delta;if(e.abilityTimer2>=15000){e.abilityTimer2=0;this.floatText(e.x,e.y-40,"I'm calling the neighbor!",0xcc44ff);this.spawnMinion('ew',45,60);}}
       if(e.isBoss){const pct=e.hp/e.maxHp;if(pct>0.6&&e.abilityTimer>=5000){e.abilityTimer=0;const d=Phaser.Math.Distance.Between(e.x,e.y,px,py);if(d<120){this.floatText(e.x,e.y-60,'WHERE HAVE YOU BEEN??',0xff4444);this.hurtPlayer(60);const a=Phaser.Math.Angle.Between(e.x,e.y,px,py);this.player.x+=Math.cos(a)*80;this.player.y+=Math.sin(a)*80;}}if(pct<=0.6&&pct>0.3){e.abilityTimer2=(e.abilityTimer2||0)+delta;if(e.abilityTimer2>=8000){e.abilityTimer2=0;this.floatText(e.x,e.y-60,"I'm texting your father!!",0xff8800);const f=this.add.graphics().setDepth(99);f.fillStyle(0xff6600,0.2);f.fillRect(0,0,W,H);this.time.delayedCall(300,()=>f.destroy());this.spawnMinion('et',60,150);}}if(pct<=0.3){e.setTint(0xff8844);if(e.abilityTimer>=4000&&!e.isCharging){e.abilityTimer=0;e.isCharging=true;this.floatText(e.x,e.y-60,'GET BACK HERE!!',0xff2244);const a=Phaser.Math.Angle.Between(e.x,e.y,px,py);e.setVelocity(Math.cos(a)*380,Math.sin(a)*380);this.cameras.main.shake(300,0.012);this.time.delayedCall(1000,()=>{if(!e.dead){e.isCharging=false;e.setVelocity(0,0);}});}}}
       if(e.hpGfx){e.hpGfx.clear();const p=Phaser.Math.Clamp(e.hp/e.maxHp,0,1),bw=e.displayWidth+40,bh=14,bx=e.x-bw/2,by=e.y-e.displayHeight/2-22;e.hpGfx.fillStyle(0x2a2a2a,0.9);e.hpGfx.fillRoundedRect(bx,by,bw,bh,4);const col=p>0.6?0x00ee44:p>0.3?0xffaa00:0xff2200;e.hpGfx.fillStyle(col,1);e.hpGfx.fillRoundedRect(bx,by,Math.floor(bw*p),bh,4);e.hpGfx.lineStyle(1,0x000000,0.5);e.hpGfx.strokeRoundedRect(bx,by,bw,bh,4);if(!e.hpTxt){e.hpTxt=this.add.text(e.x,by-2,`${Math.ceil(e.hp)}/${e.maxHp}`,{fontFamily:'Orbitron',fontSize:'8px',color:'#ffffff',stroke:'#000',strokeThickness:2}).setOrigin(0.5,1).setDepth(8);}else{e.hpTxt.setText(`${Math.ceil(e.hp)}/${e.maxHp}`).setPosition(e.x,by-2);}}
       if(e.nameLabel)e.nameLabel.setPosition(e.x,e.y-e.displayHeight/2-18);
@@ -819,8 +821,16 @@ class GameScene extends Phaser.Scene {
     this._lastKillPos={x:e.x,y:e.y};
     this.snacksEarned+=(e.gd||1);
     if(e.etype==='coach'){const dt=this.add.text(W/2,H/2-40,"I'll see you at 6am Monday!!",{fontFamily:'Orbitron',fontSize:'16px',color:'#4488ff',stroke:'#000',strokeThickness:4}).setDepth(201).setOrigin(0.5);this.tweens.add({targets:dt,alpha:0,y:H/2-120,duration:3000,onComplete:()=>dt.destroy()});const fb=this.add.graphics().setDepth(5);fb.fillStyle(0x8B4513,1);fb.fillEllipse(e.x,e.y,24,18);fb.fillStyle(0xffffff,0.8);fb.fillRect(e.x-8,e.y-1,16,2);const fz=this.add.zone(e.x,e.y,30,30).setDepth(5);this.physics.add.existing(fz);this.physics.add.overlap(this.player,fz,()=>{this.pHP=this.pMaxHP;this.updateHP();fb.destroy();fz.destroy();this.floatText(this.player.x,this.player.y-30,'+FULL HEAL!',0x00ff88);});this.time.delayedCall(10000,()=>{if(fb.scene)fb.destroy();if(fz.scene)fz.destroy();});}
-    else if(e.isPeyton){const qt=this.add.text(e.x,e.y-28,"FINE!! I'm telling Dad too!!",{fontFamily:'Orbitron',fontSize:'13px',color:'#cc44ff',stroke:'#000',strokeThickness:4,fontStyle:'bold'}).setDepth(51).setOrigin(0.5);this.tweens.add({targets:qt,y:e.y-100,alpha:0,duration:2000,ease:'Power2',onComplete:()=>qt.destroy()});this.cameras.main.flash(400,128,0,255);this.cameras.main.shake(500,0.02);}
-    else if(e.isBoss){const qt=this.add.text(W/2,H/2,"...we'll talk about this tomorrow.",{fontFamily:'Orbitron',fontSize:'16px',color:'#ff4444',stroke:'#000',strokeThickness:5,fontStyle:'bold'}).setDepth(201).setOrigin(0.5);this.time.delayedCall(3000,()=>qt.destroy());this.cameras.main.flash(600,255,100,0);this.cameras.main.shake(800,0.025);}
+    else if(e.isPeyton){
+      const pQuote=this.roundNum<=1?'Fine! I was going back to sleep anyway!!':this.roundNum>=10?'ok fine you win':"FINE!! I'm telling Dad too!!";
+      const qt=this.add.text(e.x,e.y-28,pQuote,{fontFamily:'Orbitron',fontSize:'13px',color:'#cc44ff',stroke:'#000',strokeThickness:4,fontStyle:'bold'}).setDepth(51).setOrigin(0.5);this.tweens.add({targets:qt,y:e.y-100,alpha:0,duration:2000,ease:'Power2',onComplete:()=>qt.destroy()});this.cameras.main.flash(400,128,0,255);this.cameras.main.shake(500,0.02);
+      // Round 10: Peyton dies → Mama enraged
+      if(this.roundNum>=10){const mama=this.enemies.getChildren().find(en=>en.isBoss&&!en.dead);if(mama){mama.spd=Math.floor(mama.spd*1.3);this.floatText(mama.x,mama.y-60,'SHE WAS MY FAVORITE!!',0xff6600);this.cameras.main.shake(400,0.015);}}
+    }
+    else if(e.isBoss){const qt=this.add.text(W/2,H/2,"...we'll talk about this tomorrow.",{fontFamily:'Orbitron',fontSize:'16px',color:'#ff4444',stroke:'#000',strokeThickness:5,fontStyle:'bold'}).setDepth(201).setOrigin(0.5);this.time.delayedCall(3000,()=>qt.destroy());this.cameras.main.flash(600,255,100,0);this.cameras.main.shake(800,0.025);
+      // Round 10: Mama dies → Peyton surrenders
+      if(this.roundNum>=10){const pey=this.enemies.getChildren().find(en=>en.isPeyton&&!en.dead);if(pey){pey.spd=0;this.floatText(pey.x,pey.y-40,'ok fine you win',0xcc44ff);this.time.delayedCall(2000,()=>{if(!pey.dead)this.killEnemy(pey);});}}
+    }
     else{const quips={ew:"I'm telling your mother!",ef:'DETENTION!!',es:'F MINUS!!',et:'SUSPENDED!!'};if(quips[e.etype])this.floatText(e.x,e.y-28,quips[e.etype],0xffdd00);}
     for(let i=0;i<(e.gd||1);i++){const gx=e.x+Phaser.Math.Between(-18,18),gy=e.y+Phaser.Math.Between(-18,18);const gem=this.gems.create(gx,gy,'gem').setDepth(5).setDisplaySize(20,20);gem.xp=1;this.tweens.add({targets:gem,y:gy-22,duration:220,yoyo:true,ease:'Bounce'});}
     // (death explosion already handled above with multi-ring)

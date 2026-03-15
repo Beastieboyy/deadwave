@@ -13,7 +13,7 @@
 </head>
 <body>
 <script>
-const W = 800, H = 600;
+const W = 390, H = 844;
 
 // ─────────────────────────────────────────────────
 // MENU SCENE
@@ -33,33 +33,33 @@ class MenuScene extends Phaser.Scene {
 
     // Glow orbs BG
     [
-      [120,150,0xff0044,80],[680,200,0x0044ff,60],[400,450,0xff6600,50],
+      [80,200,0xff0044,80],[310,260,0x0044ff,60],[195,500,0xff6600,50],
     ].forEach(([x,y,c,r])=>{
       const og=this.add.graphics();
       og.fillStyle(c,0.06); og.fillCircle(x,y,r);
     });
 
-    this.add.text(W/2, 150, 'DEAD', {
-      fontFamily:'Orbitron', fontSize:'80px', fontStyle:'bold',
+    this.add.text(W/2, 220, 'DEAD', {
+      fontFamily:'Orbitron', fontSize:'64px', fontStyle:'bold',
       color:'#ff2244', stroke:'#ff0022', strokeThickness:6
     }).setOrigin(0.5);
 
-    this.add.text(W/2, 238, 'WAVE', {
-      fontFamily:'Orbitron', fontSize:'80px', fontStyle:'bold',
+    this.add.text(W/2, 298, 'WAVE', {
+      fontFamily:'Orbitron', fontSize:'64px', fontStyle:'bold',
       color:'#ffffff', stroke:'#00eeff', strokeThickness:4
     }).setOrigin(0.5);
 
-    this.add.text(W/2, 320, 'SURVIVE · LEVEL UP · DOMINATE', {
-      fontFamily:'Orbitron', fontSize:'13px', color:'#00ccff', letterSpacing:5
+    this.add.text(W/2, 370, 'SURVIVE · LEVEL UP · DOMINATE', {
+      fontFamily:'Orbitron', fontSize:'11px', color:'#00ccff', letterSpacing:3
     }).setOrigin(0.5);
 
     const hs = localStorage.getItem('dw_hs')||0;
-    this.add.text(W/2, 360, `BEST KILLS: ${hs}`, {
+    this.add.text(W/2, 410, `BEST KILLS: ${hs}`, {
       fontFamily:'Orbitron', fontSize:'14px', color:'#ffaa00'
     }).setOrigin(0.5);
 
-    const btn = this.add.text(W/2, 430, '[ PRESS TO SURVIVE ]', {
-      fontFamily:'Orbitron', fontSize:'22px', fontStyle:'bold',
+    const btn = this.add.text(W/2, 500, '[ PRESS TO SURVIVE ]', {
+      fontFamily:'Orbitron', fontSize:'20px', fontStyle:'bold',
       color:'#00ff88', stroke:'#00ff88', strokeThickness:1
     }).setOrigin(0.5).setInteractive({useHandCursor:true});
 
@@ -72,8 +72,8 @@ class MenuScene extends Phaser.Scene {
     btn.on('pointerdown', start);
     this.input.keyboard.once('keydown', start);
 
-    this.add.text(W/2, H-22, 'WASD / ARROWS to move  •  Auto-attacks  •  Pick skills on level up', {
-      fontFamily:'Orbitron', fontSize:'10px', color:'#444466'
+    this.add.text(W/2, H-30, 'Joystick to move  •  Auto-attacks\nPick skills on level up', {
+      fontFamily:'Orbitron', fontSize:'9px', color:'#444466', align:'center'
     }).setOrigin(0.5);
   }
 }
@@ -97,8 +97,8 @@ class GameScene extends Phaser.Scene {
   }
 
   init() {
-    this.pHP       = 100;
-    this.pMaxHP    = 100;
+    this.pHP       = 130;
+    this.pMaxHP    = 130;
     this.pSpeed    = 185;
     this.pDmg      = 22;
     this.fireRate  = 880;
@@ -126,6 +126,8 @@ class GameScene extends Phaser.Scene {
     this.joyActive = false;
     this.joyAng    = 0;
     this.joyDist   = 0;
+    this.joyBaseX  = 0;
+    this.joyBaseY  = 0;
     this.uidCounter= 0;
   }
 
@@ -156,8 +158,8 @@ class GameScene extends Phaser.Scene {
     this.physics.add.overlap(this.bullets, this.enemies, (b,e) => this.bulletHit(b,e));
     this.physics.add.overlap(this.player, this.gems, (_p,g) => this.pickGem(g));
 
-    // Timers
-    this.time.addEvent({ delay:7500, callback:this.spawnWave, callbackScope:this, loop:true });
+    // Timers — first 3 waves use 9000ms, then 7500ms
+    this.waveTimer = this.time.addEvent({ delay:9000, callback:this.spawnWave, callbackScope:this, loop:true });
     this.spawnWave();
 
     this.time.addEvent({ delay:3000, callback:this.doPulse, callbackScope:this, loop:true });
@@ -173,8 +175,8 @@ class GameScene extends Phaser.Scene {
     [[0,0],[W,0],[0,H],[W,H]].forEach(([cx,cy])=>{
       this.bgG.lineStyle(2,0x00ccff,0.25);
       const sx=cx===0?1:-1, sy=cy===0?1:-1;
-      this.bgG.lineBetween(cx,cy,cx+sx*60,cy);
-      this.bgG.lineBetween(cx,cy,cx,cy+sy*60);
+      this.bgG.lineBetween(cx,cy,cx+sx*40,cy);
+      this.bgG.lineBetween(cx,cy,cx,cy+sy*40);
     });
   }
 
@@ -191,31 +193,34 @@ class GameScene extends Phaser.Scene {
 
   createPlayer() {
     this.player = this.physics.add.sprite(W/2, H/2, 'player').setDepth(10).setCollideWorldBounds(true);
-    this.player.setDisplaySize(48, 48);
-    this.player.setBodySize(40, 40);
+    this.player.setDisplaySize(32, 32);
+    this.player.setBodySize(22, 22);
     this.player.setBlendMode(Phaser.BlendModes.MULTIPLY);
     this.glow = this.add.graphics().setDepth(9);
   }
 
   createUI() {
     const D=100;
-    // HP bg
-    this.add.graphics().setDepth(D).fillStyle(0x0d0d1a,0.92).fillRoundedRect(8,8,204,20,4)
-      .lineStyle(1,0xff3333,0.5).strokeRoundedRect(8,8,204,20,4);
+    // HP bar — top left
+    this.add.graphics().setDepth(D).fillStyle(0x0d0d1a,0.92).fillRoundedRect(8,8,160,18,4)
+      .lineStyle(1,0xff3333,0.5).strokeRoundedRect(8,8,160,18,4);
     this.hpBar  = this.add.graphics().setDepth(D+1);
-    this.hpTxt  = this.add.text(110,10,'',{fontFamily:'Orbitron',fontSize:'10px',color:'#ffaaaa'}).setDepth(D+2).setOrigin(0.5,0);
-    this.add.text(13,10,'HP',{fontFamily:'Orbitron',fontSize:'9px',color:'#ff5555'}).setDepth(D+2);
+    this.hpTxt  = this.add.text(88,9,'',{fontFamily:'Orbitron',fontSize:'9px',color:'#ffaaaa'}).setDepth(D+2).setOrigin(0.5,0);
+    this.add.text(12,9,'HP',{fontFamily:'Orbitron',fontSize:'8px',color:'#ff5555'}).setDepth(D+2);
 
-    // XP bg
-    this.add.graphics().setDepth(D).fillStyle(0x0d0d1a,0.92).fillRoundedRect(8,33,204,10,3)
-      .lineStyle(1,0x00ff88,0.4).strokeRoundedRect(8,33,204,10,3);
+    // XP bar — below HP
+    this.add.graphics().setDepth(D).fillStyle(0x0d0d1a,0.92).fillRoundedRect(8,30,160,8,3)
+      .lineStyle(1,0x00ff88,0.4).strokeRoundedRect(8,30,160,8,3);
     this.xpBar  = this.add.graphics().setDepth(D+1);
-    this.lvlTxt = this.add.text(217,8,'LV 1',{fontFamily:'Orbitron',fontSize:'13px',color:'#00ff88',fontStyle:'bold'}).setDepth(D+2);
+    this.lvlTxt = this.add.text(173,8,'LV 1',{fontFamily:'Orbitron',fontSize:'11px',color:'#00ff88',fontStyle:'bold'}).setDepth(D+2);
 
-    this.killTxt  = this.add.text(W-10,10,'KILLS: 0',{fontFamily:'Orbitron',fontSize:'13px',color:'#ffcc00'}).setDepth(D).setOrigin(1,0);
-    this.timerTxt = this.add.text(W/2,10,'15:00',{fontFamily:'Orbitron',fontSize:'19px',color:'#ffffff',fontStyle:'bold'}).setDepth(D).setOrigin(0.5,0);
+    // Timer — centered at top
+    this.timerTxt = this.add.text(W/2,10,'15:00',{fontFamily:'Orbitron',fontSize:'17px',color:'#ffffff',fontStyle:'bold'}).setDepth(D).setOrigin(0.5,0);
 
-    this.waveTxt  = this.add.text(W/2,H/2-60,'',{fontFamily:'Orbitron',fontSize:'30px',color:'#ff4444',fontStyle:'bold',stroke:'#000',strokeThickness:5}).setDepth(D).setOrigin(0.5).setAlpha(0);
+    // Kills — top right
+    this.killTxt  = this.add.text(W-10,10,'KILLS: 0',{fontFamily:'Orbitron',fontSize:'11px',color:'#ffcc00'}).setDepth(D).setOrigin(1,0);
+
+    this.waveTxt  = this.add.text(W/2,H/2-80,'',{fontFamily:'Orbitron',fontSize:'26px',color:'#ff4444',fontStyle:'bold',stroke:'#000',strokeThickness:5}).setDepth(D).setOrigin(0.5).setAlpha(0);
 
     this.updateHP(); this.updateXP();
   }
@@ -226,23 +231,42 @@ class GameScene extends Phaser.Scene {
   }
 
   setupJoystick() {
-    const zone = this.add.zone(0, H*0.55, W*0.45, H*0.45).setOrigin(0,0).setInteractive().setDepth(150);
+    // Dynamic follow-touch joystick on LEFT half of screen (Survivor.io style)
     this.jBase = this.add.graphics().setDepth(151).setAlpha(0);
     this.jThumb = this.add.graphics().setDepth(152).setAlpha(0);
-    let sx=0,sy=0;
-    zone.on('pointerdown',p=>{
-      this.joyActive=true; sx=p.x; sy=p.y;
-      this.jBase.setAlpha(0.35).clear().lineStyle(3,0x00ffcc).strokeCircle(sx,sy,52);
-      this.jThumb.setAlpha(0.65).clear().fillStyle(0x00ffcc).fillCircle(sx,sy,22);
+    const JOY_RADIUS = 60;
+
+    this.input.on('pointerdown', (p) => {
+      // Only left half of screen for movement
+      if(p.x > W/2) return;
+      if(this.paused || this.dead) return;
+      this.joyActive = true;
+      this.joyBaseX = p.x;
+      this.joyBaseY = p.y;
+      this.joyPointerId = p.id;
+      this.jBase.setAlpha(0.35).clear().lineStyle(3,0x00ffcc).strokeCircle(p.x,p.y,JOY_RADIUS);
+      this.jThumb.setAlpha(0.65).clear().fillStyle(0x00ffcc).fillCircle(p.x,p.y,22);
     });
-    zone.on('pointermove',p=>{
-      if(!this.joyActive) return;
-      const dx=p.x-sx, dy=p.y-sy, d=Math.hypot(dx,dy), max=52;
-      this.joyAng=Math.atan2(dy,dx); this.joyDist=Math.min(d,max)/max;
-      const tx=sx+Math.cos(this.joyAng)*Math.min(d,max), ty=sy+Math.sin(this.joyAng)*Math.min(d,max);
-      this.jThumb.clear().fillStyle(0x00ffcc).fillCircle(tx,ty,22);
+
+    this.input.on('pointermove', (p) => {
+      if(!this.joyActive || p.id !== this.joyPointerId) return;
+      const dx = p.x - this.joyBaseX;
+      const dy = p.y - this.joyBaseY;
+      const d = Math.hypot(dx, dy);
+      this.joyAng = Math.atan2(dy, dx);
+      this.joyDist = Math.min(d, JOY_RADIUS) / JOY_RADIUS;
+      const tx = this.joyBaseX + Math.cos(this.joyAng) * Math.min(d, JOY_RADIUS);
+      const ty = this.joyBaseY + Math.sin(this.joyAng) * Math.min(d, JOY_RADIUS);
+      this.jThumb.clear().fillStyle(0x00ffcc).fillCircle(tx, ty, 22);
     });
-    zone.on('pointerup',()=>{ this.joyActive=false; this.joyDist=0; this.jBase.setAlpha(0); this.jThumb.setAlpha(0); });
+
+    this.input.on('pointerup', (p) => {
+      if(p.id !== this.joyPointerId) return;
+      this.joyActive = false;
+      this.joyDist = 0;
+      this.jBase.setAlpha(0);
+      this.jThumb.setAlpha(0);
+    });
   }
 
   update(time, delta) {
@@ -254,6 +278,12 @@ class GameScene extends Phaser.Scene {
     const m=Math.floor(rem/60000), s=Math.floor((rem%60000)/1000);
     this.timerTxt.setText(`${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`);
     if(rem < 120000) this.timerTxt.setColor('#ff4444');
+
+    // Switch to faster wave spawns after wave 3
+    if(this.waveNum === 3 && this.waveTimer.delay !== 7500) {
+      this.waveTimer.destroy();
+      this.waveTimer = this.time.addEvent({ delay:7500, callback:this.spawnWave, callbackScope:this, loop:true });
+    }
 
     // Boss at 5 min remaining
     if(rem <= 5*60*1000 && !this.boss10) { this.boss10=true; this.spawnBoss(); }
@@ -413,14 +443,14 @@ class GameScene extends Phaser.Scene {
     this.hpBar.clear();
     const p=this.pHP/this.pMaxHP;
     const c=p>0.5?0x00ee44:p>0.25?0xffaa00:0xff2200;
-    this.hpBar.fillStyle(c,0.88); this.hpBar.fillRoundedRect(9,9,Math.floor(202*p),18,3);
+    this.hpBar.fillStyle(c,0.88); this.hpBar.fillRoundedRect(9,9,Math.floor(158*p),16,3);
     this.hpTxt.setText(`${Math.ceil(this.pHP)}/${this.pMaxHP}`);
   }
 
   updateXP() {
     this.xpBar.clear();
     const p=Math.min(1,this.pXP/this.xpNeeded);
-    this.xpBar.fillStyle(0x00ff88,0.8); this.xpBar.fillRoundedRect(9,34,Math.floor(202*p),8,2);
+    this.xpBar.fillStyle(0x00ff88,0.8); this.xpBar.fillRoundedRect(9,31,Math.floor(158*p),6,2);
   }
 
   // ── LEVEL UP SKILL SELECTION ───────────────────
@@ -430,8 +460,8 @@ class GameScene extends Phaser.Scene {
     const ov=this.add.graphics().setDepth(200);
     ov.fillStyle(0x000000,0.78); ov.fillRect(0,0,W,H);
 
-    this.add.text(W/2,115,'⚡  LEVEL UP!',{fontFamily:'Orbitron',fontSize:'34px',color:'#ffcc00',fontStyle:'bold',stroke:'#000',strokeThickness:6}).setDepth(201).setOrigin(0.5);
-    this.add.text(W/2,158,'CHOOSE YOUR POWER',{fontFamily:'Orbitron',fontSize:'13px',color:'#8888bb',letterSpacing:5}).setDepth(201).setOrigin(0.5);
+    this.add.text(W/2,100,'⚡  LEVEL UP!',{fontFamily:'Orbitron',fontSize:'28px',color:'#ffcc00',fontStyle:'bold',stroke:'#000',strokeThickness:6}).setDepth(201).setOrigin(0.5);
+    this.add.text(W/2,138,'CHOOSE YOUR POWER',{fontFamily:'Orbitron',fontSize:'11px',color:'#8888bb',letterSpacing:4}).setDepth(201).setOrigin(0.5);
 
     const SKILLS=[
       {id:'dmg',  name:'OVERDRIVE',   desc:'+30% Bullet Damage',       icon:'💥',col:0xff4444},
@@ -447,10 +477,11 @@ class GameScene extends Phaser.Scene {
     const pool=[...SKILLS], chosen=[];
     for(let i=0;i<3;i++) chosen.push(pool.splice(Phaser.Math.Between(0,pool.length-1),1)[0]);
 
-    const cW=178, cH=168, startX=W/2-cW-18;
+    // Vertical card layout for narrow screen
+    const cW=W-40, cH=120, startX=20, startY=170;
 
     chosen.forEach((sk,i)=>{
-      const cx=startX+i*(cW+18), cy=190;
+      const cx=startX, cy=startY+i*(cH+14);
 
       const drawCard=(hover)=>{
         card.clear();
@@ -467,10 +498,11 @@ class GameScene extends Phaser.Scene {
       const card=this.add.graphics().setDepth(201);
       drawCard(false);
 
-      this.add.text(cx+cW/2, cy+34, sk.icon, {fontSize:'34px'}).setDepth(202).setOrigin(0.5);
-      this.add.text(cx+cW/2, cy+78, sk.name, {fontFamily:'Orbitron',fontSize:'12px',color:'#'+sk.col.toString(16).padStart(6,'0'),fontStyle:'bold',wordWrap:{width:cW-14}}).setDepth(202).setOrigin(0.5);
-      this.add.text(cx+cW/2, cy+104, sk.desc, {fontFamily:'Orbitron',fontSize:'10px',color:'#9999bb',wordWrap:{width:cW-14}}).setDepth(202).setOrigin(0.5);
-      this.add.text(cx+cW/2, cy+cH-18, `[ ${i+1} ]`, {fontFamily:'Orbitron',fontSize:'12px',color:'#555577'}).setDepth(202).setOrigin(0.5);
+      // Horizontal layout within each card: icon left, text center-right
+      this.add.text(cx+35, cy+cH/2, sk.icon, {fontSize:'34px'}).setDepth(202).setOrigin(0.5);
+      this.add.text(cx+cW/2+20, cy+30, sk.name, {fontFamily:'Orbitron',fontSize:'13px',color:'#'+sk.col.toString(16).padStart(6,'0'),fontStyle:'bold',wordWrap:{width:cW-90}}).setDepth(202).setOrigin(0.5);
+      this.add.text(cx+cW/2+20, cy+58, sk.desc, {fontFamily:'Orbitron',fontSize:'10px',color:'#9999bb',wordWrap:{width:cW-90}}).setDepth(202).setOrigin(0.5);
+      this.add.text(cx+cW/2+20, cy+85, `[ ${i+1} ]`, {fontFamily:'Orbitron',fontSize:'11px',color:'#555577'}).setDepth(202).setOrigin(0.5);
 
       const zone=this.add.zone(cx,cy,cW,cH).setOrigin(0,0).setDepth(203).setInteractive({useHandCursor:true});
       zone.on('pointerover', ()=>drawCard(true));
@@ -540,8 +572,8 @@ class GameScene extends Phaser.Scene {
   spawnWave() {
     if(this.paused||this.dead) return;
     this.waveNum++;
-    this.waveTxt.setText(`WAVE ${this.waveNum}`).setAlpha(1).setY(H/2-60);
-    this.tweens.add({targets:this.waveTxt,alpha:0,y:H/2-105,duration:2200,ease:'Power2'});
+    this.waveTxt.setText(`WAVE ${this.waveNum}`).setAlpha(1).setY(H/2-80);
+    this.tweens.add({targets:this.waveTxt,alpha:0,y:H/2-130,duration:2200,ease:'Power2'});
 
     const count=Math.min(6+this.waveNum*3,45);
     for(let i=0;i<count;i++){
@@ -569,8 +601,8 @@ class GameScene extends Phaser.Scene {
     e.dead=false;
     const sc=1+this.waveNum*0.04;
     switch(tex){
-      case 'ew': e.setDisplaySize(32,32); e.setBlendMode(Phaser.BlendModes.MULTIPLY); e.hp=(32+this.waveNum*9)*sc; e.spd=72+Phaser.Math.Between(0,25); e.dmg=8;  e.gd=1; e.sv=10; e.burstColor=0xff3333; break;
-      case 'ef': e.setDisplaySize(34,34); e.play('runner_walk'); e.hp=(14+this.waveNum*5)*sc; e.spd=155+Phaser.Math.Between(0,35); e.dmg=5; e.gd=1; e.sv=15; e.burstColor=0xff8800; break;
+      case 'ew': e.setDisplaySize(32,32); e.setBlendMode(Phaser.BlendModes.MULTIPLY); e.hp=(32+this.waveNum*9)*sc; e.spd=60+Phaser.Math.Between(0,25); e.dmg=8;  e.gd=1; e.sv=10; e.burstColor=0xff3333; break;
+      case 'ef': e.setDisplaySize(34,34); e.play('runner_walk'); e.hp=(14+this.waveNum*5)*sc; e.spd=130+Phaser.Math.Between(0,35); e.dmg=5; e.gd=1; e.sv=15; e.burstColor=0xff8800; break;
       case 'et': e.setDisplaySize(52,52); e.play('hulk_walk'); e.hp=(130+this.waveNum*22)*sc; e.spd=38; e.dmg=22; e.gd=4; e.sv=55; e.burstColor=0xaa0000; break;
     }
     e.maxHp=e.hp;
@@ -597,7 +629,7 @@ class GameScene extends Phaser.Scene {
       return orb;
     });
 
-    const ann=this.add.text(W/2,H/2,'☠  BOSS INCOMING  ☠',{fontFamily:'Orbitron',fontSize:'30px',color:'#ff0000',fontStyle:'bold',stroke:'#000',strokeThickness:6}).setDepth(201).setOrigin(0.5);
+    const ann=this.add.text(W/2,H/2,'☠  BOSS INCOMING  ☠',{fontFamily:'Orbitron',fontSize:'22px',color:'#ff0000',fontStyle:'bold',stroke:'#000',strokeThickness:6}).setDepth(201).setOrigin(0.5);
     this.cameras.main.shake(600,0.018);
     this.tweens.add({targets:ann,alpha:0,y:H/2-90,duration:2500,onComplete:()=>ann.destroy()});
 
@@ -634,7 +666,7 @@ class GameScene extends Phaser.Scene {
   updateGlow() {
     this.glow.clear();
     const p=0.5+0.3*Math.sin(this.time.now*0.005);
-    this.glow.fillStyle(0x00ffcc,p*0.18); this.glow.fillCircle(this.player.x,this.player.y,30);
+    this.glow.fillStyle(0x00ffcc,p*0.18); this.glow.fillCircle(this.player.x,this.player.y,24);
   }
 
   updateBossOrbs(delta) {
@@ -702,31 +734,32 @@ class EndScene extends Phaser.Scene {
 
     const col=win?'#00ff88':'#ff2244';
     const title=win?'✓  YOU SURVIVED  ✓':'✗  YOU DIED  ✗';
-    this.add.text(W/2,120,title,{fontFamily:'Orbitron',fontSize:'40px',fontStyle:'bold',color:col,stroke:'#000',strokeThickness:7}).setOrigin(0.5);
+    this.add.text(W/2,160,title,{fontFamily:'Orbitron',fontSize:'28px',fontStyle:'bold',color:col,stroke:'#000',strokeThickness:7}).setOrigin(0.5);
 
     if(win){
-      this.add.text(W/2,175,'15 MINUTES OF HELL — COMPLETE',{fontFamily:'Orbitron',fontSize:'13px',color:'#888888',letterSpacing:3}).setOrigin(0.5);
+      this.add.text(W/2,210,'15 MINUTES OF HELL — COMPLETE',{fontFamily:'Orbitron',fontSize:'11px',color:'#888888',letterSpacing:2}).setOrigin(0.5);
     }
 
     const m=Math.floor(elapsed/60000), s=Math.floor((elapsed%60000)/1000);
     const rows=[['KILLS',kills],['LEVEL REACHED',level],['TIME',`${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`]];
 
+    const panelX=20, panelW=W-40;
     const panel=this.add.graphics();
-    panel.fillStyle(0x0e0e22,0.9); panel.fillRoundedRect(220,200,360,190,8);
-    panel.lineStyle(1,0x2a2a55); panel.strokeRoundedRect(220,200,360,190,8);
+    panel.fillStyle(0x0e0e22,0.9); panel.fillRoundedRect(panelX,250,panelW,200,8);
+    panel.lineStyle(1,0x2a2a55); panel.strokeRoundedRect(panelX,250,panelW,200,8);
 
     rows.forEach(([lbl,val],i)=>{
-      const y=230+i*56;
-      this.add.text(368,y,lbl,{fontFamily:'Orbitron',fontSize:'12px',color:'#666688',letterSpacing:2}).setOrigin(1,0.5);
-      this.add.text(400,y,String(val),{fontFamily:'Orbitron',fontSize:'24px',fontStyle:'bold',color:'#ffffff'}).setOrigin(0,0.5);
-      if(i<rows.length-1){ const line=this.add.graphics(); line.lineStyle(1,0x1e1e3a); line.lineBetween(240,y+24,560,y+24); }
+      const y=290+i*56;
+      this.add.text(W/2-10,y,lbl,{fontFamily:'Orbitron',fontSize:'11px',color:'#666688',letterSpacing:2}).setOrigin(1,0.5);
+      this.add.text(W/2+10,y,String(val),{fontFamily:'Orbitron',fontSize:'22px',fontStyle:'bold',color:'#ffffff'}).setOrigin(0,0.5);
+      if(i<rows.length-1){ const line=this.add.graphics(); line.lineStyle(1,0x1e1e3a); line.lineBetween(panelX+20,y+26,panelX+panelW-20,y+26); }
     });
 
     const hs=localStorage.getItem('dw_hs')||0;
-    this.add.text(W/2,415,`BEST KILLS: ${hs}`,{fontFamily:'Orbitron',fontSize:'13px',color:'#ffaa00'}).setOrigin(0.5);
+    this.add.text(W/2,490,`BEST KILLS: ${hs}`,{fontFamily:'Orbitron',fontSize:'13px',color:'#ffaa00'}).setOrigin(0.5);
 
-    const btn1=this.add.text(W/2-105,460,'[ PLAY AGAIN ]',{fontFamily:'Orbitron',fontSize:'17px',fontStyle:'bold',color:'#00ff88'}).setOrigin(0.5).setInteractive({useHandCursor:true});
-    const btn2=this.add.text(W/2+105,460,'[ MENU ]',{fontFamily:'Orbitron',fontSize:'17px',color:'#8888aa'}).setOrigin(0.5).setInteractive({useHandCursor:true});
+    const btn1=this.add.text(W/2,550,'[ PLAY AGAIN ]',{fontFamily:'Orbitron',fontSize:'17px',fontStyle:'bold',color:'#00ff88'}).setOrigin(0.5).setInteractive({useHandCursor:true});
+    const btn2=this.add.text(W/2,600,'[ MENU ]',{fontFamily:'Orbitron',fontSize:'17px',color:'#8888aa'}).setOrigin(0.5).setInteractive({useHandCursor:true});
 
     [btn1,btn2].forEach(b=>{ b.on('pointerover',()=>b.setAlpha(0.65)); b.on('pointerout',()=>b.setAlpha(1)); });
     btn1.on('pointerdown',()=>{ this.cameras.main.fadeOut(300,0,0,0); this.time.delayedCall(300,()=>this.scene.start('GameScene')); });

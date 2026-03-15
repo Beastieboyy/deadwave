@@ -120,16 +120,16 @@ DTM.MUSIC={current:null,_lastKey:'menu',
 };
 
 const ROUNDS = [
-  {label:"PEYTON SAW YOU",sub:"She saw you sneak out the window...",enemies:[{type:'sister',count:1}],loc:"\ud83d\udccd BRODY'S HOUSE"},
-  {label:"NOSEY NEIGHBOR'S WATCHING",sub:"His porch light just came on.",enemies:[{type:'ew',count:1}],loc:"\ud83d\udccd THE STREET"},
-  {label:"SHE CALLED THE NEIGHBORS",sub:"Peyton already texted everyone.",enemies:[{type:'sister',count:1},{type:'ew',count:1}],loc:"\ud83d\udccd THE STREET"},
-  {label:"HALL MONITOR ON DUTY",sub:"Karen never actually goes home.",enemies:[{type:'ef',count:1}],loc:"\ud83d\udccd NORTHWOOD HIGH"},
-  {label:"STEINER'S GRADING PAPERS",sub:"At 3am. On a Friday.",enemies:[{type:'es',count:1}],loc:"\ud83d\udccd NORTHWOOD HIGH"},
-  {label:"AFTER SCHOOL SPECIAL",sub:"They coordinated. Of course they did.",enemies:[{type:'ef',count:1},{type:'es',count:1}],loc:"\ud83d\udccd NORTHWOOD HIGH"},
-  {label:"COACH NEVER SLEEPS",sub:"He was already running suicides.",enemies:[{type:'coach',count:1}],loc:"\ud83d\udccd NORTHWOOD FIELD"},
-  {label:"BERG IS COMING",sub:"The VP has been notified.",enemies:[{type:'et',count:1}],loc:"\ud83d\udccd MAIN ST ROASTERS"},
-  {label:"PEYTON TEXTED MR. BERG",sub:"She has his personal number somehow.",enemies:[{type:'sister',count:1},{type:'et',count:1}],loc:"\ud83d\udccd THE STREETS"},
-  {label:"\u2620 MAMA IS AWAKE \u2620",sub:"Peyton woke her up. Obviously.",enemies:[{type:'boss',count:1},{type:'sister',count:1}],loc:"\ud83d\udccd BRODY'S HOUSE"},
+  {label:'PEYTON SAW YOU',sub:'Your little sister never sleeps.',loc:"\ud83d\udccd BRODY'S BEDROOM WINDOW",enemies:[{type:'sister',count:1}],speech:{sister:'"BRODY. I SAW THAT."'},deathQ:{sister:'FINE!! Telling in the morning!!'},story:"Brody reaches the window...\nPeyton is already awake."},
+  {label:"NOSEY NEIGHBOR'S WATCHING",sub:"Rodney hasn't slept since 1987.",loc:'\ud83d\udccd THE FRONT YARD',enemies:[{type:'ew',count:1}],speech:{ew:'"HEY! I SEE YOU OUT THERE!"'},deathQ:{ew:"I'm calling the HOA!!"},story:'Made it outside...\nThen the porch light came on.'},
+  {label:'SHE CALLED THE NEIGHBORS',sub:"Peyton has Rodney saved as 'Emergency Snitch'",loc:'\ud83d\udccd THE SIDEWALK',enemies:[{type:'sister',count:1},{type:'ew',count:1}],speech:{sister:'"I CALLED FOR BACKUP."',ew:'"ON MY WAY!!"'},deathQ:{sister:'This is NOT over!!',ew:'HOA meeting tomorrow!!'},story:'Peyton already texted everyone.\nOf course she did.'},
+  {label:'HALL MONITOR ON DUTY',sub:'Karen patrols the halls at 3am. Voluntarily.',loc:'\ud83d\udccd NORTHWOOD HALLWAY',enemies:[{type:'ef',count:1}],speech:{ef:'"EXCUSE ME. DO YOU HAVE A PASS?"'},deathQ:{ef:'DETENTION!! ...whenever school starts!!'},story:'Somehow ended up at school.\nKaren never actually goes home.'},
+  {label:"STEINER'S GRADING PAPERS",sub:'At 3am. On a Friday.',loc:'\ud83d\udccd NORTHWOOD MATH WING',enemies:[{type:'es',count:1}],speech:{es:'"I HOPE YOU STUDIED, BRODY."'},deathQ:{es:'F MINUS!! See me after class!!'},story:'The math wing is lit up.\nShe never leaves.'},
+  {label:'THEY COORDINATE',sub:"They have a group chat called 'Brody Watch'",loc:'\ud83d\udccd NORTHWOOD MAIN ENTRANCE',enemies:[{type:'ef',count:1},{type:'es',count:1}],speech:{ef:'"WE CALLED EACH OTHER."',es:'"WE COORDINATE."'},deathQ:{ef:'The group chat hears about this!!',es:'Show your work next time!!'},story:'Two of them now.\nThey have a system.'},
+  {label:'COACH NEVER SLEEPS',sub:'He was already running drills. At 3am.',loc:'\ud83d\udccd NORTHWOOD FOOTBALL FIELD',enemies:[{type:'coach',count:1}],speech:{coach:'"SON. DROP AND GIVE ME 20."'},deathQ:{coach:'SEE YOU AT 6AM MONDAY!! SUICIDES!!'},story:'The field lights are on.\nCoach Andrews never left.'},
+  {label:'BERG IS NOTIFIED',sub:'The VP never actually leaves school property.',loc:'\ud83d\udccd MAIN STREET ROASTERS',enemies:[{type:'et',count:1}],speech:{et:'"MY OFFICE. NOW."'},deathQ:{et:'THIS GOES ON YOUR PERMANENT RECORD!!'},story:'Berg is at the coffee shop.\nAt 3am.\nHe lives here apparently.'},
+  {label:'PEYTON TEXTED BERG',sub:'She has his personal number. Nobody knows why.',loc:'\ud83d\udccd THE STREETS',enemies:[{type:'sister',count:1},{type:'et',count:1}],speech:{sister:'"I TEXTED MR. BERG."',et:'"SHE HAS MY NUMBER."'},deathQ:{sister:'You got lucky!!',et:'This conversation is not over!!'},story:'Almost home...\nPeyton is relentless.'},
+  {label:'\u2620 MAMA IS AWAKE \u2620',sub:'Peyton woke her up. Obviously.',loc:"\ud83d\udccd BRODY'S FRONT DOOR",enemies:[{type:'boss',count:1},{type:'sister',count:1}],speech:{boss:'"WHERE. HAVE. YOU. BEEN."',sister:'"I TOLD YOU SO."'},deathQ:{boss:"...we'll talk about this tomorrow.",sister:'ok fine you win'},story:"The front door opens.\nMama is standing there.\nPeyton is behind her.\nSmiling."},
 ];
 const TIER_QUOTES={ew:['Neighborhood watch','Got night vision','Running the block'],ef:['Hall monitor','Vice principal energy','The warden'],es:['Pop quiz','Midterm mode','Final exam'],et:['Office hours','Suspension notice','Expelled'],coach:['Practice time','Two-a-days','Championship run'],sister:['Snitching','Going live','Nuclear option'],boss:['Disappointed','Furious','Full name mode']};
 const ENAMES={ew:'NOSEY NEIGHBOR',ef:'KAREN',es:'MRS. STEINER',et:'MR. BERG',coach:'COACH ANDREWS',sister:'PEYTON',boss:'MAMA'};
@@ -543,6 +543,20 @@ class GameScene extends Phaser.Scene {
     this.input.on('pointerup',p=>{if(p.id!==this.joyPointerId)return;this.joyActive=false;this.joyDist=0;this.jBase.setAlpha(0);this.jThumb.setAlpha(0);});
   }
 
+  showSpeechBubble(enemy,text){
+    if(!enemy||!enemy.active||enemy.dead)return;
+    const ex=enemy.x,ey=enemy.y-enemy.displayHeight/2-20;
+    const bw=Math.min(260,W-40),bh=52;
+    const bx=Phaser.Math.Clamp(ex-bw/2,10,W-bw-10),by=Math.max(ey-bh-10,80);
+    const bubble=this.add.graphics().setDepth(180);
+    bubble.fillStyle(0xffffff,0.97);bubble.fillRoundedRect(bx,by,bw,bh,8);
+    bubble.lineStyle(2,0x000000,0.5);bubble.strokeRoundedRect(bx,by,bw,bh,8);
+    bubble.fillStyle(0xffffff,0.97);bubble.fillTriangle(ex-10,by+bh,ex+10,by+bh,ex,by+bh+14);
+    const txt=this.add.text(bx+bw/2,by+bh/2,text,{fontFamily:'Orbitron',fontSize:'11px',color:'#000000',fontStyle:'bold',wordWrap:{width:bw-20},align:'center'}).setOrigin(0.5).setDepth(181);
+    const origSpd=enemy.spd;enemy.spd=0;enemy.setVelocity(0,0);
+    this.time.delayedCall(2000,()=>{this.tweens.add({targets:[bubble,txt],alpha:0,duration:300,onComplete:()=>{if(bubble.scene)bubble.destroy();if(txt.scene)txt.destroy();if(enemy.active&&!enemy.dead)enemy.spd=origSpd;}});});
+  }
+
   startRound(n){
     this.roundNum=n;this.roundActive=true;this.roundEnemies=[];this.roundEnemiesExpected=0;
     const rd=this.activeRounds[n-1];
@@ -554,7 +568,7 @@ class GameScene extends Phaser.Scene {
     if(mainEnemy==='boss'){SFX.play('boss');DTM.MUSIC.play('boss');}else if(mainEnemy==='sister')SFX.play('boss');
     const tierColors={1:'#888888',2:'#4488ff',3:'#aa44ff'};
     const tierNames={1:'TIER 1',2:'TIER 2',3:'TIER 3'};
-    const tq=rd.sub||(TIER_QUOTES[mainEnemy]||['','',''])[tier-1]||'';
+    const tq=rd.story||rd.sub||'';
     const ov=this.add.graphics().setDepth(200);ov.fillStyle(0x000000,0.85);ov.fillRect(0,0,W,H);
     const card=this.add.graphics().setDepth(201);card.fillStyle(0x1a1a2e,0.97);card.fillRoundedRect(40,H/2-100,W-80,200,14);card.lineStyle(2,0xff9900,0.7);card.strokeRoundedRect(40,H/2-100,W-80,200,14);
     const rt=this.add.text(W/2,H/2-75,`ROUND ${n}`,{fontFamily:'Orbitron',fontSize:'14px',color:'#ff9900'}).setDepth(202).setOrigin(0.5);
@@ -641,6 +655,9 @@ class GameScene extends Phaser.Scene {
     if(!seen.includes(tex)&&!e.isMinion){e.hp=Math.floor(e.hp*0.7);e.maxHp=e.hp;seen.push(tex);localStorage.setItem('dtm_seen',JSON.stringify(seen));this.time.delayedCall(500,()=>this.showNewEnemyIntro(tex));}
     // Track tier abilities
     e.tierAbilityTimer=0;e.tierAbility2Timer=0;e.tierTriggeredOnce=false;
+    // Speech bubble on spawn
+    const rd=this.activeRounds?.[this.roundNum-1];
+    if(rd?.speech?.[tex]&&!e.isMinion){this.time.delayedCall(600,()=>{if(e?.active&&!e.dead)this.showSpeechBubble(e,rd.speech[tex]);});}
     return e;
   }
 
@@ -812,16 +829,17 @@ class GameScene extends Phaser.Scene {
     this.snacksEarned+=(e.gd||1);
     if(e.etype==='coach'){const dt=this.add.text(W/2,H/2-40,"I'll see you at 6am Monday!!",{fontFamily:'Orbitron',fontSize:'16px',color:'#4488ff',stroke:'#000',strokeThickness:4}).setDepth(201).setOrigin(0.5);this.tweens.add({targets:dt,alpha:0,y:H/2-120,duration:3000,onComplete:()=>dt.destroy()});const fb=this.add.graphics().setDepth(5);fb.fillStyle(0x8B4513,1);fb.fillEllipse(e.x,e.y,24,18);fb.fillStyle(0xffffff,0.8);fb.fillRect(e.x-8,e.y-1,16,2);const fz=this.add.zone(e.x,e.y,30,30).setDepth(5);this.physics.add.existing(fz);this.physics.add.overlap(this.player,fz,()=>{this.pHP=this.pMaxHP;this.updateHP();fb.destroy();fz.destroy();this.floatText(this.player.x,this.player.y-30,'+FULL HEAL!',0x00ff88);});this.time.delayedCall(10000,()=>{if(fb.scene)fb.destroy();if(fz.scene)fz.destroy();});}
     else if(e.isPeyton){
-      const pQuote=this.roundNum<=1?'Fine! I was going back to sleep anyway!!':this.roundNum>=10?'ok fine you win':"FINE!! I'm telling Dad too!!";
+      const rd=this.activeRounds?.[this.roundNum-1];
+      const pQuote=rd?.deathQ?.sister||"FINE!! I'm telling Dad too!!";
       const qt=this.add.text(e.x,e.y-28,pQuote,{fontFamily:'Orbitron',fontSize:'13px',color:'#cc44ff',stroke:'#000',strokeThickness:4,fontStyle:'bold'}).setDepth(51).setOrigin(0.5);this.tweens.add({targets:qt,y:e.y-100,alpha:0,duration:2000,ease:'Power2',onComplete:()=>qt.destroy()});this.cameras.main.flash(400,128,0,255);this.cameras.main.shake(500,0.02);
       // Round 10: Peyton dies → Mama enraged
       if(this.roundNum>=10){const mama=this.enemies.getChildren().find(en=>en.isBoss&&!en.dead);if(mama){mama.spd=Math.floor(mama.spd*1.3);this.floatText(mama.x,mama.y-60,'SHE WAS MY FAVORITE!!',0xff6600);this.cameras.main.shake(400,0.015);}}
     }
-    else if(e.isBoss){const qt=this.add.text(W/2,H/2,"...we'll talk about this tomorrow.",{fontFamily:'Orbitron',fontSize:'16px',color:'#ff4444',stroke:'#000',strokeThickness:5,fontStyle:'bold'}).setDepth(201).setOrigin(0.5);this.time.delayedCall(3000,()=>qt.destroy());this.cameras.main.flash(600,255,100,0);this.cameras.main.shake(800,0.025);
+    else if(e.isBoss){const rd3=this.activeRounds?.[this.roundNum-1];const bossQ=rd3?.deathQ?.boss||"...we'll talk about this tomorrow.";const qt=this.add.text(W/2,H/2,bossQ,{fontFamily:'Orbitron',fontSize:'16px',color:'#ff4444',stroke:'#000',strokeThickness:5,fontStyle:'bold'}).setDepth(201).setOrigin(0.5);this.time.delayedCall(3000,()=>qt.destroy());this.cameras.main.flash(600,255,100,0);this.cameras.main.shake(800,0.025);
       // Round 10: Mama dies → Peyton surrenders
       if(this.roundNum>=10){const pey=this.enemies.getChildren().find(en=>en.isPeyton&&!en.dead);if(pey){pey.spd=0;this.floatText(pey.x,pey.y-40,'ok fine you win',0xcc44ff);this.time.delayedCall(2000,()=>{if(!pey.dead)this.killEnemy(pey);});}}
     }
-    else{const quips={ew:"I'm telling your mother!",ef:'DETENTION!!',es:'F MINUS!!',et:'SUSPENDED!!'};if(quips[e.etype])this.floatText(e.x,e.y-28,quips[e.etype],0xffdd00);}
+    else{const rd2=this.activeRounds?.[this.roundNum-1];const quip=rd2?.deathQ?.[e.etype]||{ew:"I'm telling your mother!",ef:'DETENTION!!',es:'F MINUS!!',et:'SUSPENDED!!',coach:'6AM MONDAY!!'}[e.etype];if(quip)this.floatText(e.x,e.y-28,quip,0xffdd00);}
     for(let i=0;i<(e.gd||1);i++){const gx=e.x+Phaser.Math.Between(-18,18),gy=e.y+Phaser.Math.Between(-18,18);const gem=this.gems.create(gx,gy,'gem').setDepth(5).setDisplaySize(20,20);gem.xp=1;this.tweens.add({targets:gem,y:gy-22,duration:220,yoyo:true,ease:'Bounce'});}
     // (death explosion already handled above with multi-ring)
     if(e.hpGfx){e.hpGfx.destroy();e.hpGfx=null;}if(e.hpTxt){e.hpTxt.destroy();e.hpTxt=null;}if(e.nameLabel){e.nameLabel.destroy();e.nameLabel=null;}if(e.tierDot){e.tierDot.destroy();e.tierDot=null;}if(e.phaseLabel){e.phaseLabel.destroy();e.phaseLabel=null;}if(e._shield){e._shield.destroy();e._shield=null;}

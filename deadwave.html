@@ -443,16 +443,16 @@ class GameScene extends Phaser.Scene {
     const L=this.levelNum;
     const lb=Math.floor(L/10);
     // ══ PLAYER — hardcoded simple stats ══
-    this.pDmg=1+lb;this.fireRate=Math.max(400,1000-lb*50);
-    this.pMaxHP=50;this.pHP=50;this.pSpeed=170;
+    this.pDmg=8+lb;this.fireRate=Math.max(300,800-lb*50);
+    this.pMaxHP=100;this.pHP=100;this.pSpeed=170;
     this.piercing=false;this.orbitCnt=0;this.hasPulse=false;
     this.magnetR=70;this.regenRate=0;this.critRate=0;this.critDmg=1;
     this.orbitBlades=[];this.orbitAng=0;
     // Locker — flat
     const u=DTM.getUpgrades();
-    this.pSpeed+=(u.sneakers||0)*10;this.pDmg+=(u.backpack||0);
-    this.fireRate=Math.max(400,this.fireRate-(u.phone||0)*30);
-    this.pMaxHP+=(u.hoodie||0)*20;this.pHP=this.pMaxHP;
+    this.pSpeed+=(u.sneakers||0)*10;this.pDmg+=(u.backpack||0)*3;
+    this.fireRate=Math.max(300,this.fireRate-(u.phone||0)*30);
+    this.pMaxHP+=(u.hoodie||0)*25;this.pHP=this.pMaxHP;
     // ══ GAME STATE ══
     this.lastShot=0;this.pXP=0;this.pLevel=1;this.xpNeeded=10;
     this.score=0;this.kills=0;this.elapsed=0;this.totalTime=15*60*1000;
@@ -623,13 +623,13 @@ class GameScene extends Phaser.Scene {
     e.tier=ln<=10?1:ln<=30?2:3;
     const hm=1+Math.floor(ln/10)*0.2;
     switch(tex){
-      case 'ew':e.setDisplaySize(100,100);e.hp=Math.floor(100*hm);e.spd=38;e.dmg=8;e.gd=2;e.sv=50;e.burstColor=0xaaaaaa;break;
-      case 'ef':e.setDisplaySize(95,95);e.play('karen_walk');e.hp=Math.floor(80*hm);e.spd=85;e.dmg=10;e.gd=2;e.sv=60;e.burstColor=0xff8800;break;
-      case 'es':e.setDisplaySize(95,95);e.play('steiner_walk');e.hp=Math.floor(120*hm);e.spd=55;e.dmg=12;e.gd=3;e.sv=80;e.burstColor=0x4444ff;e.patrolTarget={x:Phaser.Math.Between(60,W-60),y:Phaser.Math.Between(100,H-100)};break;
-      case 'et':e.setDisplaySize(120,120);e.hp=Math.floor(200*hm);e.spd=28;e.dmg=20;e.gd=5;e.sv=150;e.burstColor=0xff0000;e.chargeDmg=30;break;
-      case 'coach':e.setDisplaySize(108,108);e.play('coach_run');e.hp=Math.floor(140*hm);e.spd=70;e.dmg=14;e.gd=4;e.sv=120;e.burstColor=0x4488ff;e.lastWhistle=0;e.lastDrill=0;break;
-      case 'sister':e.setDisplaySize(100,100);e.play('peyton_snitch');e.hp=Math.floor(160*hm);e.spd=65;e.dmg=12;e.gd=6;e.sv=200;e.burstColor=0xcc44ff;break;
-      case 'boss':e.setDisplaySize(155,155);e.play('mama_charge');e.hp=Math.floor(400*hm);e.spd=50;e.dmg=25;e.gd=15;e.sv=500;e.burstColor=0xff6600;e.chargeDmg=35;
+      case 'ew':e.setDisplaySize(100,100);e.hp=Math.floor(600*hm);e.spd=38;e.dmg=8;e.gd=3;e.sv=50;e.burstColor=0xaaaaaa;break;
+      case 'ef':e.setDisplaySize(95,95);e.play('karen_walk');e.hp=Math.floor(450*hm);e.spd=85;e.dmg=10;e.gd=3;e.sv=60;e.burstColor=0xff8800;break;
+      case 'es':e.setDisplaySize(95,95);e.play('steiner_walk');e.hp=Math.floor(700*hm);e.spd=55;e.dmg=12;e.gd=4;e.sv=80;e.burstColor=0x4444ff;e.patrolTarget={x:Phaser.Math.Between(60,W-60),y:Phaser.Math.Between(100,H-100)};break;
+      case 'et':e.setDisplaySize(120,120);e.hp=Math.floor(1200*hm);e.spd=28;e.dmg=20;e.gd=6;e.sv=150;e.burstColor=0xff0000;e.chargeDmg=30;break;
+      case 'coach':e.setDisplaySize(108,108);e.play('coach_run');e.hp=Math.floor(800*hm);e.spd=70;e.dmg=14;e.gd=5;e.sv=120;e.burstColor=0x4488ff;e.lastWhistle=0;e.lastDrill=0;break;
+      case 'sister':e.setDisplaySize(100,100);e.play('peyton_snitch');e.hp=Math.floor(800*hm);e.spd=65;e.dmg=12;e.gd=6;e.sv=200;e.burstColor=0xcc44ff;break;
+      case 'boss':e.setDisplaySize(155,155);e.play('mama_charge');e.hp=Math.floor(2400*hm);e.spd=50;e.dmg=25;e.gd=15;e.sv=500;e.burstColor=0xff6600;e.chargeDmg=35;
         this.bossOrbs=[0xff9900,0xff4400,0xff2244,0xffdd00].map(c=>{const o=this.add.graphics().setDepth(7);o.fillStyle(c,0.85);o.fillCircle(0,0,6);o.bossRef=e;return o;});break;
     }
     if(!e.hp||e.hp<=0){console.error('Enemy 0 HP on spawn! type:',tex);e.hp=100;}
@@ -873,7 +873,7 @@ class GameScene extends Phaser.Scene {
     const kh=(ev)=>{const idx=['1','2','3'].indexOf(ev.key);if(idx>=0&&chosen[idx])this.applySkill(chosen[idx]);};this.input.keyboard.on('keydown',kh);this._kh=kh;
   }
 
-  applySkill(sk){this.children.list.filter(c=>c.depth>=200).forEach(c=>c.destroy());if(this._kh){this.input.keyboard.off('keydown',this._kh);this._kh=null;}this.paused=false;this.physics.resume();switch(sk.id){case'dmg':this.pDmg+=1;break;case'rate':this.fireRate=Math.max(400,this.fireRate-150);break;case'spd':this.pSpeed+=30;break;case'pierce':this.piercing=true;break;case'orbit':this.addOrbit();break;case'pulse':this.hasPulse=true;break;case'mag':this.magnetR+=60;break;case'regen':this.regenRate+=2;break;case'maxhp':this.pMaxHP+=20;this.pHP=Math.min(this.pHP+20,this.pMaxHP);this.updateHP();break;}this.cameras.main.flash(250,0,255,160);}
+  applySkill(sk){this.children.list.filter(c=>c.depth>=200).forEach(c=>c.destroy());if(this._kh){this.input.keyboard.off('keydown',this._kh);this._kh=null;}this.paused=false;this.physics.resume();switch(sk.id){case'dmg':this.pDmg+=4;break;case'rate':this.fireRate=Math.max(300,this.fireRate-120);break;case'spd':this.pSpeed+=30;break;case'pierce':this.piercing=true;break;case'orbit':this.addOrbit();break;case'pulse':this.hasPulse=true;break;case'mag':this.magnetR+=60;break;case'regen':this.regenRate+=2;break;case'maxhp':this.pMaxHP+=25;this.pHP=Math.min(this.pHP+25,this.pMaxHP);this.updateHP();break;}this.cameras.main.flash(250,0,255,160);}
 
   addOrbit(){this.orbitCnt++;const blade=this.add.sprite(this.player.x,this.player.y,'blade').setDepth(9).setDisplaySize(30,30);blade.orbitR=58;blade.dmg=this.pDmg*0.55;blade.cd={};this.orbitBlades.push(blade);}
 

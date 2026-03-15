@@ -476,9 +476,7 @@ class GameScene extends Phaser.Scene {
     this.bgG=this.add.graphics().setDepth(1);this.drawBG();
     this.enemies=this.physics.add.group();this.bullets=this.physics.add.group();this.gems=this.physics.add.group();
     this.createAnims();this.createPlayer();this.createUI();this.setupInput();this.setupJoystick();
-    this.physics.add.overlap(this.player,this.enemies,(_p,e)=>{if(e.dead)return;const now=this.time.now;if(now-this.lastHurtTime<600)return;this.lastHurtTime=now;this.hurtPlayer(e.dmg||8);});
-    this.physics.add.overlap(this.bullets,this.enemies,(b,e)=>this.bulletHit(b,e));
-    this.physics.add.overlap(this.player,this.gems,(_p,g)=>this.pickGem(g));
+    // Collisions handled manually in checkCollisions() — no physics.add.overlap
     this.time.addEvent({delay:3000,callback:this.doPulse,callbackScope:this,loop:true});
     this.time.addEvent({delay:1000,callback:this.doRegen,callbackScope:this,loop:true});
     this.time.addEvent({delay:80,callback:this.doMagnet,callbackScope:this,loop:true});
@@ -698,6 +696,7 @@ class GameScene extends Phaser.Scene {
     if(!this.vigGfx)this.vigGfx=this.add.graphics().setDepth(95);
     this.vigGfx.clear();
     if(this.pHP/this.pMaxHP<0.3){const pulse=0.12+0.08*Math.sin(this.time.now*0.006);this.vigGfx.fillStyle(0xff0000,pulse);this.vigGfx.fillRect(0,0,W,20);this.vigGfx.fillRect(0,H-20,W,20);this.vigGfx.fillRect(0,0,20,H);this.vigGfx.fillRect(W-20,0,20,H);}
+    this.checkCollisions();
   }
 
   movePlayer(){
@@ -733,19 +732,7 @@ class GameScene extends Phaser.Scene {
     for(let i=0;i<n;i++){const p=this.add.graphics().setDepth(15);p.fillStyle(color||0xffff00,1);p.fillRect(0,0,5,5);p.x=x;p.y=y;const ang=Phaser.Math.Between(0,360)*Math.PI/180;const spd=Phaser.Math.Between(60,160);this.tweens.add({targets:p,x:p.x+Math.cos(ang)*spd*0.4,y:p.y+Math.sin(ang)*spd*0.4,alpha:0,scaleX:0.2,scaleY:0.2,duration:Phaser.Math.Between(200,400),onComplete:()=>p.destroy()});}
   }
 
-  bulletHit(b,e){
-    if(!b||!e||!b.active||e.dead||e.invincible)return;
-    if(!b.hitSet)b.hitSet=new Set();
-    if(b.hitSet.has(e.uid))return;
-    b.hitSet.add(e.uid);
-    const dmg=this.pDmg;
-    e.hp-=dmg;SFX.play('hit');
-    this.dmgNum(e.x,e.y-20,dmg,'normal');
-    e.setTint(0xffffff);this.time.delayedCall(80,()=>{if(e?.active&&!e.dead)e.clearTint();});
-    this.spawnHitParticles(e.x,e.y,e.burstColor||0xffff00);
-    b.hits=(b.hits||0)+1;
-    if(b.hits>=(b.pierce||1)){b.setActive(false).setVisible(false);b.body.enable=false;b.destroy();}
-    if(e.hp<=0)this.killEnemy(e);
+  bulletHit(b,e){/* collision handled in checkCollisions() */
     if(e.hp<=0)this.killEnemy(e);
   }
 
@@ -894,6 +881,48 @@ class GameScene extends Phaser.Scene {
     this.tweens.add({targets:t,y:y-70,alpha:0,duration:isCrit?1000:750,ease:'Power2',onComplete:()=>t.destroy()});
   }
   cleanBullets(){this.bullets.getChildren().forEach(b=>{if(b.x<-60||b.x>W+60||b.y<-60||b.y>H+60)b.destroy();});this.enemies.getChildren().forEach(e=>{if(e.dead){if(e.hpGfx){e.hpGfx.destroy();e.hpGfx=null;}if(e.hpTxt){e.hpTxt.destroy();e.hpTxt=null;}if(e.nameLabel){e.nameLabel.destroy();e.nameLabel=null;}if(e.tierDot){e.tierDot.destroy();e.tierDot=null;}if(e.phaseLabel){e.phaseLabel.destroy();e.phaseLabel=null;}}});}
+
+  checkCollisions(){
+    if(this.paused||this.dead)return;
+    const bullets=this.bullets.getChildren(),enemies=this.enemies.getChildren();
+    // Bullet vs enemy — manual distance check, runs exactly once per pair
+    for(let bi=bullets.length-1;bi>=0;bi--){
+      const b=bullets[bi];if(!b||!b.active)continue;if(!b.hitSet)b.hitSet=new Set();
+      for(let ei=enemies.length-1;ei>=0;ei--){
+        const e=enemies[ei];if(!e||e.dead||!e.active||e.invincible)continue;
+        if(b.hitSet.has(e.uid))continue;
+        const dx=b.x-e.x,dy=b.y-e.y,dist=Math.sqrt(dx*dx+dy*dy);
+        if(dist<(e.displayWidth/2)+6){
+          b.hitSet.add(e.uid);
+          e.hp-=this.pDmg;SFX.play('hit');
+          this.dmgNum(e.x,e.y-20,this.pDmg,'normal');
+          e.setTint(0xffffff);this.time.delayedCall(80,()=>{if(e?.active&&!e.dead)e.clearTint();});
+          this.spawnHitParticles(e.x,e.y,e.burstColor||0xffff00);
+          b.hits=(b.hits||0)+1;
+          if(b.hits>=(b.pierce||1)){b.destroy();break;}
+          if(e.hp<=0)this.killEnemy(e);
+        }
+      }
+    }
+    // Player vs enemy — contact damage with 600ms cooldown
+    const now=this.time.now;
+    if(now-this.lastHurtTime>=600){
+      for(let ei=0;ei<enemies.length;ei++){
+        const e=enemies[ei];if(!e||e.dead||!e.active)continue;
+        const dx=this.player.x-e.x,dy=this.player.y-e.y;
+        if(Math.sqrt(dx*dx+dy*dy)<(e.displayWidth/2)+16){
+          this.lastHurtTime=now;this.hurtPlayer(e.dmg||8);break;
+        }
+      }
+    }
+    // Gem pickup — distance check
+    const gems=this.gems.getChildren();
+    for(let gi=gems.length-1;gi>=0;gi--){
+      const g=gems[gi];if(!g||!g.active)continue;
+      const dx=this.player.x-g.x,dy=this.player.y-g.y;
+      if(Math.sqrt(dx*dx+dy*dy)<24)this.pickGem(g);
+    }
+  }
 
   diePlayer(){
     if(this.dead)return;this.dead=true;this.physics.pause();DTM.MUSIC.play('gameover');

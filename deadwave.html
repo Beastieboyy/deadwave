@@ -539,7 +539,7 @@ class GameScene extends Phaser.Scene {
   }
 
   startRound(n){
-    this.roundNum=n;this.roundActive=true;this.roundEnemies=[];
+    this.roundNum=n;this.roundActive=true;this.roundEnemies=[];this.roundEnemiesExpected=-1;
     const rd=this.activeRounds[n-1];
     if(!rd){this.winGame();return;}
     this.roundTxt.setText(`ROUND ${n}/${this.activeRounds.length}`);
@@ -562,13 +562,17 @@ class GameScene extends Phaser.Scene {
       this.roundStartTime=this.elapsed;this.roundMinTimeMet=false;this._respawnScheduled=false;
       this.waveTxt.setText(rd.label).setAlpha(1).setY(H/2-80);
       this.tweens.add({targets:this.waveTxt,alpha:0,y:H/2-130,duration:2500,ease:'Power2'});
-      let idx=0;
+      let idx=0;let total=0;
+      rd.enemies.forEach(grp=>{total+=grp.count;});
+      this.roundEnemiesExpected=total;
       rd.enemies.forEach(grp=>{for(let i=0;i<grp.count;i++){this.time.delayedCall(idx*1500,()=>{if(this.dead)return;const e=this.spawnEnemy(grp.type);if(e)this.roundEnemies.push(e);});idx++;}});
     });
   }
 
   checkRoundClear(){
     if(!this.roundActive||this.dead)return;
+    // Don't check until all expected enemies have spawned
+    if(this.roundEnemiesExpected<0||this.roundEnemies.length<this.roundEnemiesExpected)return;
     const alive=this.roundEnemies.filter(e=>e&&!e.dead);
     if(alive.length>0)return;
     // Minimum round timer — if enemies died too fast, respawn
@@ -628,8 +632,11 @@ class GameScene extends Phaser.Scene {
       case 'boss':e.setDisplaySize(155,155);e.play('mama_charge');e.hp=Math.floor(400*hm);e.spd=50;e.dmg=25;e.gd=15;e.sv=500;e.burstColor=0xff6600;e.chargeDmg=35;
         this.bossOrbs=[0xff9900,0xff4400,0xff2244,0xffdd00].map(c=>{const o=this.add.graphics().setDepth(7);o.fillStyle(c,0.85);o.fillCircle(0,0,6);o.bossRef=e;return o;});break;
     }
+    if(!e.hp||e.hp<=0){console.error('Enemy 0 HP on spawn! type:',tex);e.hp=100;}
     e.maxHp=e.hp;
+    console.log('SPAWN:',tex,'hp:',e.hp,'maxHp:',e.maxHp);
     e.hpGfx=this.add.graphics().setDepth(7);
+    e.hpTxt=null;
     const isBoss=tex==='sister'||tex==='boss'||tex==='coach';
     e.nameLabel=this.add.text(0,0,ENAMES[tex]||'',{fontFamily:'Orbitron',fontSize:isBoss?'15px':'13px',color:'#ffffff',stroke:'#000',strokeThickness:4,fontStyle:'bold'}).setDepth(20).setOrigin(0.5,1);
     // Tier dot
@@ -789,6 +796,7 @@ class GameScene extends Phaser.Scene {
   floatText(x,y,txt,col){const t=this.add.text(x,y,txt,{fontFamily:'Orbitron',fontSize:'9px',color:'#'+col.toString(16).padStart(6,'0'),stroke:'#000',strokeThickness:3,fontStyle:'bold'}).setDepth(51).setOrigin(0.5);this.tweens.add({targets:t,y:y-50,alpha:0,duration:1800,ease:'Power2',onComplete:()=>t.destroy()});}
 
   killEnemy(e){
+    console.log('KILL:',e?.etype,'hp:',e?.hp,'maxHp:',e?.maxHp);
     if(e.dead)return;e.dead=true;this.kills++;
     // Combo system
     this.comboCount++;this.lastComboTime=this.time.now;

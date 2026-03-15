@@ -475,6 +475,9 @@ class GameScene extends Phaser.Scene {
     bgTile.tileScaleX=0.18;bgTile.tileScaleY=0.18;
     this.bgG=this.add.graphics().setDepth(1);this.drawBG();
     this.enemies=this.physics.add.group();this.bullets=this.physics.add.group();this.gems=this.physics.add.group();
+    this.physics.add.collider(this.enemies,this.enemies);
+    // Safety cleanup for stuck enemies
+    this.time.addEvent({delay:2000,loop:true,callback:()=>{this.enemies.getChildren().forEach(e=>{if(!e||!e.active)return;if(e.hp<=0&&!e.dead){console.warn('Stuck enemy force-killed:',e.etype);this.killEnemy(e);}if(e.x<-200||e.x>W+200||e.y<-200||e.y>H+200){console.warn('Off-screen enemy removed:',e.etype);this.killEnemy(e);}});}});
     this.createAnims();this.createPlayer();this.createUI();this.setupInput();this.setupJoystick();
     // Collisions handled manually in checkCollisions() — no physics.add.overlap
     this.time.addEvent({delay:3000,callback:this.doPulse,callbackScope:this,loop:true});
@@ -658,7 +661,7 @@ class GameScene extends Phaser.Scene {
     e.abilityTimer=0;e.abilityTimer2=0;e.abilityTimer3=0;e.spawnedMinions=0;e.patrolTarget=null;
     e.setDisplaySize(size,size);if(tex==='ef')e.play('karen_walk');
     e.hp=hp;e.maxHp=hp;e.spd=tex==='ef'?100:50;e.dmg=5;e.gd=1;e.sv=5;e.burstColor=0xff6666;
-    e.hpGfx=this.add.graphics().setDepth(7);
+    e.hpGfx=this.add.graphics().setDepth(7);e.hpTxt=null;
     e.nameLabel=this.add.text(0,0,tex==='ew'?'NOSEY JR.':tex==='ef'?'KAREN':'',{fontFamily:'Orbitron',fontSize:'8px',color:'#aaaaaa',stroke:'#000',strokeThickness:2}).setDepth(20).setOrigin(0.5,1);
     return e;
   }
@@ -909,8 +912,8 @@ class GameScene extends Phaser.Scene {
           if(e.hpGfx){e.hpGfx.setAlpha(0.4);this.time.delayedCall(120,()=>{if(e?.hpGfx)e.hpGfx.setAlpha(1);});}
           this.spawnHitParticles(e.x,e.y,e.burstColor||0xffff00);
           b.hits=(b.hits||0)+1;
+          if(e.hp<=0&&!e.dead)this.killEnemy(e);
           if(b.hits>=(b.pierce||1)){b.destroy();break;}
-          if(e.hp<=0)this.killEnemy(e);
         }
       }
     }

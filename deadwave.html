@@ -70,18 +70,8 @@ const DTM = {
   setStars:(lvl,s)=>{const st=DTM.getStars();st[lvl]=Math.max(st[lvl]||0,s);localStorage.setItem('dtm_stars',JSON.stringify(st));},
   getCurrentLevel:()=>parseInt(localStorage.getItem('dtm_currentlevel')||'1'),
   setCurrentLevel:(n)=>localStorage.setItem('dtm_currentlevel',String(n)),
-  getToken:()=>localStorage.getItem('dtm_token')||'',
-  setToken:(t)=>localStorage.setItem('dtm_token',t),
-  getPlayer:()=>{try{return JSON.parse(localStorage.getItem('dtm_player')||'null');}catch(e){return null;}},
-  setPlayer:(p)=>localStorage.setItem('dtm_player',JSON.stringify(p)),
-  clearPlayer:()=>{localStorage.removeItem('dtm_player');localStorage.removeItem('dtm_token');},
-  isLoggedIn:()=>!!localStorage.getItem('dtm_token')&&!!localStorage.getItem('dtm_player'),
-  _fetch:async(url,opts={})=>{try{const c=new AbortController();const t=setTimeout(()=>c.abort(),10000);const r=await fetch(url,{...opts,mode:'cors',credentials:'omit',signal:c.signal,headers:{...opts.headers,'Accept':'application/json'}});clearTimeout(t);if(!r.ok)return{error:`Server error: ${r.status}`};return await r.json();}catch(e){if(e.name==='AbortError')return{error:'Request timed out'};return{error:'Connection failed: '+e.message};}},
-  register:async(username,password,display)=>DTM._fetch(DTM.API+'?action=register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username,password,display})}),
-  login:async(username,password)=>DTM._fetch(DTM.API+'?action=login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username,password})}),
-  logout:async()=>{const t=DTM.getToken();if(t)try{await DTM._fetch(DTM.API+'?action=logout',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:t})});}catch(e){}DTM.clearPlayer();},
-  validateSession:async()=>{const t=DTM.getToken();if(!t)return null;try{const d=await DTM._fetch(`${DTM.API}?action=validate&token=${t}`);if(d.success){DTM.setPlayer(d.player);const p=d.player;if(p.upgrades)localStorage.setItem('dtm_upgrades',typeof p.upgrades==='string'?p.upgrades:JSON.stringify(p.upgrades));if(p.unlocked_levels)localStorage.setItem('dtm_unlocked',typeof p.unlocked_levels==='string'?p.unlocked_levels:JSON.stringify(p.unlocked_levels));if(p.stars)localStorage.setItem('dtm_stars',typeof p.stars==='string'?p.stars:JSON.stringify(p.stars));if(p.total_snacks!=null)localStorage.setItem('dtm_snacks',String(p.total_snacks));return d.player;}}catch(e){}return null;},
-  saveProgress:async()=>{const t=DTM.getToken();if(!t)return;try{await DTM._fetch(DTM.API+'?action=save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:t,total_snacks:DTM.getSnacks(),upgrades:DTM.getUpgrades(),unlocked_levels:DTM.getUnlocked(),stars:DTM.getStars(),highest_level:DTM.getCurrentLevel()})});}catch(e){}},
+  getPin:()=>localStorage.getItem('dtm_pin')||'0000',
+  _gfetch:async(url)=>{try{const c=new AbortController();const t=setTimeout(()=>c.abort(),8000);const r=await fetch(url,{signal:c.signal});clearTimeout(t);if(!r.ok)return{error:`Server error: ${r.status}`};return await r.json();}catch(e){if(e.name==='AbortError')return{error:'Request timed out'};return{error:e.message};}},
   locationForLevel:(n)=>{
     if(n<=10) return{name:'NORTHWOOD HIGH',color:'#4488ff'};
     if(n<=20) return{name:'MAIN ST ROASTERS',color:'#ff8800'};
@@ -98,8 +88,9 @@ const DTM = {
     return['ew','ef','es','et','coach','sister'];
   },
   calcScore:(kills,rounds,timeLeft,stars,level)=>(kills*100)+(rounds*500)+(Math.floor(timeLeft/1000)*10)+(stars*1000)+(level*200),
-  submitScore:async(name,score,level,kills,stars)=>DTM._fetch(DTM.API+'?action=submit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,score,level,kills,stars})}),
-  fetchLeaderboard:async(period='all')=>DTM._fetch(`${DTM.API}?action=leaderboard&period=${period}`),
+  submitScore:async(score,level,kills,stars)=>{const n=DTM.getName(),p=DTM.getPin();if(!n||n.startsWith('Guest_'))return{error:'guest'};return DTM._gfetch(`${DTM.API}?action=submit&name=${encodeURIComponent(n)}&pin=${p}&score=${score}&level=${level}&kills=${kills}&stars=${stars}`);},
+  fetchLeaderboard:async(period='all')=>DTM._gfetch(`${DTM.API}?action=leaderboard&period=${period}`),
+  getPersonalBest:async()=>{const n=DTM.getName(),p=DTM.getPin();if(!n||n.startsWith('Guest_'))return null;return DTM._gfetch(`${DTM.API}?action=personal&name=${encodeURIComponent(n)}&pin=${p}`);},
   makeBG:(scene)=>{const g=scene.add.graphics();g.fillStyle(0x08080f);g.fillRect(0,0,W,H);g.lineStyle(1,0x1a1a2e,0.5);for(let x=0;x<W;x+=40)g.lineBetween(x,0,x,H);for(let y=0;y<H;y+=40)g.lineBetween(0,y,W,y);return g;},
   makeCard:(scene,x,y,w,h,alpha=1)=>{const g=scene.add.graphics();g.fillStyle(0x1a1a2e,alpha);g.fillRoundedRect(x,y,w,h,12);g.lineStyle(2,0xff9900,0.6);g.strokeRoundedRect(x,y,w,h,12);return g;},
   makeBtn:(scene,x,y,w,h,label,color=0xff9900)=>{
@@ -172,7 +163,7 @@ class MenuScene extends Phaser.Scene {
     this.add.text(W/2,390,`BEST SNITCH COUNT: ${hs}`,{fontFamily:'Orbitron',fontSize:'13px',color:'#ffaa00'}).setOrigin(0.5);
     const btn=this.add.text(W/2,480,'[ SNEAK OUT ]',{fontFamily:'Orbitron',fontSize:'22px',fontStyle:'bold',color:'#ff9900',stroke:'#ff9900',strokeThickness:1}).setOrigin(0.5).setInteractive({useHandCursor:true});
     this.tweens.add({targets:btn,alpha:0.25,duration:700,yoyo:true,repeat:-1});
-    const start=()=>{this.cameras.main.fadeOut(400,0,0,0);this.time.delayedCall(400,()=>this.scene.start('AuthScene'));};
+    const start=()=>{this.cameras.main.fadeOut(400,0,0,0);this.time.delayedCall(400,()=>this.scene.start('NicknameScene'));};
     btn.on('pointerdown',start);this.input.keyboard.once('keydown',start);
     this.add.text(W/2,H-50,'Drag left side to move\nAuto-throws homework  •  Pick powers on level up',{fontFamily:'Orbitron',fontSize:'8px',color:'#444466',align:'center'}).setOrigin(0.5);
     this.add.text(W/2,H-18,'"based on true events"',{fontFamily:'Orbitron',fontSize:'8px',color:'#333344',fontStyle:'italic'}).setOrigin(0.5);
@@ -181,60 +172,34 @@ class MenuScene extends Phaser.Scene {
 }
 
 // ─────────────────────────────────────────────────
-// AUTH SCENE (login/register/guest)
+// NICKNAME SCENE (simple name + PIN)
 // ─────────────────────────────────────────────────
-class AuthScene extends Phaser.Scene {
-  constructor(){super('AuthScene');}
-  async create(){
+class NicknameScene extends Phaser.Scene {
+  constructor(){super('NicknameScene');}
+  create(){
+    if(DTM.getName()&&localStorage.getItem('dtm_pin')){this.scene.start('HubScene');return;}
     DTM.makeBG(this);SFX.init();
-    const checking=this.add.text(W/2,H/2,'Checking session...',{fontFamily:'Orbitron',fontSize:'14px',color:'#888899'}).setOrigin(0.5);
-    const player=await DTM.validateSession();
-    if(player){DTM.setName(player.display_name||player.username);this.cameras.main.fadeOut(300,0,0,0);this.time.delayedCall(300,()=>this.scene.start('HubScene'));return;}
-    if(DTM.getName()){this.cameras.main.fadeOut(300,0,0,0);this.time.delayedCall(300,()=>this.scene.start('HubScene'));return;}
-    checking.destroy();this._buildUI();
-  }
-  _buildUI(){
-    DTM.makeBG(this);
-    this.add.text(W/2,80,"DON'T TELL",{fontFamily:'Orbitron',fontSize:'32px',color:'#ff9900',fontStyle:'bold',stroke:'#000',strokeThickness:4}).setOrigin(0.5);
-    this.add.text(W/2,122,'MAMA',{fontFamily:'Orbitron',fontSize:'52px',color:'#ffffff',fontStyle:'bold',stroke:'#ff9900',strokeThickness:3}).setOrigin(0.5);
-    this.add.text(W/2,175,"Brody's Great Escape",{fontFamily:'Orbitron',fontSize:'13px',color:'#888899'}).setOrigin(0.5);
-    let activeTab='login';const formObjs=[];
-    const clearForm=()=>{formObjs.forEach(o=>{if(o&&o.destroy)o.destroy();else if(o&&o.remove)o.remove();});formObjs.length=0;document.querySelectorAll('.dtm-input').forEach(el=>el.remove());};
-    const makeInput=(placeholder,yPos,type='text')=>{
-      const el=this.add.dom(W/2,yPos,'input','width:300px;padding:13px 16px;font-size:16px;font-family:Orbitron,sans-serif;background:#1a1a2e;color:#ffffff;border:2px solid #333355;border-radius:10px;outline:none;box-sizing:border-box;-webkit-appearance:none;text-align:left;').setOrigin(0.5);
-      el.node.type=type;el.node.placeholder=placeholder;el.node.maxLength=type==='password'?50:30;
-      el.node.addEventListener('focus',()=>el.node.style.borderColor='#ff9900');
-      el.node.addEventListener('blur',()=>el.node.style.borderColor='#333355');
-      formObjs.push(el);return el;
-    };
-    const ltBg=this.add.graphics(),stBg=this.add.graphics();
-    const drawTabs=(a)=>{ltBg.clear();stBg.clear();ltBg.fillStyle(a==='login'?0xff9900:0x1a1a2e,1);ltBg.fillRoundedRect(20,205,165,36,8);stBg.fillStyle(a==='signup'?0xff9900:0x1a1a2e,1);stBg.fillRoundedRect(205,205,165,36,8);};
-    drawTabs('login');
-    const ltTxt=this.add.text(102,223,'LOG IN',{fontFamily:'Orbitron',fontSize:'13px',color:'#000',fontStyle:'bold'}).setOrigin(0.5);
-    const stTxt=this.add.text(287,223,'SIGN UP',{fontFamily:'Orbitron',fontSize:'13px',color:'#ff9900',fontStyle:'bold'}).setOrigin(0.5);
-    const ltZ=this.add.zone(20,205,165,36).setOrigin(0,0).setInteractive({useHandCursor:true});
-    const stZ=this.add.zone(205,205,165,36).setOrigin(0,0).setInteractive({useHandCursor:true});
-    const showLogin=()=>{clearForm();activeTab='login';drawTabs('login');ltTxt.setColor('#000');stTxt.setColor('#ff9900');
-      const ui=makeInput('Username',310),pi=makeInput('Password',375,'password');
-      const mt=this.add.text(W/2,430,'',{fontFamily:'Orbitron',fontSize:'11px',color:'#ff4444',wordWrap:{width:300},align:'center'}).setOrigin(0.5);formObjs.push(mt);
-      const lb=DTM.makeBtn(this,40,460,W-80,52,'\u25b6 LOG IN',0xff9900);formObjs.push(lb.bg,lb.text);
-      const doLogin=async()=>{const u=ui.node.value.trim(),p=pi.node.value;if(!u||!p){mt.setText('Please fill in all fields').setColor('#ff4444');return;}mt.setText('Logging in...').setColor('#888899');lb.text.setText('...');const r=await DTM.login(u,p);if(r.error){mt.setText(r.error).setColor('#ff4444');lb.text.setText('\u25b6 LOG IN');return;}DTM.setToken(r.token);DTM.setPlayer(r.player);DTM.setName(r.player.display_name||r.player.username);await DTM.validateSession();clearForm();this.cameras.main.fadeOut(300,0,0,0);this.time.delayedCall(300,()=>this.scene.start('HubScene'));};
-      lb.bg.on('pointerdown',doLogin);pi.node.addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
-      const gb=this.add.text(W/2,534,'Play as Guest (no cloud save)',{fontFamily:'Orbitron',fontSize:'11px',color:'#888899'}).setOrigin(0.5).setInteractive({useHandCursor:true});
-      gb.on('pointerover',()=>gb.setColor('#ffffff'));gb.on('pointerout',()=>gb.setColor('#888899'));
-      gb.on('pointerdown',()=>{clearForm();DTM.setName('Guest_'+Math.floor(Math.random()*9999));this.cameras.main.fadeOut(300,0,0,0);this.time.delayedCall(300,()=>this.scene.start('HubScene'));});
-      formObjs.push(gb);
-    };
-    const showSignup=()=>{clearForm();activeTab='signup';drawTabs('signup');ltTxt.setColor('#ff9900');stTxt.setColor('#000');
-      const ni=makeInput('Display Name',290),ui=makeInput('Username',355),pi=makeInput('Password',420,'password'),p2=makeInput('Confirm Password',485,'password');
-      const mt=this.add.text(W/2,535,'',{fontFamily:'Orbitron',fontSize:'11px',color:'#ff4444',wordWrap:{width:300},align:'center'}).setOrigin(0.5);formObjs.push(mt);
-      const sb=DTM.makeBtn(this,40,565,W-80,52,'\u2713 CREATE ACCOUNT',0x00aa44);formObjs.push(sb.bg,sb.text);
-      const doSignup=async()=>{const d=ni.node.value.trim(),u=ui.node.value.trim(),p=pi.node.value,p2v=p2.node.value;if(!d||!u||!p){mt.setText('Please fill in all fields').setColor('#ff4444');return;}if(p!==p2v){mt.setText("Passwords don't match!").setColor('#ff4444');return;}if(p.length<4){mt.setText('Password must be at least 4 characters').setColor('#ff4444');return;}mt.setText('Creating account...').setColor('#888899');sb.text.setText('...');const r=await DTM.register(u,p,d);if(r.error){mt.setText(r.error).setColor('#ff4444');sb.text.setText('\u2713 CREATE ACCOUNT');return;}DTM.setToken(r.token);DTM.setPlayer(r.player);DTM.setName(d||u);clearForm();this.add.text(W/2,H/2,`Welcome, ${d}! \ud83c\udfae`,{fontFamily:'Orbitron',fontSize:'18px',color:'#00ff88',fontStyle:'bold'}).setOrigin(0.5).setDepth(10);this.time.delayedCall(1500,()=>{this.cameras.main.fadeOut(300,0,0,0);this.time.delayedCall(300,()=>this.scene.start('HubScene'));});};
-      sb.bg.on('pointerdown',doSignup);p2.node.addEventListener('keydown',e=>{if(e.key==='Enter')doSignup();});
-    };
-    ltZ.on('pointerdown',showLogin);stZ.on('pointerdown',showSignup);
-    showLogin();
-    this.events.on('shutdown',()=>{document.querySelectorAll('.dtm-input').forEach(el=>el.remove());});
+    this.add.text(W/2,100,"DON'T TELL",{fontFamily:'Orbitron',fontSize:'30px',color:'#ff9900',fontStyle:'bold',stroke:'#000',strokeThickness:4}).setOrigin(0.5);
+    this.add.text(W/2,142,'MAMA',{fontFamily:'Orbitron',fontSize:'52px',color:'#ffffff',fontStyle:'bold',stroke:'#ff9900',strokeThickness:3}).setOrigin(0.5);
+    this.add.text(W/2,196,"Brody's Great Escape",{fontFamily:'Orbitron',fontSize:'13px',color:'#888899'}).setOrigin(0.5);
+    DTM.makeCard(this,30,225,W-60,380,0.97);
+    this.add.text(W/2,252,'\ud83d\udc64 CREATE YOUR PLAYER',{fontFamily:'Orbitron',fontSize:'14px',color:'#ff9900',fontStyle:'bold'}).setOrigin(0.5);
+    this.add.text(W/2,282,'Your name appears on the Northwood\nSnitch List leaderboard',{fontFamily:'Orbitron',fontSize:'10px',color:'#888899',align:'center'}).setOrigin(0.5);
+    const nameIn=this.add.dom(W/2,338,'input','width:290px;padding:13px 16px;font-size:16px;font-family:Orbitron,sans-serif;background:#0d0d1a;color:#fff;border:2px solid #333355;border-radius:10px;outline:none;box-sizing:border-box;').setOrigin(0.5);
+    nameIn.node.placeholder='Your nickname (e.g. BrodyF)';nameIn.node.maxLength=20;
+    nameIn.node.addEventListener('focus',()=>nameIn.node.style.borderColor='#ff9900');nameIn.node.addEventListener('blur',()=>nameIn.node.style.borderColor='#333355');
+    this.add.text(W/2,376,'\ud83d\udd22 4-DIGIT PIN (to recover on new device)',{fontFamily:'Orbitron',fontSize:'10px',color:'#888899'}).setOrigin(0.5);
+    const pinIn=this.add.dom(W/2,414,'input','width:290px;padding:13px 16px;font-size:16px;font-family:Orbitron,sans-serif;background:#0d0d1a;color:#fff;border:2px solid #333355;border-radius:10px;outline:none;box-sizing:border-box;letter-spacing:8px;text-align:center;').setOrigin(0.5);
+    pinIn.node.placeholder='\u2022 \u2022 \u2022 \u2022';pinIn.node.maxLength=4;pinIn.node.type='number';pinIn.node.inputMode='numeric';pinIn.node.pattern='[0-9]*';
+    pinIn.node.addEventListener('focus',()=>pinIn.node.style.borderColor='#ff9900');pinIn.node.addEventListener('blur',()=>pinIn.node.style.borderColor='#333355');
+    const errTxt=this.add.text(W/2,450,'',{fontFamily:'Orbitron',fontSize:'11px',color:'#ff4444',wordWrap:{width:290},align:'center'}).setOrigin(0.5);
+    const btn=DTM.makeBtn(this,50,472,W-100,54,"\u25b6 LET'S SNEAK OUT!",0xff9900);
+    const go=()=>{const name=nameIn.node.value.trim().replace(/[^a-zA-Z0-9_ ]/g,''),pin=pinIn.node.value.replace(/[^0-9]/g,'');if(!name||name.length<2){errTxt.setText('Name must be at least 2 characters!');return;}if(pin.length!==4){errTxt.setText('PIN must be exactly 4 digits!');return;}DTM.setName(name);localStorage.setItem('dtm_pin',pin);nameIn.destroy();pinIn.destroy();this.cameras.main.fadeOut(300,0,0,0);this.time.delayedCall(300,()=>this.scene.start('HubScene'));};
+    btn.bg.on('pointerdown',go);nameIn.node.addEventListener('keydown',e=>{if(e.key==='Enter')pinIn.node.focus();});pinIn.node.addEventListener('keydown',e=>{if(e.key==='Enter')go();});
+    const guestBtn=this.add.text(W/2,544,'Skip \u2014 Play as Guest (no leaderboard)',{fontFamily:'Orbitron',fontSize:'11px',color:'#555577'}).setOrigin(0.5).setInteractive({useHandCursor:true});
+    guestBtn.on('pointerover',()=>guestBtn.setColor('#888899'));guestBtn.on('pointerout',()=>guestBtn.setColor('#555577'));
+    guestBtn.on('pointerdown',()=>{DTM.setName('Guest_'+Math.floor(Math.random()*9999));localStorage.setItem('dtm_pin','0000');nameIn.destroy();pinIn.destroy();this.cameras.main.fadeOut(300,0,0,0);this.time.delayedCall(300,()=>this.scene.start('HubScene'));});
+    this.events.on('shutdown',()=>{if(nameIn.scene)nameIn.destroy();if(pinIn.scene)pinIn.destroy();});
     this.cameras.main.fadeIn(400,0,0,0);
   }
 }
@@ -258,17 +223,14 @@ class HubScene extends Phaser.Scene {
     const setBtn=this.add.text(W/2+14,20,'\u2699\ufe0f',{fontSize:'18px'}).setOrigin(0.5).setDepth(10).setInteractive({useHandCursor:true});
     setBtn.on('pointerdown',()=>{
       const ov=this.add.graphics().setDepth(200);ov.fillStyle(0x000000,0.85);ov.fillRect(0,0,W,H);
-      DTM.makeCard(this,40,280,W-80,260,0.98);const p=DTM.getPlayer();
+      DTM.makeCard(this,40,280,W-80,260,0.98);
       this.add.text(W/2,310,'ACCOUNT',{fontFamily:'Orbitron',fontSize:'18px',color:'#ff9900',fontStyle:'bold'}).setOrigin(0.5).setDepth(201);
-      this.add.text(W/2,340,p?`@${p.username}`:'Guest Mode',{fontFamily:'Orbitron',fontSize:'12px',color:'#888899'}).setOrigin(0.5).setDepth(201);
-      if(DTM.isLoggedIn()){
-        const svb=DTM.makeBtn(this,60,365,W-120,40,'\u2601 SAVE TO CLOUD',0x1a1a2e);svb.text.setColor('#00ff88').setDepth(202);svb.bg.setDepth(201);
-        svb.bg.on('pointerdown',async()=>{svb.text.setText('Saving...');await DTM.saveProgress();svb.text.setText('\u2713 Saved!');});
-        const lob=DTM.makeBtn(this,60,415,W-120,40,'\ud83d\udeaa LOG OUT',0x1a1a2e);lob.text.setColor('#ff4444').setDepth(202);lob.bg.setDepth(201);
-        lob.bg.on('pointerdown',async()=>{await DTM.logout();this.scene.start('AuthScene');});
-      }
-      const cb=DTM.makeBtn(this,60,465,W-120,40,'\u2715 CLOSE',0x1a1a2e);cb.text.setColor('#888899').setDepth(202);cb.bg.setDepth(201);
-      cb.on='pointerdown';cb.bg.on('pointerdown',()=>{this.children.list.filter(c=>c.depth>=200).forEach(c=>c.destroy());});
+      this.add.text(W/2,340,`\ud83d\udc64 ${name}`,{fontFamily:'Orbitron',fontSize:'16px',color:'#ffffff',fontStyle:'bold'}).setOrigin(0.5).setDepth(201);
+      const pin=DTM.getPin();this.add.text(W/2,365,`PIN: ${pin.replace(/./g,'\u2022')}  (write this down!)`,{fontFamily:'Orbitron',fontSize:'11px',color:'#888899'}).setOrigin(0.5).setDepth(201);
+      const chb=DTM.makeBtn(this,60,395,W-120,40,'\u270f CHANGE NAME / PIN',0x1a1a2e);chb.text.setColor('#ff9900').setDepth(202);chb.bg.setDepth(201);
+      chb.bg.on('pointerdown',()=>{localStorage.removeItem('dtm_playername');localStorage.removeItem('dtm_pin');this.cameras.main.fadeOut(250,0,0,0);this.time.delayedCall(250,()=>this.scene.start('NicknameScene'));});
+      const cb=DTM.makeBtn(this,60,445,W-120,40,'\u2715 CLOSE',0x1a1a2e);cb.text.setColor('#888899').setDepth(202);cb.bg.setDepth(201);
+      cb.bg.on('pointerdown',()=>{this.children.list.filter(c=>c.depth>=200).forEach(c=>c.destroy());});
     });
     DTM.makeCard(this,16,85,W-32,310,0.95);
     this.add.text(W/2,108,`NIGHT ${level}`,{fontFamily:'Orbitron',fontSize:'28px',fontStyle:'bold',color:'#ffffff'}).setOrigin(0.5);
@@ -957,8 +919,7 @@ class GameScene extends Phaser.Scene {
   winGame(){
     if(this.dead)return;this.dead=true;this.physics.pause();DTM.MUSIC.play('victory');
     localStorage.removeItem(`dtm_losses_${this.levelNum}`);
-    DTM.saveProgress();
-    const hs=parseInt(localStorage.getItem('dw_hs')||0);if(this.kills>hs)localStorage.setItem('dw_hs',this.kills);
+        const hs=parseInt(localStorage.getItem('dw_hs')||0);if(this.kills>hs)localStorage.setItem('dw_hs',this.kills);
     this.cameras.main.flash(1200,255,255,255);
     this.time.delayedCall(900,()=>this.scene.start('ResultScene',{win:true,kills:this.kills,level:this.levelNum,elapsed:this.elapsed,rounds:this.roundsCompleted,snacksEarned:this.snacksEarned,specialHits:this.specialHitCount,finalHP:this.pHP,maxHP:this.pMaxHP}));
   }
@@ -1040,7 +1001,7 @@ class ResultScene extends Phaser.Scene {
     rows.forEach(([label,val],i)=>{const y=210+i*48;this.add.text(40,y,label,{fontFamily:'Orbitron',fontSize:'11px',color:'#888899'});this.add.text(W-40,y,String(val),{fontFamily:'Orbitron',fontSize:'18px',color:'#ffffff',fontStyle:'bold'}).setOrigin(1,0);if(i<rows.length-1){const lg=this.add.graphics();lg.lineStyle(1,0x1e1e3a);lg.lineBetween(40,y+30,W-40,y+30);}});
     if(win&&snacksEarned>0)this.add.text(W/2,418,`+${snacksEarned} \ud83c\udf55 SNACKS EARNED`,{fontFamily:'Orbitron',fontSize:'13px',color:'#ffcc00',fontStyle:'bold'}).setOrigin(0.5);
     const rankTxt=this.add.text(W/2,450,'\u23f3 Submitting score...',{fontFamily:'Orbitron',fontSize:'12px',color:'#888899'}).setOrigin(0.5);
-    const result=await DTM.submitScore(DTM.getName(),score,level,kills,stars);
+    const result=await DTM.submitScore(score,level,kills,stars);
     if(result.rank)rankTxt.setText(`\ud83c\udfc6 YOUR RANK: #${result.rank} on the Snitch List!`).setColor('#ffcc00');
     else rankTxt.setText('\ud83d\udce1 Score saved locally').setColor('#888899');
     const retryBtn=DTM.makeBtn(this,20,510,(W-52)/2,56,'\u21ba RETRY');
@@ -1067,7 +1028,7 @@ stripWhiteBGs().then(()=>{
   new Phaser.Game({
     type:Phaser.AUTO,width:W,height:H,backgroundColor:'#07070f',dom:{createContainer:true},
     physics:{default:'arcade',arcade:{debug:false,gravity:{y:0}}},
-    scene:[MenuScene,AuthScene,HubScene,ChapterScene,GameScene,ResultScene,LeaderboardScene,UpgradeScene],
+    scene:[MenuScene,NicknameScene,HubScene,ChapterScene,GameScene,ResultScene,LeaderboardScene,UpgradeScene],
     scale:{mode:Phaser.Scale.FIT,autoCenter:Phaser.Scale.CENTER_BOTH,width:W,height:H,expandParent:true},
     parent:document.body,
   });

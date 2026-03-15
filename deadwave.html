@@ -481,6 +481,7 @@ class GameScene extends Phaser.Scene {
     this.isDevMode=false;
     if((DTM.getName()||'').toLowerCase().trim()==='vince'&&(DTM.getPin()||'').trim()==='8675'){
       this.isDevMode=true;this.pDmg*=10;this.pMaxHP=9999;this.pHP=9999;this.pSpeed*=2;this.fireRate=100;this.critRate=0.5;this.critDmg=3.0;this.magnetR=300;
+      try{localStorage.setItem('dtm_unlocked',JSON.stringify(Array.from({length:100},(_,i)=>i+1)));}catch(e){}
       console.log('\ud83d\udd25 DEV MODE ACTIVE');
     }
     const allowed=DTM.enemiesForLevel(L);

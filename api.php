@@ -1,9 +1,10 @@
 <?php
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type');
-header('Content-Type: application/json');
-if($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { exit(0); }
+header('Access-Control-Allow-Headers: Content-Type, Accept, Origin, X-Requested-With');
+header('Access-Control-Max-Age: 86400');
+header('Content-Type: application/json; charset=utf-8');
+if($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { http_response_code(200); exit(0); }
 
 $host = '127.0.0.1';
 $db   = 'donttellmama';
@@ -118,6 +119,10 @@ switch($action) {
         echo json_encode(['success'=>true,'player'=>$player]);
         break;
 
+    case 'ping':
+        echo json_encode(['success'=>true,'message'=>'API is alive','time'=>date('Y-m-d H:i:s'),'method'=>$_SERVER['REQUEST_METHOD'],'https'=>isset($_SERVER['HTTPS'])?'yes':'no']);
+        break;
+
     default:
-        echo json_encode(['error'=>'Unknown action','valid_actions'=>['leaderboard','submit','register','login','validate','save','logout','player']]);
+        echo json_encode(['error'=>'Unknown action','valid_actions'=>['leaderboard','submit','register','login','validate','save','logout','player','ping']]);
 }

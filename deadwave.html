@@ -76,11 +76,12 @@ const DTM = {
   setPlayer:(p)=>localStorage.setItem('dtm_player',JSON.stringify(p)),
   clearPlayer:()=>{localStorage.removeItem('dtm_player');localStorage.removeItem('dtm_token');},
   isLoggedIn:()=>!!localStorage.getItem('dtm_token')&&!!localStorage.getItem('dtm_player'),
-  register:async(username,password,display)=>{try{const r=await fetch(DTM.API+'?action=register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username,password,display})});return await r.json();}catch(e){return{error:'Connection failed'};}},
-  login:async(username,password)=>{try{const r=await fetch(DTM.API+'?action=login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username,password})});return await r.json();}catch(e){return{error:'Connection failed'};}},
-  logout:async()=>{const t=DTM.getToken();if(t)try{await fetch(DTM.API+'?action=logout',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:t})});}catch(e){}DTM.clearPlayer();},
-  validateSession:async()=>{const t=DTM.getToken();if(!t)return null;try{const r=await fetch(`${DTM.API}?action=validate&token=${t}`);const d=await r.json();if(d.success){DTM.setPlayer(d.player);const p=d.player;if(p.upgrades)localStorage.setItem('dtm_upgrades',typeof p.upgrades==='string'?p.upgrades:JSON.stringify(p.upgrades));if(p.unlocked_levels)localStorage.setItem('dtm_unlocked',typeof p.unlocked_levels==='string'?p.unlocked_levels:JSON.stringify(p.unlocked_levels));if(p.stars)localStorage.setItem('dtm_stars',typeof p.stars==='string'?p.stars:JSON.stringify(p.stars));if(p.total_snacks!=null)localStorage.setItem('dtm_snacks',String(p.total_snacks));return d.player;}}catch(e){}return null;},
-  saveProgress:async()=>{const t=DTM.getToken();if(!t)return;try{await fetch(DTM.API+'?action=save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:t,total_snacks:DTM.getSnacks(),upgrades:DTM.getUpgrades(),unlocked_levels:DTM.getUnlocked(),stars:DTM.getStars(),highest_level:DTM.getCurrentLevel()})});}catch(e){}},
+  _fetch:async(url,opts={})=>{try{const c=new AbortController();const t=setTimeout(()=>c.abort(),10000);const r=await fetch(url,{...opts,signal:c.signal,headers:{...opts.headers,'Accept':'application/json'}});clearTimeout(t);if(!r.ok)return{error:`Server error: ${r.status}`};return await r.json();}catch(e){if(e.name==='AbortError')return{error:'Request timed out'};return{error:'Connection failed: '+e.message};}},
+  register:async(username,password,display)=>DTM._fetch(DTM.API+'?action=register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username,password,display})}),
+  login:async(username,password)=>DTM._fetch(DTM.API+'?action=login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username,password})}),
+  logout:async()=>{const t=DTM.getToken();if(t)try{await DTM._fetch(DTM.API+'?action=logout',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:t})});}catch(e){}DTM.clearPlayer();},
+  validateSession:async()=>{const t=DTM.getToken();if(!t)return null;try{const d=await DTM._fetch(`${DTM.API}?action=validate&token=${t}`);if(d.success){DTM.setPlayer(d.player);const p=d.player;if(p.upgrades)localStorage.setItem('dtm_upgrades',typeof p.upgrades==='string'?p.upgrades:JSON.stringify(p.upgrades));if(p.unlocked_levels)localStorage.setItem('dtm_unlocked',typeof p.unlocked_levels==='string'?p.unlocked_levels:JSON.stringify(p.unlocked_levels));if(p.stars)localStorage.setItem('dtm_stars',typeof p.stars==='string'?p.stars:JSON.stringify(p.stars));if(p.total_snacks!=null)localStorage.setItem('dtm_snacks',String(p.total_snacks));return d.player;}}catch(e){}return null;},
+  saveProgress:async()=>{const t=DTM.getToken();if(!t)return;try{await DTM._fetch(DTM.API+'?action=save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:t,total_snacks:DTM.getSnacks(),upgrades:DTM.getUpgrades(),unlocked_levels:DTM.getUnlocked(),stars:DTM.getStars(),highest_level:DTM.getCurrentLevel()})});}catch(e){}},
   locationForLevel:(n)=>{
     if(n<=10) return{name:'NORTHWOOD HIGH',color:'#4488ff'};
     if(n<=20) return{name:'MAIN ST ROASTERS',color:'#ff8800'};
@@ -97,12 +98,8 @@ const DTM = {
     return['ew','ef','es','et','coach','sister'];
   },
   calcScore:(kills,rounds,timeLeft,stars,level)=>(kills*100)+(rounds*500)+(Math.floor(timeLeft/1000)*10)+(stars*1000)+(level*200),
-  submitScore:async(name,score,level,kills,stars)=>{
-    try{const r=await fetch(DTM.API+'?action=submit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,score,level,kills,stars})});return await r.json();}catch(e){return{error:'offline'};}
-  },
-  fetchLeaderboard:async(period='all')=>{
-    try{const r=await fetch(`${DTM.API}?action=leaderboard&period=${period}`);return await r.json();}catch(e){return{error:'offline'};}
-  },
+  submitScore:async(name,score,level,kills,stars)=>DTM._fetch(DTM.API+'?action=submit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,score,level,kills,stars})}),
+  fetchLeaderboard:async(period='all')=>DTM._fetch(`${DTM.API}?action=leaderboard&period=${period}`),
   makeBG:(scene)=>{const g=scene.add.graphics();g.fillStyle(0x08080f);g.fillRect(0,0,W,H);g.lineStyle(1,0x1a1a2e,0.5);for(let x=0;x<W;x+=40)g.lineBetween(x,0,x,H);for(let y=0;y<H;y+=40)g.lineBetween(0,y,W,y);return g;},
   makeCard:(scene,x,y,w,h,alpha=1)=>{const g=scene.add.graphics();g.fillStyle(0x1a1a2e,alpha);g.fillRoundedRect(x,y,w,h,12);g.lineStyle(2,0xff9900,0.6);g.strokeRoundedRect(x,y,w,h,12);return g;},
   makeBtn:(scene,x,y,w,h,label,color=0xff9900)=>{

@@ -1,7 +1,7 @@
 {
-  "name": "Don't Tell Mama",
-  "short_name": "DTM",
-  "description": "Brody's Great Escape",
+  "name": "Panther Prowl",
+  "short_name": "PROWL",
+  "description": "Don't Get Caught.",
   "start_url": "/deadwave/deadwave.html",
   "display": "fullscreen",
   "orientation": "portrait",

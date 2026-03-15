@@ -324,6 +324,7 @@ class LeaderboardScene extends Phaser.Scene {
   constructor(){super('LeaderboardScene');}
   create(){
     DTM.makeBG(this);
+    console.log('LeaderboardScene: API=',DTM.API,'name=',DTM.getName());
     const hg=this.add.graphics();hg.fillStyle(0x0d0d0d,0.95);hg.fillRect(0,0,W,60);hg.lineStyle(2,0xffcc00,0.4);hg.lineBetween(0,60,W,60);
     this.add.text(W/2,30,'\ud83d\udc3e NORTHWOOD SNITCH LIST',{fontFamily:'Orbitron',fontSize:'15px',color:'#ffcc00',fontStyle:'bold'}).setOrigin(0.5);
     const back=this.add.text(16,30,'\u2039 BACK',{fontFamily:'Orbitron',fontSize:'13px',color:'#888899'}).setOrigin(0,0.5).setInteractive({useHandCursor:true});
@@ -340,30 +341,40 @@ class LeaderboardScene extends Phaser.Scene {
       zone.on('pointerdown',()=>{activePeriod=periodKeys[i];tabBtns.forEach((b,j)=>{const isAct=b.key===activePeriod;b.bg.clear();b.bg.fillStyle(isAct?0xffcc00:0x1a1a2e,1);b.bg.fillRoundedRect(30+j*115,70,90,24,6);b.txt.setColor(isAct?'#000':'#888899');});loadBoard(activePeriod);});
     });
     let listContainer=this.add.container(0,0);
-    const loadingTxt=this.add.text(W/2,H/2,'\u23f3 Loading...',{fontFamily:'Orbitron',fontSize:'16px',color:'#888899'}).setOrigin(0.5);
     const loadBoard=async(period)=>{
-      loadingTxt.setVisible(true);listContainer.destroy();listContainer=this.add.container(0,0);
-      const data=await DTM.fetchLeaderboard(period);loadingTxt.setVisible(false);
-      console.log('loadBoard result:',JSON.stringify(data));
-      if(!data||(!data.success&&data.error)){listContainer.add(this.add.text(W/2,H/2,"\ud83d\ude05 Couldn't reach\nthe Snitch List\n\n"+String(data?.error||'unknown'),{fontFamily:'Orbitron',fontSize:'12px',color:'#ff4444',align:'center',wordWrap:{width:300}}).setOrigin(0.5));return;}
+      if(listContainer&&listContainer.scene)listContainer.destroy();
+      listContainer=this.add.container(0,0);
+      const loadTxt=this.add.text(W/2,H/2,'\u23f3 Loading...',{fontFamily:'Orbitron',fontSize:'16px',color:'#888899'}).setOrigin(0.5);
+      let data=null,fetchErr=null;
+      try{
+        const url=DTM.API+'?action=leaderboard&period='+period;
+        console.log('LB fetch:',url);
+        const resp=await fetch(url);
+        console.log('LB status:',resp.status);
+        const text=await resp.text();
+        console.log('LB raw:',text.substring(0,200));
+        data=JSON.parse(text);
+      }catch(e){fetchErr=e.message;console.error('LB error:',e);}
+      if(loadTxt&&loadTxt.scene)loadTxt.destroy();
+      if(fetchErr){listContainer.add(this.add.text(W/2,H/2,`Fetch error:\n${fetchErr}`,{fontFamily:'Orbitron',fontSize:'11px',color:'#ff4444',align:'center',wordWrap:{width:320}}).setOrigin(0.5));return;}
+      if(!data){listContainer.add(this.add.text(W/2,H/2,'No response from server',{fontFamily:'Orbitron',fontSize:'12px',color:'#ff4444'}).setOrigin(0.5));return;}
+      if(data.error){listContainer.add(this.add.text(W/2,H/2,`API error: ${data.error}`,{fontFamily:'Orbitron',fontSize:'11px',color:'#ff4444',wordWrap:{width:320},align:'center'}).setOrigin(0.5));return;}
       const scores=data.scores||[];
       if(scores.length===0){listContainer.add(this.add.text(W/2,H/2-40,'\ud83c\udfc6',{fontSize:'48px'}).setOrigin(0.5));listContainer.add(this.add.text(W/2,H/2+20,'No scores yet!\nBe the FIRST on the\nNorthwood Snitch List!',{fontFamily:'Orbitron',fontSize:'14px',color:'#ff9900',align:'center',lineSpacing:8}).setOrigin(0.5));return;}
       const myName=DTM.getName().toLowerCase();let myRank=-1;
       scores.forEach((s,i)=>{
         const y=105+i*54,isMe=s.player_name.toLowerCase()===myName;
+        if(isMe)myRank=i+1;
         const rowBg=this.add.graphics();rowBg.fillStyle(isMe?0x2a1a00:i%2===0?0x0d0d1a:0x111122,1);rowBg.fillRoundedRect(12,y,W-24,48,6);
-        if(isMe){rowBg.lineStyle(1,0xff9900,0.8);rowBg.strokeRoundedRect(12,y,W-24,48,6);myRank=i+1;}
+        if(isMe){rowBg.lineStyle(1,0xff9900,0.8);rowBg.strokeRoundedRect(12,y,W-24,48,6);}
         listContainer.add(rowBg);
-        const rankColor=i===0?'#ffd700':i===1?'#c0c0c0':i===2?'#cd7f32':'#ffffff';
-        listContainer.add(this.add.text(30,y+24,`#${i+1}`,{fontFamily:'Orbitron',fontSize:'14px',color:rankColor,fontStyle:'bold'}).setOrigin(0,0.5));
+        const rc=i===0?'#ffd700':i===1?'#c0c0c0':i===2?'#cd7f32':'#ffffff';
+        listContainer.add(this.add.text(30,y+24,`#${i+1}`,{fontFamily:'Orbitron',fontSize:'14px',color:rc,fontStyle:'bold'}).setOrigin(0,0.5));
         listContainer.add(this.add.text(72,y+16,s.player_name.toUpperCase(),{fontFamily:'Orbitron',fontSize:'12px',color:isMe?'#ff9900':'#ffffff'}).setOrigin(0,0.5));
         listContainer.add(this.add.text(72,y+34,`Night ${s.level_reached}`,{fontFamily:'Orbitron',fontSize:'10px',color:'#666688'}).setOrigin(0,0.5));
-        listContainer.add(this.add.text(W-24,y+24,s.score.toLocaleString(),{fontFamily:'Orbitron',fontSize:'14px',color:'#ff9900',fontStyle:'bold'}).setOrigin(1,0.5));
+        listContainer.add(this.add.text(W-24,y+24,String(parseInt(s.score||0).toLocaleString()),{fontFamily:'Orbitron',fontSize:'14px',color:'#ff9900',fontStyle:'bold'}).setOrigin(1,0.5));
       });
-      if(myRank>0){
-        const pinBg=this.add.graphics();pinBg.fillStyle(0x1a0d00,0.97);pinBg.fillRect(0,H-130,W,50);pinBg.lineStyle(1,0xff9900,0.5);pinBg.lineBetween(0,H-130,W,H-130);
-        listContainer.add(pinBg);listContainer.add(this.add.text(W/2,H-105,`YOU: #${myRank} \u2022 ${DTM.getName().toUpperCase()}`,{fontFamily:'Orbitron',fontSize:'13px',color:'#ff9900',fontStyle:'bold'}).setOrigin(0.5));
-      }
+      if(myRank>0){const pb=this.add.graphics();pb.fillStyle(0x1a0d00,0.97);pb.fillRect(0,H-130,W,50);pb.lineStyle(1,0xff9900,0.5);pb.lineBetween(0,H-130,W,H-130);listContainer.add(pb);listContainer.add(this.add.text(W/2,H-105,`YOU: #${myRank} \u2022 ${DTM.getName().toUpperCase()}`,{fontFamily:'Orbitron',fontSize:'13px',color:'#ff9900',fontStyle:'bold'}).setOrigin(0.5));}
     };
     loadBoard('all');
     this.time.addEvent({delay:30000,callback:()=>loadBoard(activePeriod),loop:true});

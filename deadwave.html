@@ -473,7 +473,7 @@ class GameScene extends Phaser.Scene {
   }
 
   create(){
-    const bgTile=this.add.tileSprite(0,0,W,H,'bg').setOrigin(0,0).setDepth(0).setAlpha(0.7);
+    const bgTile=this.add.tileSprite(0,0,W,H,'bg').setOrigin(0,0).setDepth(0).setAlpha(0.55);
     bgTile.tileScaleX=0.18;bgTile.tileScaleY=0.18;
     this.bgG=this.add.graphics().setDepth(1);this.drawBG();
     this.enemies=this.physics.add.group();this.bullets=this.physics.add.group();this.gems=this.physics.add.group();
@@ -1080,10 +1080,33 @@ class ResultScene extends Phaser.Scene {
 // WHITE BACKGROUND REMOVAL & LAUNCH
 // ─────────────────────────────────────────────────
 async function stripWhiteBGs(){
-  const files=['gary.png','mrberg.png','thekid.png','karen.png','steiner.png','mama.png','sister.png','footballcoach.png','bullet.png','shard.png'];
+  const files=['thekid.png','gary.png','karen.png','steiner.png','mrberg.png','mama.png','sister.png','footballcoach.png','bullet.png','shard.png'];
+  window.__cleanURLs={};
   for(const file of files){
-    try{const blob=await fetch(file).then(r=>r.blob());const url=URL.createObjectURL(blob);const img=await new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=rej;i.src=url;});const c=document.createElement('canvas');c.width=img.width;c.height=img.height;const ctx=c.getContext('2d');ctx.drawImage(img,0,0);const d=ctx.getImageData(0,0,c.width,c.height);for(let i=0;i<d.data.length;i+=4){if(d.data[i]>230&&d.data[i+1]>230&&d.data[i+2]>230)d.data[i+3]=0;}ctx.putImageData(d,0,0);const cleanBlob=await new Promise(res=>c.toBlob(res));window.__cleanURLs=window.__cleanURLs||{};window.__cleanURLs[file]=URL.createObjectURL(cleanBlob);}catch(e){console.warn('Could not strip',file,e);}
+    try{
+      const resp=await fetch(file);const blob=await resp.blob();const imgURL=URL.createObjectURL(blob);
+      const img=await new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=rej;i.src=imgURL;});
+      const c=document.createElement('canvas');c.width=img.width;c.height=img.height;
+      const ctx=c.getContext('2d');ctx.drawImage(img,0,0);
+      const id=ctx.getImageData(0,0,c.width,c.height);const d=id.data;
+      // Sample corner pixel as background color
+      const cR=d[0],cG=d[1],cB=d[2];
+      const isLight=cR>180&&cG>180&&cB>180;
+      for(let i=0;i<d.length;i+=4){
+        const r=d[i],g=d[i+1],b=d[i+2];
+        if(isLight){
+          const diff=Math.abs(r-cR)+Math.abs(g-cG)+Math.abs(b-cB);
+          if(diff<80)d[i+3]=0;
+          else if(diff<140)d[i+3]=Math.floor(d[i+3]*(diff-80)/60);
+        }else{if(r<30&&g<30&&b<30)d[i+3]=0;}
+      }
+      ctx.putImageData(id,0,0);
+      const cleanBlob=await new Promise(res=>c.toBlob(res,'image/png'));
+      window.__cleanURLs[file]=URL.createObjectURL(cleanBlob);
+      URL.revokeObjectURL(imgURL);
+    }catch(e){console.warn('stripWhiteBGs fail:',file,e.message);window.__cleanURLs[file]=file;}
   }
+  console.log('stripWhiteBGs done:',Object.keys(window.__cleanURLs).length,'files');
 }
 
 stripWhiteBGs().then(()=>{

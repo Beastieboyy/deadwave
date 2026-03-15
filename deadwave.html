@@ -15,76 +15,50 @@
 <script>
 const W = 390, H = 844;
 
+const ROUNDS = [
+  { label: "RODNEY'S WATCHING",    enemies: [{type:'ew', count:1}] },
+  { label: "KAREN IS JOGGING",     enemies: [{type:'ef', count:1}] },
+  { label: "DOUBLE TROUBLE",       enemies: [{type:'ew', count:1}, {type:'ef', count:1}] },
+  { label: "MRS. STEINER PATROL",  enemies: [{type:'es', count:1}] },
+  { label: "MR. BERG IS COMING",   enemies: [{type:'et', count:1}] },
+  { label: "AFTER SCHOOL SPECIAL", enemies: [{type:'es', count:1}, {type:'ef', count:1}] },
+  { label: "THE SNITCHES UNITE",   enemies: [{type:'ew', count:1}, {type:'ef', count:1}, {type:'es', count:1}] },
+  { label: "BERG'S BACKUP",        enemies: [{type:'et', count:1}, {type:'ew', count:1}] },
+  { label: "ALL OF THEM",          enemies: [{type:'ew', count:1}, {type:'ef', count:1}, {type:'es', count:1}, {type:'et', count:1}] },
+  { label: "\u26a0 PEYTON IS SNITCHING", enemies: [{type:'sister', count:1}] },
+  { label: "\u2620 MAMA IS AWAKE \u2620", enemies: [{type:'boss', count:1}] },
+];
+
+const ENAMES = {ew:'RODNEY',ef:'KAREN',es:'MRS. STEINER',et:'MR. BERG',sister:'PEYTON',boss:'MAMA'};
+
 // ─────────────────────────────────────────────────
 // MENU SCENE
 // ─────────────────────────────────────────────────
 class MenuScene extends Phaser.Scene {
   constructor() { super('MenuScene'); }
-
   create() {
     const g = this.add.graphics();
     g.fillStyle(0x07070f); g.fillRect(0,0,W,H);
     g.lineStyle(1,0x1a1a3a,0.6);
     for(let x=0;x<W;x+=50) g.lineBetween(x,0,x,H);
     for(let y=0;y<H;y+=50) g.lineBetween(0,y,W,y);
-
-    for(let y=0;y<H;y+=4) { g.lineStyle(1,0x000000,0.3); g.lineBetween(0,y,W,y); }
-
-    [
-      [80,200,0xff6600,80],[310,260,0xff9900,60],[195,500,0xff4400,50],
-    ].forEach(([x,y,c,r])=>{
-      const og=this.add.graphics();
-      og.fillStyle(c,0.06); og.fillCircle(x,y,r);
+    for(let y=0;y<H;y+=4){g.lineStyle(1,0x000000,0.3);g.lineBetween(0,y,W,y);}
+    [[80,200,0xff6600,80],[310,260,0xff9900,60],[195,500,0xff4400,50]].forEach(([x,y,c,r])=>{
+      const og=this.add.graphics(); og.fillStyle(c,0.06); og.fillCircle(x,y,r);
     });
-
-    this.add.text(W/2, 200, "DON'T TELL", {
-      fontFamily:'Orbitron', fontSize:'38px', fontStyle:'bold',
-      color:'#ff9900', stroke:'#ff6600', strokeThickness:5
-    }).setOrigin(0.5);
-
-    this.add.text(W/2, 268, 'MAMA', {
-      fontFamily:'Orbitron', fontSize:'72px', fontStyle:'bold',
-      color:'#ff2244', stroke:'#cc0022', strokeThickness:6
-    }).setOrigin(0.5);
-
-    this.add.text(W/2, 345, "BRODY'S GREAT ESCAPE", {
-      fontFamily:'Orbitron', fontSize:'12px', color:'#ff9900', letterSpacing:3
-    }).setOrigin(0.5);
-
-    const hs = localStorage.getItem('dw_hs')||0;
-    this.add.text(W/2, 390, `BEST SNITCH COUNT: ${hs}`, {
-      fontFamily:'Orbitron', fontSize:'13px', color:'#ffaa00'
-    }).setOrigin(0.5);
-
-    const btn = this.add.text(W/2, 480, '[ SNEAK OUT ]', {
-      fontFamily:'Orbitron', fontSize:'22px', fontStyle:'bold',
-      color:'#ff9900', stroke:'#ff9900', strokeThickness:1
-    }).setOrigin(0.5).setInteractive({useHandCursor:true});
-
-    this.tweens.add({ targets:btn, alpha:0.25, duration:700, yoyo:true, repeat:-1 });
-
-    const start = () => {
-      this.cameras.main.fadeOut(400,0,0,0);
-      this.time.delayedCall(400,()=>this.scene.start('GameScene'));
-    };
-    btn.on('pointerdown', start);
-    this.input.keyboard.once('keydown', start);
-
-    this.add.text(W/2, H-50, 'Drag left side to move\nAuto-throws homework  •  Pick powers on level up', {
-      fontFamily:'Orbitron', fontSize:'8px', color:'#444466', align:'center'
-    }).setOrigin(0.5);
-
-    this.add.text(W/2, H-18, '"based on true events"', {
-      fontFamily:'Orbitron', fontSize:'8px', color:'#333344', fontStyle:'italic'
-    }).setOrigin(0.5);
-
-    const bg = this.add.graphics().setDepth(1);
-    [[0,0],[W,0],[0,H],[W,H]].forEach(([cx,cy])=>{
-      bg.lineStyle(2,0xff9900,0.25);
-      const sx=cx===0?1:-1, sy=cy===0?1:-1;
-      bg.lineBetween(cx,cy,cx+sx*40,cy);
-      bg.lineBetween(cx,cy,cx,cy+sy*40);
-    });
+    this.add.text(W/2,200,"DON'T TELL",{fontFamily:'Orbitron',fontSize:'38px',fontStyle:'bold',color:'#ff9900',stroke:'#ff6600',strokeThickness:5}).setOrigin(0.5);
+    this.add.text(W/2,268,'MAMA',{fontFamily:'Orbitron',fontSize:'72px',fontStyle:'bold',color:'#ff2244',stroke:'#cc0022',strokeThickness:6}).setOrigin(0.5);
+    this.add.text(W/2,345,"BRODY'S GREAT ESCAPE",{fontFamily:'Orbitron',fontSize:'12px',color:'#ff9900',letterSpacing:3}).setOrigin(0.5);
+    const hs=localStorage.getItem('dw_hs')||0;
+    this.add.text(W/2,390,`BEST SNITCH COUNT: ${hs}`,{fontFamily:'Orbitron',fontSize:'13px',color:'#ffaa00'}).setOrigin(0.5);
+    const btn=this.add.text(W/2,480,'[ SNEAK OUT ]',{fontFamily:'Orbitron',fontSize:'22px',fontStyle:'bold',color:'#ff9900',stroke:'#ff9900',strokeThickness:1}).setOrigin(0.5).setInteractive({useHandCursor:true});
+    this.tweens.add({targets:btn,alpha:0.25,duration:700,yoyo:true,repeat:-1});
+    const start=()=>{this.cameras.main.fadeOut(400,0,0,0);this.time.delayedCall(400,()=>this.scene.start('GameScene'));};
+    btn.on('pointerdown',start); this.input.keyboard.once('keydown',start);
+    this.add.text(W/2,H-50,'Drag left side to move\nAuto-throws homework  •  Pick powers on level up',{fontFamily:'Orbitron',fontSize:'8px',color:'#444466',align:'center'}).setOrigin(0.5);
+    this.add.text(W/2,H-18,'"based on true events"',{fontFamily:'Orbitron',fontSize:'8px',color:'#333344',fontStyle:'italic'}).setOrigin(0.5);
+    const bg=this.add.graphics().setDepth(1);
+    [[0,0],[W,0],[0,H],[W,H]].forEach(([cx,cy])=>{bg.lineStyle(2,0xff9900,0.25);const sx=cx===0?1:-1,sy=cy===0?1:-1;bg.lineBetween(cx,cy,cx+sx*40,cy);bg.lineBetween(cx,cy,cx,cy+sy*40);});
   }
 }
 
@@ -95,97 +69,63 @@ class GameScene extends Phaser.Scene {
   constructor() { super('GameScene'); }
 
   preload() {
-    const u = (f) => window.__cleanURLs && window.__cleanURLs[f] || f;
-
-    this.load.spritesheet('player', u('thekid.png'), { frameWidth: 448, frameHeight: 297 });
-    this.load.image('ew', u('gary.png'));
-    this.load.spritesheet('ef', u('karen.png'), { frameWidth: 352, frameHeight: 768 });
-    this.load.spritesheet('es', u('steiner.png'), { frameWidth: 252, frameHeight: 1051 });
-    this.load.image('et', u('mrberg.png'));
-    this.load.spritesheet('boss', u('mama.png'), { frameWidth: 432, frameHeight: 614 });
-    this.load.spritesheet('sister', u('sister.png'), { frameWidth: 448, frameHeight: 597 });
-    this.load.image('gem', u('shard.png'));
-    this.load.image('bullet', u('bullet.png'));
-    this.load.image('bg', 'bg.png');
-    this.load.image('blade', 'disc.png');
+    const u=(f)=>window.__cleanURLs&&window.__cleanURLs[f]||f;
+    this.load.spritesheet('player',u('thekid.png'),{frameWidth:448,frameHeight:297});
+    this.load.image('ew',u('gary.png'));
+    this.load.spritesheet('ef',u('karen.png'),{frameWidth:352,frameHeight:768});
+    this.load.spritesheet('es',u('steiner.png'),{frameWidth:252,frameHeight:1051});
+    this.load.image('et',u('mrberg.png'));
+    this.load.spritesheet('boss',u('mama.png'),{frameWidth:432,frameHeight:614});
+    this.load.spritesheet('sister',u('sister.png'),{frameWidth:448,frameHeight:597});
+    this.load.image('gem',u('shard.png'));
+    this.load.image('bullet',u('bullet.png'));
+    this.load.image('bg','bg.png');
+    this.load.image('blade','disc.png');
   }
 
   init() {
-    this.pHP       = 130;
-    this.pMaxHP    = 130;
-    this.pSpeed    = 185;
-    this.pDmg      = 22;
-    this.fireRate  = 880;
-    this.piercing  = false;
-    this.orbitCnt  = 0;
-    this.hasPulse  = false;
-    this.magnetR   = 75;
-    this.regenRate = 0;
-    this.lastShot  = 0;
-    this.pXP       = 0;
-    this.pLevel    = 1;
-    this.xpNeeded  = 10;
-    this.score     = 0;
-    this.kills     = 0;
-    this.elapsed   = 0;
-    this.totalTime = 15*60*1000;
-    this.waveNum   = 0;
-    this.peytonSpawned = false;
-    this.mamaSpawned   = false;
-    this.peytonRef     = null;
-    this.peytonSnitchProgress = 0;
-    this.paused    = false;
-    this.dead      = false;
-    this.orbitBlades = [];
-    this.orbitAng  = 0;
-    this.bossOrbs  = [];
-    this.bossOrbAng = 0;
-    this.joyActive = false;
-    this.joyAng    = 0;
-    this.joyDist   = 0;
-    this.joyBaseX  = 0;
-    this.joyBaseY  = 0;
-    this.uidCounter= 0;
+    this.pHP=150; this.pMaxHP=150; this.pSpeed=185; this.pDmg=22;
+    this.fireRate=650; this.piercing=false; this.orbitCnt=0;
+    this.hasPulse=false; this.magnetR=75; this.regenRate=0;
+    this.lastShot=0; this.pXP=0; this.pLevel=1; this.xpNeeded=10;
+    this.score=0; this.kills=0; this.elapsed=0; this.totalTime=15*60*1000;
+    this.roundNum=0; this.roundActive=false; this.roundEnemies=[];
+    this.paused=false; this.dead=false; this.playerFrozen=false;
+    this.playerIframes=0;
+    this.orbitBlades=[]; this.orbitAng=0;
+    this.bossOrbs=[]; this.bossOrbAng=0;
+    this.joyActive=false; this.joyAng=0; this.joyDist=0;
+    this.joyBaseX=0; this.joyBaseY=0;
+    this.uidCounter=0; this.projectiles=[];
   }
 
   create() {
-    const bgTile = this.add.tileSprite(0, 0, W, H, 'bg').setOrigin(0, 0).setDepth(0).setAlpha(0.7);
-    bgTile.tileScaleX = 0.18;
-    bgTile.tileScaleY = 0.18;
-    this.bgG = this.add.graphics().setDepth(1);
+    const bgTile=this.add.tileSprite(0,0,W,H,'bg').setOrigin(0,0).setDepth(0).setAlpha(0.7);
+    bgTile.tileScaleX=0.18; bgTile.tileScaleY=0.18;
+    this.bgG=this.add.graphics().setDepth(1);
     this.drawBG();
-
-    this.enemies = this.physics.add.group();
-    this.bullets = this.physics.add.group();
-    this.gems    = this.physics.add.group();
-
-    this.createAnims();
-    this.createPlayer();
-    this.createUI();
-    this.setupInput();
-    this.setupJoystick();
-
-    this.physics.add.overlap(this.player, this.enemies, (_p, e) => {
-      if(!e.dead) this.hurtPlayer(e.dmg||10);
+    this.enemies=this.physics.add.group();
+    this.bullets=this.physics.add.group();
+    this.gems=this.physics.add.group();
+    this.createAnims(); this.createPlayer(); this.createUI();
+    this.setupInput(); this.setupJoystick();
+    this.physics.add.overlap(this.player,this.enemies,(_p,e)=>{
+      if(!e.dead&&this.playerIframes<=0) this.hurtPlayer(e.chargeDmg&&e.isCharging?e.chargeDmg:e.dmg||10);
     });
-    this.physics.add.overlap(this.bullets, this.enemies, (b,e) => this.bulletHit(b,e));
-    this.physics.add.overlap(this.player, this.gems, (_p,g) => this.pickGem(g));
-
-    this.waveTimer = this.time.addEvent({ delay:9000, callback:this.spawnWave, callbackScope:this, loop:true });
-    this.spawnWave();
-
-    this.time.addEvent({ delay:3000, callback:this.doPulse, callbackScope:this, loop:true });
-    this.time.addEvent({ delay:1000, callback:this.doRegen, callbackScope:this, loop:true });
-    this.time.addEvent({ delay:80,   callback:this.doMagnet, callbackScope:this, loop:true });
-
+    this.physics.add.overlap(this.bullets,this.enemies,(b,e)=>this.bulletHit(b,e));
+    this.physics.add.overlap(this.player,this.gems,(_p,g)=>this.pickGem(g));
+    this.time.addEvent({delay:3000,callback:this.doPulse,callbackScope:this,loop:true});
+    this.time.addEvent({delay:1000,callback:this.doRegen,callbackScope:this,loop:true});
+    this.time.addEvent({delay:80,callback:this.doMagnet,callbackScope:this,loop:true});
     this.cameras.main.fadeIn(500,0,0,0);
+    this.startRound(1);
   }
 
   drawBG() {
     this.bgG.clear();
     [[0,0],[W,0],[0,H],[W,H]].forEach(([cx,cy])=>{
       this.bgG.lineStyle(2,0xff9900,0.25);
-      const sx=cx===0?1:-1, sy=cy===0?1:-1;
+      const sx=cx===0?1:-1,sy=cy===0?1:-1;
       this.bgG.lineBetween(cx,cy,cx+sx*40,cy);
       this.bgG.lineBetween(cx,cy,cx,cy+sy*40);
     });
@@ -193,662 +133,537 @@ class GameScene extends Phaser.Scene {
 
   createAnims() {
     if(!this.anims.exists('brody_idle')) {
-      this.anims.create({ key: 'brody_idle', frames: this.anims.generateFrameNumbers('player', { start: 0, end: 7 }), frameRate: 8, repeat: -1 });
-      this.anims.create({ key: 'karen_walk', frames: this.anims.generateFrameNumbers('ef', { start: 0, end: 3 }), frameRate: 10, repeat: -1 });
-      this.anims.create({ key: 'steiner_walk', frames: this.anims.generateFrameNumbers('es', { start: 0, end: 3 }), frameRate: 8, repeat: -1 });
-      this.anims.create({ key: 'mama_charge', frames: this.anims.generateFrameNumbers('boss', { start: 0, end: 3 }), frameRate: 6, repeat: -1 });
-      this.anims.create({ key: 'peyton_snitch', frames: this.anims.generateFrameNumbers('sister', { start: 0, end: 3 }), frameRate: 7, repeat: -1 });
+      this.anims.create({key:'brody_idle',frames:this.anims.generateFrameNumbers('player',{start:0,end:7}),frameRate:8,repeat:-1});
+      this.anims.create({key:'karen_walk',frames:this.anims.generateFrameNumbers('ef',{start:0,end:3}),frameRate:10,repeat:-1});
+      this.anims.create({key:'steiner_walk',frames:this.anims.generateFrameNumbers('es',{start:0,end:3}),frameRate:8,repeat:-1});
+      this.anims.create({key:'mama_charge',frames:this.anims.generateFrameNumbers('boss',{start:0,end:3}),frameRate:6,repeat:-1});
+      this.anims.create({key:'peyton_snitch',frames:this.anims.generateFrameNumbers('sister',{start:0,end:3}),frameRate:7,repeat:-1});
     }
   }
 
   createPlayer() {
-    this.player = this.physics.add.sprite(W/2, H/2, 'player').setDepth(10).setCollideWorldBounds(true);
-    this.player.setDisplaySize(58, 58);
-    this.player.setBodySize(22, 22);
-
+    this.player=this.physics.add.sprite(W/2,H/2,'player').setDepth(10).setCollideWorldBounds(true);
+    this.player.setDisplaySize(58,58).setBodySize(22,22);
     this.player.play('brody_idle');
-    this.glow = this.add.graphics().setDepth(9);
+    this.glow=this.add.graphics().setDepth(9);
   }
 
   createUI() {
     const D=100;
-    this.add.graphics().setDepth(D).fillStyle(0x0d0d1a,0.92).fillRoundedRect(8,8,160,18,4)
-      .lineStyle(1,0xff9900,0.5).strokeRoundedRect(8,8,160,18,4);
-    this.hpBar  = this.add.graphics().setDepth(D+1);
-    this.hpTxt  = this.add.text(88,9,'',{fontFamily:'Orbitron',fontSize:'9px',color:'#ffccaa'}).setDepth(D+2).setOrigin(0.5,0);
+    this.add.graphics().setDepth(D).fillStyle(0x0d0d1a,0.92).fillRoundedRect(8,8,160,18,4).lineStyle(1,0xff9900,0.5).strokeRoundedRect(8,8,160,18,4);
+    this.hpBar=this.add.graphics().setDepth(D+1);
+    this.hpTxt=this.add.text(88,9,'',{fontFamily:'Orbitron',fontSize:'9px',color:'#ffccaa'}).setDepth(D+2).setOrigin(0.5,0);
     this.add.text(12,9,'HP',{fontFamily:'Orbitron',fontSize:'8px',color:'#ff9900'}).setDepth(D+2);
-
-    this.add.graphics().setDepth(D).fillStyle(0x0d0d1a,0.92).fillRoundedRect(8,30,160,8,3)
-      .lineStyle(1,0xffdd00,0.4).strokeRoundedRect(8,30,160,8,3);
-    this.xpBar  = this.add.graphics().setDepth(D+1);
-    this.lvlTxt = this.add.text(173,8,'LV 1',{fontFamily:'Orbitron',fontSize:'11px',color:'#ffdd00',fontStyle:'bold'}).setDepth(D+2);
-
-    this.timerTxt = this.add.text(W/2,10,'15:00',{fontFamily:'Orbitron',fontSize:'17px',color:'#ffffff',fontStyle:'bold'}).setDepth(D).setOrigin(0.5,0);
-    this.killTxt  = this.add.text(W-10,10,'SNITCHES: 0',{fontFamily:'Orbitron',fontSize:'10px',color:'#ffcc00'}).setDepth(D).setOrigin(1,0);
-
-    this.waveTxt  = this.add.text(W/2,H/2-80,'',{fontFamily:'Orbitron',fontSize:'22px',color:'#ff6600',fontStyle:'bold',stroke:'#000',strokeThickness:5}).setDepth(D).setOrigin(0.5).setAlpha(0);
-
-    // Peyton's snitching bar — hidden until she spawns
-    this.peytonBarBg = this.add.graphics().setDepth(D).setAlpha(0);
-    this.peytonBarBg.fillStyle(0x0d0d1a,0.92); this.peytonBarBg.fillRoundedRect(20,H-42,W-40,16,4);
-    this.peytonBarBg.lineStyle(1,0xcc44ff,0.5); this.peytonBarBg.strokeRoundedRect(20,H-42,W-40,16,4);
-    this.peytonBarFill = this.add.graphics().setDepth(D+1).setAlpha(0);
-    this.peytonBarLbl = this.add.text(W/2,H-44,"PEYTON'S SNITCHING",{fontFamily:'Orbitron',fontSize:'7px',color:'#cc44ff'}).setDepth(D+2).setOrigin(0.5,1).setAlpha(0);
-
+    this.add.graphics().setDepth(D).fillStyle(0x0d0d1a,0.92).fillRoundedRect(8,30,160,8,3).lineStyle(1,0xffdd00,0.4).strokeRoundedRect(8,30,160,8,3);
+    this.xpBar=this.add.graphics().setDepth(D+1);
+    this.lvlTxt=this.add.text(173,8,'LV 1',{fontFamily:'Orbitron',fontSize:'11px',color:'#ffdd00',fontStyle:'bold'}).setDepth(D+2);
+    this.timerTxt=this.add.text(W/2,10,'15:00',{fontFamily:'Orbitron',fontSize:'17px',color:'#ffffff',fontStyle:'bold'}).setDepth(D).setOrigin(0.5,0);
+    this.killTxt=this.add.text(W-10,10,'SNITCHES: 0',{fontFamily:'Orbitron',fontSize:'10px',color:'#ffcc00'}).setDepth(D).setOrigin(1,0);
+    this.roundTxt=this.add.text(W/2,32,'',{fontFamily:'Orbitron',fontSize:'10px',color:'#ff9900'}).setDepth(D).setOrigin(0.5,0);
+    this.waveTxt=this.add.text(W/2,H/2-80,'',{fontFamily:'Orbitron',fontSize:'20px',color:'#ff6600',fontStyle:'bold',stroke:'#000',strokeThickness:5}).setDepth(D).setOrigin(0.5).setAlpha(0);
     this.updateHP(); this.updateXP();
   }
 
-  setupInput() {
-    this.cursors = this.input.keyboard.createCursorKeys();
-    this.wasd    = this.input.keyboard.addKeys('W,A,S,D');
-  }
+  setupInput() { this.cursors=this.input.keyboard.createCursorKeys(); this.wasd=this.input.keyboard.addKeys('W,A,S,D'); }
 
   setupJoystick() {
-    this.jBase = this.add.graphics().setDepth(151).setAlpha(0);
-    this.jThumb = this.add.graphics().setDepth(152).setAlpha(0);
-    const JOY_RADIUS = 60;
-
-    this.input.on('pointerdown', (p) => {
-      if(p.x > W/2) return;
-      if(this.paused || this.dead) return;
-      this.joyActive = true;
-      this.joyBaseX = p.x;
-      this.joyBaseY = p.y;
-      this.joyPointerId = p.id;
-      this.jBase.setAlpha(0.35).clear().lineStyle(3,0xff9900).strokeCircle(p.x,p.y,JOY_RADIUS);
-      this.jThumb.setAlpha(0.65).clear().fillStyle(0xff9900).fillCircle(p.x,p.y,22);
-    });
-
-    this.input.on('pointermove', (p) => {
-      if(!this.joyActive || p.id !== this.joyPointerId) return;
-      const dx = p.x - this.joyBaseX;
-      const dy = p.y - this.joyBaseY;
-      const d = Math.hypot(dx, dy);
-      this.joyAng = Math.atan2(dy, dx);
-      this.joyDist = Math.min(d, JOY_RADIUS) / JOY_RADIUS;
-      const tx = this.joyBaseX + Math.cos(this.joyAng) * Math.min(d, JOY_RADIUS);
-      const ty = this.joyBaseY + Math.sin(this.joyAng) * Math.min(d, JOY_RADIUS);
-      this.jThumb.clear().fillStyle(0xff9900).fillCircle(tx, ty, 22);
-    });
-
-    this.input.on('pointerup', (p) => {
-      if(p.id !== this.joyPointerId) return;
-      this.joyActive = false;
-      this.joyDist = 0;
-      this.jBase.setAlpha(0);
-      this.jThumb.setAlpha(0);
-    });
+    this.jBase=this.add.graphics().setDepth(151).setAlpha(0);
+    this.jThumb=this.add.graphics().setDepth(152).setAlpha(0);
+    const R=60;
+    this.input.on('pointerdown',p=>{if(p.x>W/2||this.paused||this.dead)return;this.joyActive=true;this.joyBaseX=p.x;this.joyBaseY=p.y;this.joyPointerId=p.id;this.jBase.setAlpha(0.35).clear().lineStyle(3,0xff9900).strokeCircle(p.x,p.y,R);this.jThumb.setAlpha(0.65).clear().fillStyle(0xff9900).fillCircle(p.x,p.y,22);});
+    this.input.on('pointermove',p=>{if(!this.joyActive||p.id!==this.joyPointerId)return;const dx=p.x-this.joyBaseX,dy=p.y-this.joyBaseY,d=Math.hypot(dx,dy);this.joyAng=Math.atan2(dy,dx);this.joyDist=Math.min(d,R)/R;const tx=this.joyBaseX+Math.cos(this.joyAng)*Math.min(d,R),ty=this.joyBaseY+Math.sin(this.joyAng)*Math.min(d,R);this.jThumb.clear().fillStyle(0xff9900).fillCircle(tx,ty,22);});
+    this.input.on('pointerup',p=>{if(p.id!==this.joyPointerId)return;this.joyActive=false;this.joyDist=0;this.jBase.setAlpha(0);this.jThumb.setAlpha(0);});
   }
 
-  update(time, delta) {
-    if(this.paused||this.dead) return;
-
-    this.elapsed += delta;
-    const rem = Math.max(0, this.totalTime - this.elapsed);
-    const m=Math.floor(rem/60000), s=Math.floor((rem%60000)/1000);
-    this.timerTxt.setText(`${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`);
-    if(rem < 120000) this.timerTxt.setColor('#ff4444');
-
-    if(this.waveNum === 3 && this.waveTimer.delay !== 7500) {
-      this.waveTimer.destroy();
-      this.waveTimer = this.time.addEvent({ delay:7500, callback:this.spawnWave, callbackScope:this, loop:true });
-    }
-
-    // Peyton at 5 min elapsed (10 min remaining)
-    if(this.elapsed >= 5*60*1000 && !this.peytonSpawned) { this.peytonSpawned=true; this.spawnPeyton(); }
-    // Mama at 5 min remaining
-    if(rem <= 5*60*1000 && !this.mamaSpawned) { this.mamaSpawned=true; this.spawnBoss(); }
-    if(rem <= 0) { this.winGame(); return; }
-
-    // Update Peyton's snitching bar
-    if(this.peytonRef && !this.peytonRef.dead) {
-      this.peytonSnitchProgress += delta;
-      const prog = Math.min(1, this.peytonSnitchProgress / 12000);
-      this.peytonBarFill.clear();
-      this.peytonBarFill.fillStyle(0xcc44ff,0.85);
-      this.peytonBarFill.fillRoundedRect(21, H-41, Math.floor((W-42)*prog), 14, 3);
-      if(this.peytonSnitchProgress >= 12000) {
-        this.peytonSnitchProgress = 0;
-        this.peytonSnitchWave();
-      }
-    }
-
-    this.movePlayer();
-    this.autoShoot(time);
-    if(this.orbitCnt>0) this.updateOrbits(delta);
-    this.moveEnemies();
-    this.updateBossOrbs(delta);
-    this.updateGlow();
-    this.cleanBullets();
-  }
-
-  movePlayer() {
-    let vx=0, vy=0;
-    if(this.cursors.left.isDown  || this.wasd.A.isDown) vx=-1;
-    if(this.cursors.right.isDown || this.wasd.D.isDown) vx=1;
-    if(this.cursors.up.isDown    || this.wasd.W.isDown) vy=-1;
-    if(this.cursors.down.isDown  || this.wasd.S.isDown) vy=1;
-    if(this.joyActive && this.joyDist>0.1) {
-      vx=Math.cos(this.joyAng)*this.joyDist;
-      vy=Math.sin(this.joyAng)*this.joyDist;
-    }
-    if(vx&&vy){ vx*=0.707; vy*=0.707; }
-    this.player.setVelocity(vx*this.pSpeed, vy*this.pSpeed);
-    if(vx>0) this.player.setAngle(12);
-    else if(vx<0) this.player.setAngle(-12);
-    else this.player.setAngle(0);
-  }
-
-  autoShoot(time) {
-    if(time - this.lastShot < this.fireRate) return;
-    const t = this.nearestEnemy();
-    if(!t) return;
-    this.lastShot = time;
-    const b = this.bullets.create(this.player.x, this.player.y, 'bullet');
-    b.setDepth(8);
-    b.setDisplaySize(28, 12);
-
-    b.setFlipX(true);
-    b.pdmg = this.pDmg;
-    b.pierce = this.piercing ? 3 : 1;
-    b.hits = 0;
-    b.hitSet = new Set();
-    const ang = Phaser.Math.Angle.Between(this.player.x,this.player.y,t.x,t.y);
-    b.setRotation(ang);
-    b.setVelocity(Math.cos(ang)*460, Math.sin(ang)*460);
-    const f = this.add.graphics().setDepth(11);
-    f.fillStyle(0xffff00,0.75); f.fillCircle(this.player.x,this.player.y,9);
-    this.time.delayedCall(70,()=>f.destroy());
-  }
-
-  nearestEnemy() {
-    let best=null, bd=Infinity;
-    this.enemies.getChildren().forEach(e=>{
-      if(e.dead) return;
-      const d=Phaser.Math.Distance.Between(this.player.x,this.player.y,e.x,e.y);
-      if(d<bd){bd=d;best=e;}
-    });
-    return best;
-  }
-
-  bulletHit(b, e) {
-    if(e.dead || b.hitSet.has(e.uid)) return;
-    // Invincible check (Peyton on the phone)
-    if(e.invincible) return;
-    b.hitSet.add(e.uid);
-    const dmg=b.pdmg;
-    this.dmgNum(e.x,e.y,dmg);
-    e.hp-=dmg;
-    this.tweens.add({targets:e,alpha:0.25,duration:70,yoyo:true});
-    b.hits++;
-    if(b.hits>=b.pierce) b.destroy();
-    if(e.hp<=0) this.killEnemy(e);
-  }
-
-  killEnemy(e) {
-    if(e.dead) return;
-    e.dead=true;
-    this.kills++;
-    this.score+=e.sv||10;
-    this.killTxt.setText(`SNITCHES: ${this.kills}`);
-
-    // Special Peyton death
-    if(e.isPeyton) {
-      const qt = this.add.text(e.x, e.y-28, "FINE!! I'm telling Dad too!!", {
-        fontFamily:'Orbitron', fontSize:'13px', color:'#cc44ff', stroke:'#000', strokeThickness:4, fontStyle:'bold'
-      }).setDepth(51).setOrigin(0.5);
-      this.tweens.add({targets:qt, y:e.y-100, alpha:0, duration:2000, ease:'Power2', onComplete:()=>qt.destroy()});
-      this.cameras.main.flash(400, 128, 0, 255);
-      this.cameras.main.shake(500, 0.02);
-      // Spawn 15 snacks
-      for(let i=0;i<15;i++) {
-        const gx=e.x+Phaser.Math.Between(-50,50), gy=e.y+Phaser.Math.Between(-50,50);
-        const gem=this.gems.create(gx,gy,'gem').setDepth(5);
-        gem.setDisplaySize(20,20);
-  
-        gem.xp=1;
-        this.tweens.add({targets:gem,y:gy-22,duration:220,yoyo:true,ease:'Bounce'});
-      }
-      // Hide Peyton HUD bar
-      this.peytonBarBg.setAlpha(0);
-      this.peytonBarFill.setAlpha(0);
-      this.peytonBarLbl.setAlpha(0);
-      this.peytonRef = null;
-    }
-    // Special Mama death
-    else if(e.isBoss) {
-      const qt = this.add.text(e.x, e.y-28, "...we'll talk about this tomorrow.", {
-        fontFamily:'Orbitron', fontSize:'11px', color:'#ff4444', stroke:'#000', strokeThickness:4, fontStyle:'bold'
-      }).setDepth(51).setOrigin(0.5);
-      this.tweens.add({targets:qt, y:e.y-100, alpha:0, duration:2000, ease:'Power2', onComplete:()=>qt.destroy()});
-    }
-    // Normal enemy death quips
-    else {
-      const quips = { ew:"I'm telling your mother!", ef:'DETENTION!!', es:'F MINUS!!', et:'SUSPENDED!!' };
-      const quip = quips[e.etype] || '';
-      if(quip) {
-        const qt = this.add.text(e.x, e.y-28, quip, {
-          fontFamily:'Orbitron', fontSize:'10px', color:'#ffdd00', stroke:'#000', strokeThickness:3, fontStyle:'bold'
-        }).setDepth(51).setOrigin(0.5);
-        this.tweens.add({targets:qt, y:e.y-80, alpha:0, duration:1400, ease:'Power2', onComplete:()=>qt.destroy()});
-      }
-    }
-
-    // Drop snacks (normal enemies only — Peyton handled above)
-    if(!e.isPeyton) {
-      for(let i=0;i<(e.gd||1);i++) {
-        const gx=e.x+Phaser.Math.Between(-18,18), gy=e.y+Phaser.Math.Between(-18,18);
-        const gem=this.gems.create(gx,gy,'gem').setDepth(5);
-        gem.setDisplaySize(20,20);
-  
-        gem.xp=1;
-        this.tweens.add({targets:gem,y:gy-22,duration:220,yoyo:true,ease:'Bounce'});
-      }
-    }
-    // Death burst
-    const boom=this.add.graphics().setDepth(7);
-    boom.fillStyle(e.burstColor||0xff4444,0.65);
-    boom.fillCircle(e.x,e.y,e.displayWidth*0.9);
-    this.tweens.add({targets:boom,alpha:0,scaleX:2.2,scaleY:2.2,duration:320,onComplete:()=>boom.destroy()});
-    if(e.hpGfx){e.hpGfx.destroy();e.hpGfx=null;}
-    e.destroy();
-  }
-
-  pickGem(gem) {
-    this.pXP += gem.xp||1;
-    gem.destroy();
-    if(this.pXP >= this.xpNeeded) {
-      this.pXP -= this.xpNeeded;
-      this.xpNeeded = Math.floor(this.xpNeeded*1.45);
-      this.pLevel++;
-      this.lvlTxt.setText(`LV ${this.pLevel}`);
-      this.showLevelUp();
-    }
-    this.updateXP();
-  }
-
-  doMagnet() {
-    if(!this.player) return;
-    this.gems.getChildren().forEach(g=>{
-      const d=Phaser.Math.Distance.Between(this.player.x,this.player.y,g.x,g.y);
-      if(d<this.magnetR) {
-        const a=Phaser.Math.Angle.Between(g.x,g.y,this.player.x,this.player.y);
-        g.x+=Math.cos(a)*9; g.y+=Math.sin(a)*9;
+  // ── ROUND SYSTEM ───────────────────────────────
+  startRound(n) {
+    this.roundNum=n;
+    this.roundActive=true;
+    this.roundEnemies=[];
+    const rd=ROUNDS[n-1];
+    if(!rd){this.winGame();return;}
+    this.roundTxt.setText(`ROUND ${n}`);
+    this.waveTxt.setText(rd.label).setAlpha(1).setY(H/2-80);
+    this.tweens.add({targets:this.waveTxt,alpha:0,y:H/2-130,duration:2500,ease:'Power2'});
+    let idx=0;
+    rd.enemies.forEach(grp=>{
+      for(let i=0;i<grp.count;i++){
+        this.time.delayedCall(idx*1500,()=>{
+          if(this.dead)return;
+          const e=this.spawnEnemy(grp.type);
+          if(e)this.roundEnemies.push(e);
+        });
+        idx++;
       }
     });
   }
 
-  doRegen() {
-    if(this.regenRate>0 && this.pHP<this.pMaxHP) {
-      this.pHP=Math.min(this.pMaxHP,this.pHP+this.regenRate);
-      this.updateHP();
+  checkRoundClear() {
+    if(!this.roundActive||this.dead)return;
+    const alive=this.roundEnemies.filter(e=>e&&!e.dead);
+    if(alive.length>0)return;
+    this.roundActive=false;
+    // Drop 8 snacks at last kill pos
+    const lk=this._lastKillPos||{x:W/2,y:H/2};
+    for(let i=0;i<8;i++){
+      const gx=lk.x+Phaser.Math.Between(-40,40),gy=lk.y+Phaser.Math.Between(-40,40);
+      const gem=this.gems.create(gx,gy,'gem').setDepth(5).setDisplaySize(20,20);
+      gem.xp=1;
+      this.tweens.add({targets:gem,y:gy-22,duration:220,yoyo:true,ease:'Bounce'});
     }
+    const ct=this.add.text(W/2,H/2,'\u2713 ROUND CLEAR!',{fontFamily:'Orbitron',fontSize:'26px',color:'#00ff88',fontStyle:'bold',stroke:'#000',strokeThickness:6}).setDepth(201).setOrigin(0.5);
+    this.time.delayedCall(2500,()=>{ct.destroy();this.startRound(this.roundNum+1);});
   }
 
-  doPulse() {
-    if(!this.hasPulse||this.paused||this.dead) return;
-    const r=125;
-    const ring=this.add.graphics().setDepth(8);
-    ring.lineStyle(3,0xff88ff,1); ring.strokeCircle(this.player.x,this.player.y,10);
-    this.tweens.add({targets:ring,scaleX:r/10,scaleY:r/10,alpha:0,duration:420,onComplete:()=>ring.destroy()});
-    this.enemies.getChildren().forEach(e=>{
-      if(e.dead||e.invincible) return;
-      const d=Phaser.Math.Distance.Between(this.player.x,this.player.y,e.x,e.y);
-      if(d<r){ const dmg=this.pDmg*0.85; e.hp-=dmg; this.dmgNum(e.x,e.y,Math.floor(dmg)); if(e.hp<=0) this.killEnemy(e); }
-    });
-  }
-
-  hurtPlayer(dmg) {
-    if(this.dead) return;
-    this.pHP=Math.max(0,this.pHP-dmg);
-    this.updateHP();
-    const f=this.add.graphics().setDepth(99);
-    f.fillStyle(0xff0000,0.28); f.fillRect(0,0,W,H);
-    this.time.delayedCall(130,()=>f.destroy());
-    this.cameras.main.shake(180,0.009);
-    if(this.pHP<=0) this.diePlayer();
-  }
-
-  updateHP() {
-    this.hpBar.clear();
-    const p=this.pHP/this.pMaxHP;
-    const c=p>0.5?0xff9900:p>0.25?0xffaa00:0xff2200;
-    this.hpBar.fillStyle(c,0.88); this.hpBar.fillRoundedRect(9,9,Math.floor(158*p),16,3);
-    this.hpTxt.setText(`${Math.ceil(this.pHP)}/${this.pMaxHP}`);
-  }
-
-  updateXP() {
-    this.xpBar.clear();
-    const p=Math.min(1,this.pXP/this.xpNeeded);
-    this.xpBar.fillStyle(0xffdd00,0.8); this.xpBar.fillRoundedRect(9,31,Math.floor(158*p),6,2);
-  }
-
-  // ── LEVEL UP SKILL SELECTION ───────────────────
-  showLevelUp() {
-    this.paused=true; this.physics.pause();
-
-    const ov=this.add.graphics().setDepth(200);
-    ov.fillStyle(0x000000,0.78); ov.fillRect(0,0,W,H);
-
-    this.add.text(W/2,100,'BRODY LEVELED UP!',{fontFamily:'Orbitron',fontSize:'22px',color:'#ffcc00',fontStyle:'bold',stroke:'#000',strokeThickness:6}).setDepth(201).setOrigin(0.5);
-    this.add.text(W/2,135,'CHOOSE YOUR MOVE',{fontFamily:'Orbitron',fontSize:'11px',color:'#8888bb',letterSpacing:4}).setDepth(201).setOrigin(0.5);
-
-    const SKILLS=[
-      {id:'dmg',  name:'SUGAR RUSH',    desc:'Ate too much candy — +30% throw speed', icon:'🍬',col:0xff4444},
-      {id:'rate', name:'PANIC MODE',    desc:'Throwing homework faster',               icon:'📝',col:0xffaa00},
-      {id:'spd',  name:'SPRINT HOME',   desc:'+20% Move Speed',                        icon:'👟',col:0x00ccff},
-      {id:'pierce',name:'HALL PASS',    desc:'Papers go through snitches',             icon:'📋',col:0xcc44ff},
-      {id:'orbit',name:'BACKPACK SPIN', desc:'Spinning bag knocks snitches away',      icon:'🎒',col:0xff9900},
-      {id:'pulse',name:'ALARM CLOCK',   desc:'Stun burst freezes nearby snitches',     icon:'⏰',col:0xff88ff},
-      {id:'mag',  name:'SNACK RADAR',   desc:'2x snack pickup range',                  icon:'🍕',col:0xffff44},
-      {id:'regen',name:'ENERGY DRINK',  desc:'+3 HP regen per second',                 icon:'🥤',col:0xff6688},
-      {id:'maxhp',name:"MOM'S COOKING", desc:'+50 max HP + full heal',                 icon:'🍲',col:0x44aaff},
-    ];
-    const pool=[...SKILLS], chosen=[];
-    for(let i=0;i<3;i++) chosen.push(pool.splice(Phaser.Math.Between(0,pool.length-1),1)[0]);
-
-    const cW=W-40, cH=120, startX=20, startY=170;
-
-    chosen.forEach((sk,i)=>{
-      const cx=startX, cy=startY+i*(cH+14);
-
-      const drawCard=(hover)=>{
-        card.clear();
-        card.fillStyle(hover?0x1c1c38:0x0e0e22,0.97);
-        card.fillRoundedRect(cx,cy,cW,cH,9);
-        card.lineStyle(hover?3:2,0xff9900,hover?1:0.7);
-        card.strokeRoundedRect(cx,cy,cW,cH,9);
-        if(hover){
-          card.lineStyle(1,0xff9900,0.2);
-          for(let s=8;s<24;s+=6){card.lineStyle(1,0xff9900,0.07);card.strokeRoundedRect(cx-s/3,cy-s/3,cW+s*0.66,cH+s*0.66,9+s/3);}
-        }
-      };
-
-      const card=this.add.graphics().setDepth(201);
-      drawCard(false);
-
-      this.add.text(cx+35, cy+cH/2, sk.icon, {fontSize:'34px'}).setDepth(202).setOrigin(0.5);
-      this.add.text(cx+cW/2+20, cy+30, sk.name, {fontFamily:'Orbitron',fontSize:'13px',color:'#'+sk.col.toString(16).padStart(6,'0'),fontStyle:'bold',wordWrap:{width:cW-90}}).setDepth(202).setOrigin(0.5);
-      this.add.text(cx+cW/2+20, cy+58, sk.desc, {fontFamily:'Orbitron',fontSize:'9px',color:'#9999bb',wordWrap:{width:cW-90}}).setDepth(202).setOrigin(0.5);
-      this.add.text(cx+cW/2+20, cy+85, `[ ${i+1} ]`, {fontFamily:'Orbitron',fontSize:'11px',color:'#555577'}).setDepth(202).setOrigin(0.5);
-
-      const zone=this.add.zone(cx,cy,cW,cH).setOrigin(0,0).setDepth(203).setInteractive({useHandCursor:true});
-      zone.on('pointerover', ()=>drawCard(true));
-      zone.on('pointerout',  ()=>drawCard(false));
-      zone.on('pointerdown', ()=>this.applySkill(sk,i));
-    });
-
-    const kh=(ev)=>{
-      const idx=['1','2','3'].indexOf(ev.key);
-      if(idx>=0&&chosen[idx]) this.applySkill(chosen[idx],idx);
-    };
-    this.input.keyboard.on('keydown',kh);
-    this._kh=kh;
-  }
-
-  applySkill(sk) {
-    this.children.list.filter(c=>c.depth>=200).forEach(c=>c.destroy());
-    if(this._kh){ this.input.keyboard.off('keydown',this._kh); this._kh=null; }
-    this.paused=false; this.physics.resume();
-
-    switch(sk.id){
-      case 'dmg':   this.pDmg=Math.floor(this.pDmg*1.3); break;
-      case 'rate':  this.fireRate=Math.max(180,this.fireRate*0.72); break;
-      case 'spd':   this.pSpeed=Math.floor(this.pSpeed*1.2); break;
-      case 'pierce':this.piercing=true; break;
-      case 'orbit': this.addOrbit(); break;
-      case 'pulse': this.hasPulse=true; break;
-      case 'mag':   this.magnetR*=2; break;
-      case 'regen': this.regenRate+=3; break;
-      case 'maxhp': this.pMaxHP+=50; this.pHP=this.pMaxHP; this.updateHP(); break;
-    }
-    this.cameras.main.flash(250,0,255,160);
-  }
-
-  addOrbit() {
-    this.orbitCnt++;
-    const blade=this.add.sprite(this.player.x,this.player.y,'blade').setDepth(9);
-    blade.setDisplaySize(30,30);
-    blade.orbitR=58; blade.dmg=this.pDmg*0.55; blade.cd={};
-    this.orbitBlades.push(blade);
-  }
-
-  updateOrbits(delta) {
-    this.orbitAng += delta*0.0032;
-    const n=this.orbitBlades.length;
-    this.orbitBlades.forEach((bl,i)=>{
-      const a=this.orbitAng+(i*Math.PI*2/n);
-      bl.x=this.player.x+Math.cos(a)*bl.orbitR;
-      bl.y=this.player.y+Math.sin(a)*bl.orbitR;
-      bl.angle+=8;
-      this.enemies.getChildren().forEach(e=>{
-        if(e.dead||e.invincible) return;
-        const now=Date.now();
-        if(bl.cd[e.uid]&&now-bl.cd[e.uid]<500) return;
-        if(Phaser.Math.Distance.Between(bl.x,bl.y,e.x,e.y)<32){
-          bl.cd[e.uid]=now;
-          e.hp-=bl.dmg;
-          this.dmgNum(e.x,e.y,Math.floor(bl.dmg));
-          if(e.hp<=0) this.killEnemy(e);
-        }
-      });
-    });
-  }
-
-  spawnWave() {
-    if(this.paused||this.dead) return;
-    this.waveNum++;
-    const waveTexts = ['SNITCHES INCOMING!','MORE SNITCHES!','THEY KEEP COMING!'];
-    const wtxt = this.waveNum <= 3 ? waveTexts[this.waveNum-1] : `WAVE ${this.waveNum} — SNITCHES!`;
-    this.waveTxt.setText(wtxt).setAlpha(1).setY(H/2-80);
-    this.tweens.add({targets:this.waveTxt,alpha:0,y:H/2-130,duration:2200,ease:'Power2'});
-
-    const count=Math.min(6+this.waveNum*3,45);
-    for(let i=0;i<count;i++){
-      this.time.delayedCall(i*180,()=>{
-        if(this.dead) return;
-        const r=Math.random();
-        if(this.waveNum>2&&r<0.08) this.spawnEnemy('et');
-        else if(this.waveNum>3&&r<0.22) this.spawnEnemy('es');
-        else if(this.waveNum>1&&r<0.35) this.spawnEnemy('ef');
-        else this.spawnEnemy('ew');
-      });
+  // ── SPAWN SYSTEM ───────────────────────────────
+  randEdge() {
+    const s=Phaser.Math.Between(0,3);
+    switch(s){
+      case 0:return{x:Phaser.Math.Between(0,W),y:-40};
+      case 1:return{x:W+40,y:Phaser.Math.Between(0,H)};
+      case 2:return{x:Phaser.Math.Between(0,W),y:H+40};
+      case 3:return{x:-40,y:Phaser.Math.Between(0,H)};
     }
   }
 
   spawnEnemy(tex) {
-    const side=Phaser.Math.Between(0,3);
-    let x,y;
-    switch(side){
-      case 0: x=Phaser.Math.Between(0,W); y=-25; break;
-      case 1: x=W+25; y=Phaser.Math.Between(0,H); break;
-      case 2: x=Phaser.Math.Between(0,W); y=H+25; break;
-      case 3: x=-25; y=Phaser.Math.Between(0,H); break;
-    }
-    const e=this.enemies.create(x,y,tex).setDepth(6);
-    e.uid = ++this.uidCounter;
-    e.dead=false;
-    e.invincible=false;
-    e.etype=tex;
-    const sc=1+this.waveNum*0.04;
+    const{x,y}=this.randEdge();
+    const e=this.enemies.create(x,y,tex==='sister'?'sister':tex==='boss'?'boss':tex).setDepth(6);
+    e.uid=++this.uidCounter; e.dead=false; e.invincible=false; e.etype=tex;
+    e.isMinion=false; e.isBoss=tex==='boss'; e.isPeyton=tex==='sister';
+    e.isCharging=false; e.chargeDmg=0;
+    e.abilityTimer=0; e.abilityTimer2=0; e.abilityTimer3=0;
+    e.spawnedMinions=0; e.patrolTarget=null;
     switch(tex){
-      case 'ew': e.setDisplaySize(52,52); e.hp=(32+this.waveNum*9)*sc; e.spd=60+Phaser.Math.Between(0,25); e.dmg=8;  e.gd=1; e.sv=10; e.burstColor=0xff3333; break;
-      case 'ef': e.setDisplaySize(52,52); e.play('karen_walk'); e.hp=(14+this.waveNum*5)*sc; e.spd=85+Phaser.Math.Between(0,15); e.dmg=5; e.gd=1; e.sv=15; e.burstColor=0xff8800; break;
-      case 'es': e.setDisplaySize(54,54); e.play('steiner_walk'); e.hp=(60+this.waveNum*10)*sc; e.spd=95+Phaser.Math.Between(0,15); e.dmg=12; e.gd=2; e.sv=30; e.burstColor=0xcc44ff; break;
-      case 'et': e.setDisplaySize(68,68); e.hp=(130+this.waveNum*22)*sc; e.spd=38; e.dmg=22; e.gd=4; e.sv=55; e.burstColor=0xaa0000; break;
+      case 'ew':
+        e.setDisplaySize(80,80); e.hp=180; e.maxHp=180; e.spd=42; e.dmg=8; e.gd=2; e.sv=10; e.burstColor=0xff3333; break;
+      case 'ef':
+        e.setDisplaySize(75,75); e.play('karen_walk'); e.hp=140; e.maxHp=140; e.spd=110; e.dmg=5; e.gd=2; e.sv=15; e.burstColor=0xff8800; break;
+      case 'es':
+        e.setDisplaySize(78,78); e.play('steiner_walk'); e.hp=200; e.maxHp=200; e.spd=75; e.dmg=12; e.gd=3; e.sv=30; e.burstColor=0xcc44ff;
+        e.patrolTarget={x:Phaser.Math.Between(60,W-60),y:Phaser.Math.Between(100,H-100)}; break;
+      case 'et':
+        e.setDisplaySize(95,95); e.hp=380; e.maxHp=380; e.spd=35; e.dmg=22; e.gd=5; e.sv=55; e.burstColor=0xaa0000; e.chargeDmg=30; break;
+      case 'sister':
+        e.setDisplaySize(80,80); e.play('peyton_snitch'); e.hp=450; e.maxHp=450; e.spd=85; e.dmg=15; e.gd=8; e.sv=300; e.burstColor=0xcc44ff; break;
+      case 'boss':
+        e.setDisplaySize(150,150); e.play('mama_charge'); e.hp=1200; e.maxHp=1200; e.spd=65; e.dmg=28; e.gd=20; e.sv=600; e.burstColor=0xff0000; e.chargeDmg=35;
+        // Boss orbs
+        this.bossOrbs=[0xff9900,0xff4400,0xff2244,0xffdd00].map(c=>{const o=this.add.graphics().setDepth(7);o.fillStyle(c,0.85);o.fillCircle(0,0,6);o.bossRef=e;return o;});
+        break;
     }
-    e.maxHp=e.hp;
     e.hpGfx=this.add.graphics().setDepth(7);
+    e.nameTxt=this.add.text(0,0,ENAMES[tex]||'',{fontFamily:'Orbitron',fontSize:'7px',color:'#aaaacc',stroke:'#000',strokeThickness:2}).setDepth(8).setOrigin(0.5);
     return e;
   }
 
-  // ── PEYTON MID-BOSS ────────────────────────────
-  spawnPeyton() {
-    const e=this.enemies.create(W/2,-70,'sister').setDepth(6);
-    e.setDisplaySize(58,58);
-
-    e.play('peyton_snitch');
-    e.uid=++this.uidCounter;
-    e.dead=false; e.isPeyton=true; e.invincible=false;
-    e.etype='sister';
-    e.hp=500; e.maxHp=e.hp;
-    e.spd=88; e.dmg=15; e.gd=12; e.sv=300; e.burstColor=0xcc44ff;
+  spawnMinion(tex,size,hp) {
+    const{x,y}=this.randEdge();
+    const e=this.enemies.create(x,y,tex).setDepth(6);
+    e.uid=++this.uidCounter; e.dead=false; e.invincible=false; e.etype=tex;
+    e.isMinion=true; e.isBoss=false; e.isPeyton=false; e.isCharging=false; e.chargeDmg=0;
+    e.abilityTimer=0; e.abilityTimer2=0; e.abilityTimer3=0; e.spawnedMinions=0; e.patrolTarget=null;
+    e.setDisplaySize(size,size);
+    if(tex==='ef')e.play('karen_walk');
+    e.hp=hp; e.maxHp=hp; e.spd=tex==='ef'?100:50; e.dmg=tex==='ef'?5:5; e.gd=1; e.sv=5; e.burstColor=0xff6666;
     e.hpGfx=this.add.graphics().setDepth(7);
-    this.peytonRef = e;
-    this.peytonSnitchProgress = 0;
-
-    // Show Peyton HUD bar
-    this.peytonBarBg.setAlpha(1);
-    this.peytonBarFill.setAlpha(1);
-    this.peytonBarLbl.setAlpha(1);
-
-    const ann=this.add.text(W/2,H/2,'⚠  PEYTON IS SNITCHING  ⚠',{fontFamily:'Orbitron',fontSize:'18px',color:'#cc44ff',fontStyle:'bold',stroke:'#000',strokeThickness:6}).setDepth(201).setOrigin(0.5);
-    this.cameras.main.shake(400,0.015);
-    this.tweens.add({targets:ann,alpha:0,y:H/2-90,duration:2500,onComplete:()=>ann.destroy()});
-
-    // Peyton phone invincibility — every 8 seconds, invincible for 3 seconds
-    const phoneTimer = this.time.addEvent({
-      delay:8000, loop:true,
-      callback:()=>{
-        if(!e||e.dead){phoneTimer.destroy();return;}
-        e.invincible=true;
-        e.setAlpha(0.6);
-        const pt = this.add.text(e.x, e.y-50, "shhhh I'm on the phone", {
-          fontFamily:'Orbitron', fontSize:'8px', color:'#cc44ff', stroke:'#000', strokeThickness:2, fontStyle:'bold'
-        }).setDepth(51).setOrigin(0.5);
-        this.tweens.add({targets:pt, y:e.y-80, alpha:0, duration:3000, onComplete:()=>pt.destroy()});
-        this.time.delayedCall(3000,()=>{
-          if(!e||e.dead) return;
-          e.invincible=false;
-          e.setAlpha(1);
-        });
-      }
-    });
-
+    e.nameTxt=this.add.text(0,0,'',{fontFamily:'Orbitron',fontSize:'6px',color:'#777799'}).setDepth(8).setOrigin(0.5);
     return e;
   }
 
-  peytonSnitchWave() {
-    // Peyton calls in 6 Rodneys
-    const pt = this.add.text(this.peytonRef.x, this.peytonRef.y-50, "I'm calling for backup!!", {
-      fontFamily:'Orbitron', fontSize:'9px', color:'#cc44ff', stroke:'#000', strokeThickness:2, fontStyle:'bold'
-    }).setDepth(51).setOrigin(0.5);
-    this.tweens.add({targets:pt, y:this.peytonRef.y-90, alpha:0, duration:1200, onComplete:()=>pt.destroy()});
-    for(let i=0;i<6;i++) {
-      this.time.delayedCall(i*120, ()=>{ if(!this.dead) this.spawnEnemy('ew'); });
-    }
+  // ── UPDATE ─────────────────────────────────────
+  update(time,delta) {
+    if(this.paused||this.dead)return;
+    this.elapsed+=delta;
+    const rem=Math.max(0,this.totalTime-this.elapsed);
+    const m=Math.floor(rem/60000),s=Math.floor((rem%60000)/1000);
+    this.timerTxt.setText(`${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`);
+    if(rem<120000)this.timerTxt.setColor('#ff4444');
+    if(rem<=0){this.winGame();return;}
+    if(this.playerIframes>0)this.playerIframes-=delta;
+    if(this.playerFrozen){this.player.setVelocity(0,0);}else{this.movePlayer();}
+    this.autoShoot(time);
+    if(this.orbitCnt>0)this.updateOrbits(delta);
+    this.updateEnemyAI(time,delta);
+    this.updateProjectiles(delta);
+    this.updateBossOrbs(delta);
+    this.updateGlow();
+    this.cleanBullets();
+    this.checkRoundClear();
   }
 
-  // ── MAMA BOSS ──────────────────────────────────
-  spawnBoss() {
-    const e=this.enemies.create(W/2,-70,'boss').setDepth(6);
-    e.setDisplaySize(120,120);
-
-    e.play('mama_charge');
-    e.uid=++this.uidCounter;
-    e.dead=false; e.isBoss=true; e.invincible=false; e.etype='boss';
-    e.hp=1200; e.maxHp=e.hp;
-    e.spd=52; e.dmg=28; e.gd=20; e.sv=600; e.burstColor=0xff0000;
-    e.hpGfx=this.add.graphics().setDepth(7);
-
-    const orbColors = [0xff9900, 0xff4400, 0xff2244, 0xffdd00];
-    this.bossOrbs = orbColors.map(c => {
-      const orb = this.add.graphics().setDepth(7);
-      orb.fillStyle(c, 0.85); orb.fillCircle(0, 0, 6);
-      orb.bossRef = e;
-      return orb;
-    });
-
-    const ann=this.add.text(W/2,H/2,'☠  MAMA IS AWAKE  ☠',{fontFamily:'Orbitron',fontSize:'22px',color:'#ff0000',fontStyle:'bold',stroke:'#000',strokeThickness:6}).setDepth(201).setOrigin(0.5);
-    this.cameras.main.shake(600,0.018);
-    this.tweens.add({targets:ann,alpha:0,y:H/2-90,duration:2500,onComplete:()=>ann.destroy()});
-
-    // Mama charge — every 4 seconds, speed 320 for 0.8s with "WHERE ARE YOU??" text
-    const chargeTimer=this.time.addEvent({
-      delay:4000, loop:true,
-      callback:()=>{
-        if(!e||e.dead){chargeTimer.destroy();return;}
-        const a=Phaser.Math.Angle.Between(e.x,e.y,this.player.x,this.player.y);
-        e.setVelocity(Math.cos(a)*320,Math.sin(a)*320);
-        const ct = this.add.text(e.x, e.y-60, 'WHERE ARE YOU??', {
-          fontFamily:'Orbitron', fontSize:'10px', color:'#ff4444', stroke:'#000', strokeThickness:3, fontStyle:'bold'
-        }).setDepth(51).setOrigin(0.5);
-        this.tweens.add({targets:ct, y:e.y-100, alpha:0, duration:1000, onComplete:()=>ct.destroy()});
-        this.time.delayedCall(800,()=>{ if(!e||e.dead) return; e.setVelocity(0,0); });
-      }
-    });
-    return e;
+  movePlayer() {
+    let vx=0,vy=0;
+    if(this.cursors.left.isDown||this.wasd.A.isDown)vx=-1;
+    if(this.cursors.right.isDown||this.wasd.D.isDown)vx=1;
+    if(this.cursors.up.isDown||this.wasd.W.isDown)vy=-1;
+    if(this.cursors.down.isDown||this.wasd.S.isDown)vy=1;
+    if(this.joyActive&&this.joyDist>0.1){vx=Math.cos(this.joyAng)*this.joyDist;vy=Math.sin(this.joyAng)*this.joyDist;}
+    if(vx&&vy){vx*=0.707;vy*=0.707;}
+    this.player.setVelocity(vx*this.pSpeed,vy*this.pSpeed);
+    if(vx>0)this.player.setAngle(12);else if(vx<0)this.player.setAngle(-12);else this.player.setAngle(0);
   }
 
-  moveEnemies() {
+  autoShoot(time) {
+    if(time-this.lastShot<this.fireRate)return;
+    const t=this.nearestEnemy();if(!t)return;
+    this.lastShot=time;
+    const b=this.bullets.create(this.player.x,this.player.y,'bullet').setDepth(8).setDisplaySize(28,12).setFlipX(true);
+    b.pdmg=this.pDmg; b.pierce=this.piercing?3:1; b.hits=0; b.hitSet=new Set();
+    const ang=Phaser.Math.Angle.Between(this.player.x,this.player.y,t.x,t.y);
+    b.setRotation(ang).setVelocity(Math.cos(ang)*460,Math.sin(ang)*460);
+    const f=this.add.graphics().setDepth(11);f.fillStyle(0xffff00,0.75);f.fillCircle(this.player.x,this.player.y,9);
+    this.time.delayedCall(70,()=>f.destroy());
+  }
+
+  nearestEnemy() {
+    let best=null,bd=Infinity;
+    this.enemies.getChildren().forEach(e=>{if(e.dead)return;const d=Phaser.Math.Distance.Between(this.player.x,this.player.y,e.x,e.y);if(d<bd){bd=d;best=e;}});
+    return best;
+  }
+
+  bulletHit(b,e) {
+    if(e.dead||b.hitSet.has(e.uid)||e.invincible)return;
+    b.hitSet.add(e.uid);
+    const dmg=b.pdmg;this.dmgNum(e.x,e.y,dmg);e.hp-=dmg;
+    this.tweens.add({targets:e,alpha:0.25,duration:70,yoyo:true});
+    b.hits++;if(b.hits>=b.pierce)b.destroy();
+    if(e.hp<=0)this.killEnemy(e);
+  }
+
+  // ── ENEMY AI ───────────────────────────────────
+  updateEnemyAI(time,delta) {
     this.enemies.getChildren().forEach(e=>{
-      if(e.dead) return;
-      if(!e.isBoss && !e.isPeyton || (e.isBoss && e.body.speed<10) || (e.isPeyton)) {
-        if(!e.isBoss || e.body.speed<10) {
-          const a=Phaser.Math.Angle.Between(e.x,e.y,this.player.x,this.player.y);
-          e.setVelocity(Math.cos(a)*e.spd, Math.sin(a)*e.spd);
+      if(e.dead)return;
+      const px=this.player.x,py=this.player.y;
+      e.abilityTimer+=delta;
+
+      // Movement
+      if(e.isCharging){/* velocity already set */}
+      else if(e.isPeyton&&e.invincible){
+        // Run away
+        const a=Phaser.Math.Angle.Between(px,py,e.x,e.y);
+        e.setVelocity(Math.cos(a)*e.spd,Math.sin(a)*e.spd);
+      }
+      else if(e.etype==='es'&&!e.isMinion){
+        // Patrol movement
+        if(!e.patrolTarget||Phaser.Math.Distance.Between(e.x,e.y,e.patrolTarget.x,e.patrolTarget.y)<20){
+          e.patrolTarget={x:Phaser.Math.Between(60,W-60),y:Phaser.Math.Between(100,H-100)};
+        }
+        if(e.abilityTimer2<=0){
+          const a=Phaser.Math.Angle.Between(e.x,e.y,e.patrolTarget.x,e.patrolTarget.y);
+          e.setVelocity(Math.cos(a)*e.spd,Math.sin(a)*e.spd);
+        }
+        e.abilityTimer3+=delta;
+        if(e.abilityTimer3>=3000){e.abilityTimer3=0;e.patrolTarget={x:Phaser.Math.Between(60,W-60),y:Phaser.Math.Between(100,H-100)};}
+      }
+      else if(!e.isBoss||!e.isCharging){
+        // Mama phase speed
+        if(e.isBoss){
+          const pct=e.hp/e.maxHp;
+          if(pct<=0.3)e.spd=140;else if(pct<=0.6)e.spd=90;else e.spd=65;
+        }
+        const a=Phaser.Math.Angle.Between(e.x,e.y,px,py);
+        e.setVelocity(Math.cos(a)*e.spd,Math.sin(a)*e.spd);
+      }
+
+      // ── RODNEY ability: every 9s spawn mini-rodney
+      if(e.etype==='ew'&&!e.isMinion&&e.abilityTimer>=9000){
+        e.abilityTimer=0;
+        const minis=this.enemies.getChildren().filter(m=>m.etype==='ew'&&m.isMinion&&!m.dead);
+        if(minis.length<2){
+          e.setVelocity(0,0);
+          this.floatText(e.x,e.y-40,"I'm calling your mother!",0xffdd00);
+          this.time.delayedCall(2000,()=>{if(!e.dead){
+            const a=Phaser.Math.Angle.Between(e.x,e.y,px,py);
+            e.setVelocity(Math.cos(a)*e.spd,Math.sin(a)*e.spd);
+          }});
+          this.time.delayedCall(1000,()=>{if(!e.dead)this.spawnMinion('ew',45,60);});
         }
       }
+
+      // ── KAREN ability: every 10s freeze player
+      if(e.etype==='ef'&&!e.isMinion&&e.abilityTimer>=10000){
+        e.abilityTimer=0;
+        this.floatText(e.x,e.y-40,'STOP RIGHT THERE!',0xff4444);
+        this.playerFrozen=true;
+        this.player.setTint(0xff4444);
+        this.time.delayedCall(1800,()=>{this.playerFrozen=false;this.player.clearTint();});
+      }
+
+      // ── STEINER ability: every 12s throw math book
+      if(e.etype==='es'&&!e.isMinion&&e.abilityTimer>=12000){
+        e.abilityTimer=0;
+        this.floatText(e.x,e.y-40,'SHOW YOUR WORK!',0xcc44ff);
+        const ang=Phaser.Math.Angle.Between(e.x,e.y,px,py);
+        const book=this.add.graphics().setDepth(8);
+        book.fillStyle(0x8B4513); book.fillRect(-15,-10,30,20);
+        book.setPosition(e.x,e.y);
+        book.vx=Math.cos(ang)*280; book.vy=Math.sin(ang)*280; book.life=3000; book.dmg=18;
+        this.projectiles.push(book);
+      }
+
+      // ── BERG abilities
+      if(e.etype==='et'&&!e.isMinion){
+        // Every 7s spawn Karen
+        e.abilityTimer2=(e.abilityTimer2||0)+delta;
+        if(e.abilityTimer2>=7000){
+          e.abilityTimer2=0;
+          const karens=this.enemies.getChildren().filter(m=>m.etype==='ef'&&m.isMinion&&!m.dead);
+          if(karens.length<2){
+            this.floatText(e.x,e.y-40,'BACKUP REQUESTED',0xff8800);
+            this.spawnMinion('ef',50,80);
+          }
+        }
+        // Every 14s charge
+        if(e.abilityTimer>=14000&&!e.isCharging){
+          e.abilityTimer=0; e.isCharging=true;
+          const a=Phaser.Math.Angle.Between(e.x,e.y,px,py);
+          e.setVelocity(Math.cos(a)*340,Math.sin(a)*340);
+          e.setTint(0xff4444);
+          this.time.delayedCall(1200,()=>{if(!e.dead){e.isCharging=false;e.clearTint();e.setVelocity(0,0);}});
+        }
+      }
+
+      // ── PEYTON abilities
+      if(e.isPeyton){
+        // Every 8s invincible for 3s
+        if(e.abilityTimer>=8000&&!e.invincible){
+          e.abilityTimer=0; e.invincible=true; e.setAlpha(0.5);
+          this.floatText(e.x,e.y-50,"shhhh I'm on the phone",0xcc44ff);
+          // Purple shield ring
+          e._shield=this.add.graphics().setDepth(8);
+          e._shield.lineStyle(2,0xcc44ff,0.6);e._shield.strokeCircle(0,0,50);
+          this.time.delayedCall(3000,()=>{if(!e.dead){e.invincible=false;e.setAlpha(1);if(e._shield){e._shield.destroy();e._shield=null;}}});
+        }
+        if(e._shield&&!e.dead){e._shield.setPosition(e.x,e.y);}
+        // Every 15s spawn Rodney
+        e.abilityTimer2=(e.abilityTimer2||0)+delta;
+        if(e.abilityTimer2>=15000){e.abilityTimer2=0;this.floatText(e.x,e.y-40,"I'm calling Rodney!",0xcc44ff);this.spawnMinion('ew',45,60);}
+      }
+
+      // ── MAMA 3-phase abilities
+      if(e.isBoss){
+        const pct=e.hp/e.maxHp;
+        // Phase 1: rolling pin swing
+        if(pct>0.6&&e.abilityTimer>=5000){
+          e.abilityTimer=0;
+          const d=Phaser.Math.Distance.Between(e.x,e.y,px,py);
+          if(d<120){
+            this.floatText(e.x,e.y-60,'WHERE HAVE YOU BEEN??',0xff4444);
+            this.hurtPlayer(35);
+            // Knockback
+            const a=Phaser.Math.Angle.Between(e.x,e.y,px,py);
+            this.player.x+=Math.cos(a)*80;this.player.y+=Math.sin(a)*80;
+          }
+        }
+        // Phase 2: spawn Berg
+        if(pct<=0.6&&pct>0.3){
+          e.abilityTimer2=(e.abilityTimer2||0)+delta;
+          if(e.abilityTimer2>=8000){
+            e.abilityTimer2=0;
+            this.floatText(e.x,e.y-60,"I'm texting your father!!",0xff8800);
+            const f=this.add.graphics().setDepth(99);f.fillStyle(0xff6600,0.2);f.fillRect(0,0,W,H);
+            this.time.delayedCall(300,()=>f.destroy());
+            this.spawnMinion('et',60,150);
+          }
+        }
+        // Phase 3: charge every 4s + orange tint
+        if(pct<=0.3){
+          e.setTint(0xff8844);
+          if(e.abilityTimer>=4000&&!e.isCharging){
+            e.abilityTimer=0; e.isCharging=true;
+            this.floatText(e.x,e.y-60,'GET BACK HERE!!',0xff2244);
+            const a=Phaser.Math.Angle.Between(e.x,e.y,px,py);
+            e.setVelocity(Math.cos(a)*380,Math.sin(a)*380);
+            this.cameras.main.shake(300,0.012);
+            this.time.delayedCall(1000,()=>{if(!e.dead){e.isCharging=false;e.setVelocity(0,0);}});
+          }
+        }
+      }
+
+      // HP bar + name
       if(e.hpGfx){
         e.hpGfx.clear();
-        const p=e.hp/e.maxHp, bw=e.displayWidth+12, bx=e.x-bw/2, by=e.y-e.displayHeight/2-10;
-        e.hpGfx.fillStyle(0x2a2a2a,0.9); e.hpGfx.fillRect(bx,by,bw,5);
-        const barCol = e.isPeyton ? 0xcc44ff : (p>0.5?0xff9900:p>0.25?0xffaa00:0xff2200);
-        e.hpGfx.fillStyle(barCol,1);
-        e.hpGfx.fillRect(bx,by,Math.floor(bw*p),5);
+        const p=e.hp/e.maxHp,bw=e.displayWidth+20,bx=e.x-bw/2,by=e.y-e.displayHeight/2-14;
+        e.hpGfx.fillStyle(0x2a2a2a,0.9);e.hpGfx.fillRect(bx,by,bw,6);
+        const col=e.isPeyton?0xcc44ff:e.isBoss?0xff2244:(p>0.5?0xff9900:p>0.25?0xffaa00:0xff2200);
+        e.hpGfx.fillStyle(col,1);e.hpGfx.fillRect(bx,by,Math.floor(bw*p),6);
       }
+      if(e.nameTxt)e.nameTxt.setPosition(e.x,e.y-e.displayHeight/2-22);
     });
   }
 
-  updateGlow() {
-    this.glow.clear();
-    const p=0.5+0.3*Math.sin(this.time.now*0.005);
-    this.glow.fillStyle(0xff9900,p*0.18); this.glow.fillCircle(this.player.x,this.player.y,24);
+  updateProjectiles(delta) {
+    for(let i=this.projectiles.length-1;i>=0;i--){
+      const p=this.projectiles[i];
+      p.x+=p.vx*(delta/1000);p.y+=p.vy*(delta/1000);p.life-=delta;
+      if(p.life<=0||p.x<-50||p.x>W+50||p.y<-50||p.y>H+50){p.destroy();this.projectiles.splice(i,1);continue;}
+      if(Phaser.Math.Distance.Between(p.x,p.y,this.player.x,this.player.y)<28&&this.playerIframes<=0){
+        this.hurtPlayer(p.dmg);p.destroy();this.projectiles.splice(i,1);
+      }
+    }
   }
+
+  floatText(x,y,txt,col) {
+    const t=this.add.text(x,y,txt,{fontFamily:'Orbitron',fontSize:'9px',color:'#'+col.toString(16).padStart(6,'0'),stroke:'#000',strokeThickness:3,fontStyle:'bold'}).setDepth(51).setOrigin(0.5);
+    this.tweens.add({targets:t,y:y-50,alpha:0,duration:1800,ease:'Power2',onComplete:()=>t.destroy()});
+  }
+
+  killEnemy(e) {
+    if(e.dead)return;
+    e.dead=true;this.kills++;this.score+=e.sv||10;
+    this.killTxt.setText(`SNITCHES: ${this.kills}`);
+    this._lastKillPos={x:e.x,y:e.y};
+
+    // Death quips
+    if(e.isPeyton){
+      const qt=this.add.text(e.x,e.y-28,"FINE!! I'm telling Dad too!!",{fontFamily:'Orbitron',fontSize:'13px',color:'#cc44ff',stroke:'#000',strokeThickness:4,fontStyle:'bold'}).setDepth(51).setOrigin(0.5);
+      this.tweens.add({targets:qt,y:e.y-100,alpha:0,duration:2000,ease:'Power2',onComplete:()=>qt.destroy()});
+      this.cameras.main.flash(400,128,0,255);this.cameras.main.shake(500,0.02);
+    } else if(e.isBoss){
+      const qt=this.add.text(W/2,H/2,"...we'll talk about this tomorrow.",{fontFamily:'Orbitron',fontSize:'16px',color:'#ff4444',stroke:'#000',strokeThickness:5,fontStyle:'bold'}).setDepth(201).setOrigin(0.5);
+      this.time.delayedCall(3000,()=>qt.destroy());
+      this.cameras.main.flash(600,255,100,0);this.cameras.main.shake(800,0.025);
+    } else {
+      const quips={ew:"I'm telling your mother!",ef:'DETENTION!!',es:'F MINUS!!',et:'SUSPENDED!!'};
+      if(quips[e.etype])this.floatText(e.x,e.y-28,quips[e.etype],0xffdd00);
+    }
+
+    // Drop snacks
+    for(let i=0;i<(e.gd||1);i++){
+      const gx=e.x+Phaser.Math.Between(-18,18),gy=e.y+Phaser.Math.Between(-18,18);
+      const gem=this.gems.create(gx,gy,'gem').setDepth(5).setDisplaySize(20,20);
+      gem.xp=1;this.tweens.add({targets:gem,y:gy-22,duration:220,yoyo:true,ease:'Bounce'});
+    }
+
+    const boom=this.add.graphics().setDepth(7);
+    boom.fillStyle(e.burstColor||0xff4444,0.65);boom.fillCircle(e.x,e.y,e.displayWidth*0.9);
+    this.tweens.add({targets:boom,alpha:0,scaleX:2.2,scaleY:2.2,duration:320,onComplete:()=>boom.destroy()});
+    if(e.hpGfx){e.hpGfx.destroy();e.hpGfx=null;}
+    if(e.nameTxt){e.nameTxt.destroy();e.nameTxt=null;}
+    if(e._shield){e._shield.destroy();e._shield=null;}
+    e.destroy();
+  }
+
+  pickGem(gem) {
+    this.pXP+=gem.xp||1;gem.destroy();
+    if(this.pXP>=this.xpNeeded){this.pXP-=this.xpNeeded;this.xpNeeded=Math.floor(this.xpNeeded*1.45);this.pLevel++;this.lvlTxt.setText(`LV ${this.pLevel}`);this.showLevelUp();}
+    this.updateXP();
+  }
+
+  doMagnet() {
+    if(!this.player)return;
+    this.gems.getChildren().forEach(g=>{const d=Phaser.Math.Distance.Between(this.player.x,this.player.y,g.x,g.y);if(d<this.magnetR){const a=Phaser.Math.Angle.Between(g.x,g.y,this.player.x,this.player.y);g.x+=Math.cos(a)*9;g.y+=Math.sin(a)*9;}});
+  }
+
+  doRegen() {if(this.regenRate>0&&this.pHP<this.pMaxHP){this.pHP=Math.min(this.pMaxHP,this.pHP+this.regenRate);this.updateHP();}}
+
+  doPulse() {
+    if(!this.hasPulse||this.paused||this.dead)return;
+    const r=125;const ring=this.add.graphics().setDepth(8);ring.lineStyle(3,0xff88ff,1);ring.strokeCircle(this.player.x,this.player.y,10);
+    this.tweens.add({targets:ring,scaleX:r/10,scaleY:r/10,alpha:0,duration:420,onComplete:()=>ring.destroy()});
+    this.enemies.getChildren().forEach(e=>{if(e.dead||e.invincible)return;const d=Phaser.Math.Distance.Between(this.player.x,this.player.y,e.x,e.y);if(d<r){const dmg=this.pDmg*0.85;e.hp-=dmg;this.dmgNum(e.x,e.y,Math.floor(dmg));if(e.hp<=0)this.killEnemy(e);}});
+  }
+
+  hurtPlayer(dmg) {
+    if(this.dead||this.playerIframes>0)return;
+    this.pHP=Math.max(0,this.pHP-dmg);this.updateHP();
+    this.playerIframes=500;
+    this.player.setAlpha(0.5);this.time.delayedCall(500,()=>{if(!this.dead)this.player.setAlpha(1);});
+    const f=this.add.graphics().setDepth(99);f.fillStyle(0xff0000,0.28);f.fillRect(0,0,W,H);
+    this.time.delayedCall(130,()=>f.destroy());
+    this.cameras.main.shake(180,0.009);
+    if(this.pHP<=0)this.diePlayer();
+  }
+
+  updateHP() {this.hpBar.clear();const p=this.pHP/this.pMaxHP;const c=p>0.5?0xff9900:p>0.25?0xffaa00:0xff2200;this.hpBar.fillStyle(c,0.88);this.hpBar.fillRoundedRect(9,9,Math.floor(158*p),16,3);this.hpTxt.setText(`${Math.ceil(this.pHP)}/${this.pMaxHP}`);}
+  updateXP() {this.xpBar.clear();const p=Math.min(1,this.pXP/this.xpNeeded);this.xpBar.fillStyle(0xffdd00,0.8);this.xpBar.fillRoundedRect(9,31,Math.floor(158*p),6,2);}
+
+  // ── LEVEL UP ───────────────────────────────────
+  showLevelUp() {
+    this.paused=true;this.physics.pause();
+    const ov=this.add.graphics().setDepth(200);ov.fillStyle(0x000000,0.78);ov.fillRect(0,0,W,H);
+    this.add.text(W/2,100,'BRODY LEVELED UP!',{fontFamily:'Orbitron',fontSize:'22px',color:'#ffcc00',fontStyle:'bold',stroke:'#000',strokeThickness:6}).setDepth(201).setOrigin(0.5);
+    this.add.text(W/2,135,'CHOOSE YOUR MOVE',{fontFamily:'Orbitron',fontSize:'11px',color:'#8888bb',letterSpacing:4}).setDepth(201).setOrigin(0.5);
+    const SKILLS=[
+      {id:'dmg',name:'SUGAR RUSH',desc:'Ate too much candy — +30% throw speed',icon:'\ud83c\udf6c',col:0xff4444},
+      {id:'rate',name:'PANIC MODE',desc:'Throwing homework faster',icon:'\ud83d\udcdd',col:0xffaa00},
+      {id:'spd',name:'SPRINT HOME',desc:'+20% Move Speed',icon:'\ud83d\udc5f',col:0x00ccff},
+      {id:'pierce',name:'HALL PASS',desc:'Papers go through snitches',icon:'\ud83d\udccb',col:0xcc44ff},
+      {id:'orbit',name:'BACKPACK SPIN',desc:'Spinning bag knocks snitches away',icon:'\ud83c\udf92',col:0xff9900},
+      {id:'pulse',name:'ALARM CLOCK',desc:'Stun burst freezes nearby snitches',icon:'\u23f0',col:0xff88ff},
+      {id:'mag',name:'SNACK RADAR',desc:'2x snack pickup range',icon:'\ud83c\udf55',col:0xffff44},
+      {id:'regen',name:'ENERGY DRINK',desc:'+3 HP regen per second',icon:'\ud83e\udd64',col:0xff6688},
+      {id:'maxhp',name:"MOM'S COOKING",desc:'+50 max HP + full heal',icon:'\ud83c\udf72',col:0x44aaff},
+    ];
+    const pool=[...SKILLS],chosen=[];
+    for(let i=0;i<3;i++)chosen.push(pool.splice(Phaser.Math.Between(0,pool.length-1),1)[0]);
+    const cW=W-40,cH=120,startX=20,startY=170;
+    chosen.forEach((sk,i)=>{
+      const cx=startX,cy=startY+i*(cH+14);
+      const drawCard=(hover)=>{card.clear();card.fillStyle(hover?0x1c1c38:0x0e0e22,0.97);card.fillRoundedRect(cx,cy,cW,cH,9);card.lineStyle(hover?3:2,0xff9900,hover?1:0.7);card.strokeRoundedRect(cx,cy,cW,cH,9);if(hover){for(let s=8;s<24;s+=6){card.lineStyle(1,0xff9900,0.07);card.strokeRoundedRect(cx-s/3,cy-s/3,cW+s*0.66,cH+s*0.66,9+s/3);}}};
+      const card=this.add.graphics().setDepth(201);drawCard(false);
+      this.add.text(cx+35,cy+cH/2,sk.icon,{fontSize:'34px'}).setDepth(202).setOrigin(0.5);
+      this.add.text(cx+cW/2+20,cy+30,sk.name,{fontFamily:'Orbitron',fontSize:'13px',color:'#'+sk.col.toString(16).padStart(6,'0'),fontStyle:'bold',wordWrap:{width:cW-90}}).setDepth(202).setOrigin(0.5);
+      this.add.text(cx+cW/2+20,cy+58,sk.desc,{fontFamily:'Orbitron',fontSize:'9px',color:'#9999bb',wordWrap:{width:cW-90}}).setDepth(202).setOrigin(0.5);
+      this.add.text(cx+cW/2+20,cy+85,`[ ${i+1} ]`,{fontFamily:'Orbitron',fontSize:'11px',color:'#555577'}).setDepth(202).setOrigin(0.5);
+      const zone=this.add.zone(cx,cy,cW,cH).setOrigin(0,0).setDepth(203).setInteractive({useHandCursor:true});
+      zone.on('pointerover',()=>drawCard(true));zone.on('pointerout',()=>drawCard(false));zone.on('pointerdown',()=>this.applySkill(sk));
+    });
+    const kh=(ev)=>{const idx=['1','2','3'].indexOf(ev.key);if(idx>=0&&chosen[idx])this.applySkill(chosen[idx]);};
+    this.input.keyboard.on('keydown',kh);this._kh=kh;
+  }
+
+  applySkill(sk) {
+    this.children.list.filter(c=>c.depth>=200).forEach(c=>c.destroy());
+    if(this._kh){this.input.keyboard.off('keydown',this._kh);this._kh=null;}
+    this.paused=false;this.physics.resume();
+    switch(sk.id){
+      case'dmg':this.pDmg=Math.floor(this.pDmg*1.3);break;case'rate':this.fireRate=Math.max(180,this.fireRate*0.72);break;
+      case'spd':this.pSpeed=Math.floor(this.pSpeed*1.2);break;case'pierce':this.piercing=true;break;
+      case'orbit':this.addOrbit();break;case'pulse':this.hasPulse=true;break;
+      case'mag':this.magnetR*=2;break;case'regen':this.regenRate+=3;break;
+      case'maxhp':this.pMaxHP+=50;this.pHP=this.pMaxHP;this.updateHP();break;
+    }
+    this.cameras.main.flash(250,0,255,160);
+  }
+
+  addOrbit() {this.orbitCnt++;const blade=this.add.sprite(this.player.x,this.player.y,'blade').setDepth(9).setDisplaySize(30,30);blade.orbitR=58;blade.dmg=this.pDmg*0.55;blade.cd={};this.orbitBlades.push(blade);}
+
+  updateOrbits(delta) {
+    this.orbitAng+=delta*0.0032;const n=this.orbitBlades.length;
+    this.orbitBlades.forEach((bl,i)=>{const a=this.orbitAng+(i*Math.PI*2/n);bl.x=this.player.x+Math.cos(a)*bl.orbitR;bl.y=this.player.y+Math.sin(a)*bl.orbitR;bl.angle+=8;
+      this.enemies.getChildren().forEach(e=>{if(e.dead||e.invincible)return;const now=Date.now();if(bl.cd[e.uid]&&now-bl.cd[e.uid]<500)return;if(Phaser.Math.Distance.Between(bl.x,bl.y,e.x,e.y)<32){bl.cd[e.uid]=now;e.hp-=bl.dmg;this.dmgNum(e.x,e.y,Math.floor(bl.dmg));if(e.hp<=0)this.killEnemy(e);}});
+    });
+  }
+
+  updateGlow() {this.glow.clear();const p=0.5+0.3*Math.sin(this.time.now*0.005);this.glow.fillStyle(0xff9900,p*0.18);this.glow.fillCircle(this.player.x,this.player.y,24);}
 
   updateBossOrbs(delta) {
-    if(!this.bossOrbs.length) return;
-    this.bossOrbAng += delta * 0.003;
-    const boss = this.bossOrbs[0].bossRef;
-    if(!boss || boss.dead) {
-      this.bossOrbs.forEach(o => o.destroy());
-      this.bossOrbs = [];
-      return;
-    }
-    this.bossOrbs.forEach((orb, i) => {
-      const a = this.bossOrbAng + (i * Math.PI * 2 / this.bossOrbs.length);
-      orb.setPosition(boss.x + Math.cos(a) * 55, boss.y + Math.sin(a) * 55);
-    });
+    if(!this.bossOrbs.length)return;this.bossOrbAng+=delta*0.003;
+    const boss=this.bossOrbs[0].bossRef;
+    if(!boss||boss.dead){this.bossOrbs.forEach(o=>o.destroy());this.bossOrbs=[];return;}
+    this.bossOrbs.forEach((orb,i)=>{const a=this.bossOrbAng+(i*Math.PI*2/this.bossOrbs.length);orb.setPosition(boss.x+Math.cos(a)*65,boss.y+Math.sin(a)*65);});
   }
 
-  dmgNum(x,y,amt) {
-    const big=amt>50;
-    const t=this.add.text(x,y-12,`-${Math.floor(amt)}`,{
-      fontFamily:'Orbitron', fontSize:big?'17px':'12px',
-      color:big?'#ffcc00':'#ffffff', stroke:'#000', strokeThickness:3
-    }).setDepth(50).setOrigin(0.5);
-    this.tweens.add({targets:t,y:y-55,alpha:0,duration:820,ease:'Power2',onComplete:()=>t.destroy()});
-  }
+  dmgNum(x,y,amt) {const big=amt>50;const t=this.add.text(x,y-12,`-${Math.floor(amt)}`,{fontFamily:'Orbitron',fontSize:big?'17px':'12px',color:big?'#ffcc00':'#ffffff',stroke:'#000',strokeThickness:3}).setDepth(50).setOrigin(0.5);this.tweens.add({targets:t,y:y-55,alpha:0,duration:820,ease:'Power2',onComplete:()=>t.destroy()});}
 
   cleanBullets() {
-    this.bullets.getChildren().forEach(b=>{ if(b.x<-60||b.x>W+60||b.y<-60||b.y>H+60) b.destroy(); });
-    this.enemies.getChildren().forEach(e=>{ if(e.dead&&e.hpGfx){e.hpGfx.destroy();e.hpGfx=null;} });
+    this.bullets.getChildren().forEach(b=>{if(b.x<-60||b.x>W+60||b.y<-60||b.y>H+60)b.destroy();});
+    this.enemies.getChildren().forEach(e=>{if(e.dead){if(e.hpGfx){e.hpGfx.destroy();e.hpGfx=null;}if(e.nameTxt){e.nameTxt.destroy();e.nameTxt=null;}}});
   }
 
   diePlayer() {
-    if(this.dead) return;
-    this.dead=true; this.physics.pause();
-    const hs=parseInt(localStorage.getItem('dw_hs')||0);
-    if(this.kills>hs) localStorage.setItem('dw_hs',this.kills);
+    if(this.dead)return;this.dead=true;this.physics.pause();
+    const hs=parseInt(localStorage.getItem('dw_hs')||0);if(this.kills>hs)localStorage.setItem('dw_hs',this.kills);
     this.cameras.main.shake(900,0.022);
     this.time.delayedCall(700,()=>this.scene.start('EndScene',{win:false,kills:this.kills,level:this.pLevel,elapsed:this.elapsed}));
   }
 
   winGame() {
-    if(this.dead) return;
-    this.dead=true; this.physics.pause();
-    const hs=parseInt(localStorage.getItem('dw_hs')||0);
-    if(this.kills>hs) localStorage.setItem('dw_hs',this.kills);
+    if(this.dead)return;this.dead=true;this.physics.pause();
+    const hs=parseInt(localStorage.getItem('dw_hs')||0);if(this.kills>hs)localStorage.setItem('dw_hs',this.kills);
     this.cameras.main.flash(1200,255,255,255);
     this.time.delayedCall(900,()=>this.scene.start('EndScene',{win:true,kills:this.kills,level:this.pLevel,elapsed:this.elapsed}));
   }
@@ -858,56 +673,30 @@ class GameScene extends Phaser.Scene {
 // END SCENE
 // ─────────────────────────────────────────────────
 class EndScene extends Phaser.Scene {
-  constructor() { super('EndScene'); }
-  init(d){ this.d=d; }
-
+  constructor(){super('EndScene');}
+  init(d){this.d=d;}
   create() {
-    const {win,kills,level,elapsed}=this.d;
-    const g=this.add.graphics();
-    g.fillStyle(0x05050a); g.fillRect(0,0,W,H);
-    g.lineStyle(1,0x111128,0.6);
-    for(let x=0;x<W;x+=50) g.lineBetween(x,0,x,H);
-    for(let y=0;y<H;y+=50) g.lineBetween(0,y,W,y);
-
+    const{win,kills,level,elapsed}=this.d;
+    const g=this.add.graphics();g.fillStyle(0x05050a);g.fillRect(0,0,W,H);
+    g.lineStyle(1,0x111128,0.6);for(let x=0;x<W;x+=50)g.lineBetween(x,0,x,H);for(let y=0;y<H;y+=50)g.lineBetween(0,y,W,y);
     const col=win?'#00ff88':'#ff2244';
     const title=win?'BRODY MADE IT HOME!':'MAMA FOUND OUT';
     const subtitle=win?'Slipped into bed just in time.':'Brody got caught sneaking out...';
     this.add.text(W/2,150,title,{fontFamily:'Orbitron',fontSize:win?'22px':'28px',fontStyle:'bold',color:col,stroke:'#000',strokeThickness:7}).setOrigin(0.5);
     this.add.text(W/2,195,subtitle,{fontFamily:'Orbitron',fontSize:'11px',color:'#888888',letterSpacing:1}).setOrigin(0.5);
-
-    const m=Math.floor(elapsed/60000), s=Math.floor((elapsed%60000)/1000);
+    const m=Math.floor(elapsed/60000),s=Math.floor((elapsed%60000)/1000);
     const rows=[['SNITCHES CAUGHT',kills],['LEVEL REACHED',level],['TIME SURVIVED',`${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`]];
-
-    const panelX=20, panelW=W-40;
-    const panel=this.add.graphics();
-    panel.fillStyle(0x0e0e22,0.9); panel.fillRoundedRect(panelX,240,panelW,210,8);
-    panel.lineStyle(1,0x2a2a55); panel.strokeRoundedRect(panelX,240,panelW,210,8);
-
-    rows.forEach(([lbl,val],i)=>{
-      const y=280+i*60;
-      this.add.text(W/2,y-8,lbl,{fontFamily:'Orbitron',fontSize:'10px',color:'#666688',letterSpacing:2}).setOrigin(0.5);
-      this.add.text(W/2,y+16,String(val),{fontFamily:'Orbitron',fontSize:'24px',fontStyle:'bold',color:'#ffffff'}).setOrigin(0.5);
-      if(i<rows.length-1){ const line=this.add.graphics(); line.lineStyle(1,0x1e1e3a); line.lineBetween(panelX+20,y+38,panelX+panelW-20,y+38); }
-    });
-
+    const panelX=20,panelW=W-40,panel=this.add.graphics();
+    panel.fillStyle(0x0e0e22,0.9);panel.fillRoundedRect(panelX,240,panelW,210,8);panel.lineStyle(1,0x2a2a55);panel.strokeRoundedRect(panelX,240,panelW,210,8);
+    rows.forEach(([lbl,val],i)=>{const y=280+i*60;this.add.text(W/2,y-8,lbl,{fontFamily:'Orbitron',fontSize:'10px',color:'#666688',letterSpacing:2}).setOrigin(0.5);this.add.text(W/2,y+16,String(val),{fontFamily:'Orbitron',fontSize:'24px',fontStyle:'bold',color:'#ffffff'}).setOrigin(0.5);if(i<rows.length-1){const line=this.add.graphics();line.lineStyle(1,0x1e1e3a);line.lineBetween(panelX+20,y+38,panelX+panelW-20,y+38);}});
     const hs=localStorage.getItem('dw_hs')||0;
     this.add.text(W/2,490,`BEST SNITCH COUNT: ${hs}`,{fontFamily:'Orbitron',fontSize:'13px',color:'#ffaa00'}).setOrigin(0.5);
-
     const btn1=this.add.text(W/2,550,'[ SNEAK OUT AGAIN ]',{fontFamily:'Orbitron',fontSize:'16px',fontStyle:'bold',color:'#ff9900'}).setOrigin(0.5).setInteractive({useHandCursor:true});
     const btn2=this.add.text(W/2,600,'[ MENU ]',{fontFamily:'Orbitron',fontSize:'17px',color:'#8888aa'}).setOrigin(0.5).setInteractive({useHandCursor:true});
-
-    [btn1,btn2].forEach(b=>{ b.on('pointerover',()=>b.setAlpha(0.65)); b.on('pointerout',()=>b.setAlpha(1)); });
-    btn1.on('pointerdown',()=>{ this.cameras.main.fadeOut(300,0,0,0); this.time.delayedCall(300,()=>this.scene.start('GameScene')); });
-    btn2.on('pointerdown',()=>{ this.cameras.main.fadeOut(300,0,0,0); this.time.delayedCall(300,()=>this.scene.start('MenuScene')); });
-
-    const bg = this.add.graphics().setDepth(1);
-    [[0,0],[W,0],[0,H],[W,H]].forEach(([cx,cy])=>{
-      bg.lineStyle(2,0xff9900,0.25);
-      const sx=cx===0?1:-1, sy=cy===0?1:-1;
-      bg.lineBetween(cx,cy,cx+sx*40,cy);
-      bg.lineBetween(cx,cy,cx,cy+sy*40);
-    });
-
+    [btn1,btn2].forEach(b=>{b.on('pointerover',()=>b.setAlpha(0.65));b.on('pointerout',()=>b.setAlpha(1));});
+    btn1.on('pointerdown',()=>{this.cameras.main.fadeOut(300,0,0,0);this.time.delayedCall(300,()=>this.scene.start('GameScene'));});
+    btn2.on('pointerdown',()=>{this.cameras.main.fadeOut(300,0,0,0);this.time.delayedCall(300,()=>this.scene.start('MenuScene'));});
+    const bg=this.add.graphics().setDepth(1);[[0,0],[W,0],[0,H],[W,H]].forEach(([cx,cy])=>{bg.lineStyle(2,0xff9900,0.25);const sx=cx===0?1:-1,sy=cy===0?1:-1;bg.lineBetween(cx,cy,cx+sx*40,cy);bg.lineBetween(cx,cy,cx,cy+sy*40);});
     this.cameras.main.fadeIn(400,0,0,0);
   }
 }
@@ -916,38 +705,28 @@ class EndScene extends Phaser.Scene {
 // WHITE BACKGROUND REMOVAL & LAUNCH
 // ─────────────────────────────────────────────────
 async function stripWhiteBGs() {
-  const files = ['gary.png','mrberg.png','thekid.png','karen.png',
-                 'steiner.png','mama.png','sister.png','bullet.png','shard.png'];
-  for (const file of files) {
-    try {
-      const blob = await fetch(file).then(r=>r.blob());
-      const url = URL.createObjectURL(blob);
-      const img = await new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=rej;i.src=url;});
-      const c = document.createElement('canvas');
-      c.width=img.width; c.height=img.height;
-      const ctx=c.getContext('2d');
-      ctx.drawImage(img,0,0);
+  const files=['gary.png','mrberg.png','thekid.png','karen.png','steiner.png','mama.png','sister.png','bullet.png','shard.png'];
+  for(const file of files){
+    try{
+      const blob=await fetch(file).then(r=>r.blob());const url=URL.createObjectURL(blob);
+      const img=await new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=rej;i.src=url;});
+      const c=document.createElement('canvas');c.width=img.width;c.height=img.height;const ctx=c.getContext('2d');ctx.drawImage(img,0,0);
       const d=ctx.getImageData(0,0,c.width,c.height);
-      for(let i=0;i<d.data.length;i+=4){
-        if(d.data[i]>230&&d.data[i+1]>230&&d.data[i+2]>230) d.data[i+3]=0;
-      }
+      for(let i=0;i<d.data.length;i+=4){if(d.data[i]>230&&d.data[i+1]>230&&d.data[i+2]>230)d.data[i+3]=0;}
       ctx.putImageData(d,0,0);
-      const cleanBlob = await new Promise(res=>c.toBlob(res));
-      window.__cleanURLs = window.__cleanURLs||{};
-      window.__cleanURLs[file] = URL.createObjectURL(cleanBlob);
-    } catch(e) { console.warn('Could not strip',file,e); }
+      const cleanBlob=await new Promise(res=>c.toBlob(res));
+      window.__cleanURLs=window.__cleanURLs||{};window.__cleanURLs[file]=URL.createObjectURL(cleanBlob);
+    }catch(e){console.warn('Could not strip',file,e);}
   }
 }
 
-stripWhiteBGs().then(() => {
+stripWhiteBGs().then(()=>{
   new Phaser.Game({
-    type: Phaser.AUTO,
-    width: W, height: H,
-    backgroundColor: '#07070f',
-    physics: { default:'arcade', arcade:{ debug:false, gravity:{y:0} } },
-    scene: [MenuScene, GameScene, EndScene],
-    scale: { mode:Phaser.Scale.FIT, autoCenter:Phaser.Scale.CENTER_BOTH },
-    parent: document.body,
+    type:Phaser.AUTO,width:W,height:H,backgroundColor:'#07070f',
+    physics:{default:'arcade',arcade:{debug:false,gravity:{y:0}}},
+    scene:[MenuScene,GameScene,EndScene],
+    scale:{mode:Phaser.Scale.FIT,autoCenter:Phaser.Scale.CENTER_BOTH},
+    parent:document.body,
   });
 });
 </script>

@@ -537,8 +537,8 @@ class GameScene extends Phaser.Scene {
 
   setupJoystick(){
     this.jBase=this.add.graphics().setDepth(151).setAlpha(0);this.jThumb=this.add.graphics().setDepth(152).setAlpha(0);const R=60;
-    this.input.on('pointerdown',p=>{if(p.x>W/2||this.paused||this.dead)return;this.joyActive=true;this.joyBaseX=p.x;this.joyBaseY=p.y;this.joyPointerId=p.id;this.jBase.setAlpha(0.35).clear().lineStyle(3,0xff9900).strokeCircle(p.x,p.y,R);this.jThumb.setAlpha(0.65).clear().fillStyle(0xff9900).fillCircle(p.x,p.y,22);});
-    this.input.on('pointermove',p=>{if(!this.joyActive||p.id!==this.joyPointerId)return;const dx=p.x-this.joyBaseX,dy=p.y-this.joyBaseY,d=Math.hypot(dx,dy);this.joyAng=Math.atan2(dy,dx);this.joyDist=Math.min(d,R)/R;const tx=this.joyBaseX+Math.cos(this.joyAng)*Math.min(d,R),ty=this.joyBaseY+Math.sin(this.joyAng)*Math.min(d,R);this.jThumb.clear().fillStyle(0xff9900).fillCircle(tx,ty,22);});
+    this.input.on('pointerdown',p=>{if(this.paused||this.dead)return;this.joyActive=true;this.joyBaseX=p.x;this.joyBaseY=p.y;this.joyPointerId=p.id;this.jBase.setAlpha(0.35).clear().lineStyle(3,0x00ffcc).strokeCircle(p.x,p.y,R);this.jThumb.setAlpha(0.65).clear().fillStyle(0x00ffcc).fillCircle(p.x,p.y,22);});
+    this.input.on('pointermove',p=>{if(!this.joyActive||p.id!==this.joyPointerId)return;const dx=p.x-this.joyBaseX,dy=p.y-this.joyBaseY,d=Math.hypot(dx,dy);this.joyAng=Math.atan2(dy,dx);this.joyDist=Math.min(d,R)/R;const tx=this.joyBaseX+Math.cos(this.joyAng)*Math.min(d,R),ty=this.joyBaseY+Math.sin(this.joyAng)*Math.min(d,R);this.jThumb.clear().fillStyle(0x00ffcc).fillCircle(tx,ty,22);});
     this.input.on('pointerup',p=>{if(p.id!==this.joyPointerId)return;this.joyActive=false;this.joyDist=0;this.jBase.setAlpha(0);this.jThumb.setAlpha(0);});
   }
 

@@ -64,7 +64,7 @@ const DTM = {
   spendSnacks:(n)=>localStorage.setItem('dtm_snacks',String(Math.max(0,DTM.getSnacks()-n))),
   getUpgrades:()=>JSON.parse(localStorage.getItem('dtm_upgrades')||'{"sneakers":0,"backpack":0,"phone":0,"hoodie":0}'),
   saveUpgrades:(u)=>localStorage.setItem('dtm_upgrades',JSON.stringify(u)),
-  getUnlocked:()=>JSON.parse(localStorage.getItem('dtm_unlocked')||'[1,2,3]'),
+  getUnlocked:()=>JSON.parse(localStorage.getItem('dtm_unlocked')||'[1]'),
   unlockLevel:(n)=>{const u=DTM.getUnlocked();if(!u.includes(n)){u.push(n);localStorage.setItem('dtm_unlocked',JSON.stringify(u));}},
   getStars:()=>JSON.parse(localStorage.getItem('dtm_stars')||'{}'),
   setStars:(lvl,s)=>{const st=DTM.getStars();st[lvl]=Math.max(st[lvl]||0,s);localStorage.setItem('dtm_stars',JSON.stringify(st));},
@@ -219,7 +219,7 @@ class HubScene extends Phaser.Scene {
     const level=DTM.getCurrentLevel(),loc=DTM.locationForLevel(level),stars=DTM.getStars(),snacks=DTM.getSnacks(),name=DTM.getName();
     const topBar=this.add.graphics();topBar.fillStyle(0x0d0d0d,0.95);topBar.fillRect(0,0,W,68);topBar.lineStyle(2,0xff9900,0.5);topBar.lineBetween(0,68,W,68);
     this.add.text(16,20,name.toUpperCase(),{fontFamily:'Orbitron',fontSize:'14px',color:'#ff9900',fontStyle:'bold'});
-    this.add.text(16,42,'LEVEL '+level,{fontFamily:'Orbitron',fontSize:'11px',color:'#888899'});
+    this.add.text(16,42,'NIGHT '+level,{fontFamily:'Orbitron',fontSize:'11px',color:'#888899'});
     this.add.text(W-16,20,'\ud83c\udf55 '+snacks,{fontFamily:'Orbitron',fontSize:'14px',color:'#ffcc00'}).setOrigin(1,0);
     this.add.text(W-16,42,'SNACKS',{fontFamily:'Orbitron',fontSize:'9px',color:'#666688'}).setOrigin(1,0);
     const spkBtn=this.add.text(W/2-14,20,SFX.musicMuted?'\ud83d\udd07':'\ud83d\udd0a',{fontSize:'18px'}).setOrigin(0.5).setDepth(10).setInteractive({useHandCursor:true});
@@ -278,48 +278,43 @@ class HubScene extends Phaser.Scene {
 class ChapterScene extends Phaser.Scene {
   constructor(){super('ChapterScene');}
   create(){
+    try{const n=(DTM.getName()||'').toLowerCase().trim(),p=(localStorage.getItem('dtm_pin')||'').trim();if(n==='vince'&&p==='8675')localStorage.setItem('dtm_unlocked',JSON.stringify([1,2,3,4,5,6,7,8,9,10]));}catch(e){}
     DTM.makeBG(this);
     const unlocked=DTM.getUnlocked(),stars=DTM.getStars();
     const hg=this.add.graphics();hg.fillStyle(0x0d0d0d,0.95);hg.fillRect(0,0,W,60);hg.lineStyle(2,0xff9900,0.4);hg.lineBetween(0,60,W,60);
-    this.add.text(W/2,30,'\ud83c\udf19 NIGHTS OUT',{fontFamily:'Orbitron',fontSize:'18px',color:'#ff9900',fontStyle:'bold'}).setOrigin(0.5);
+    this.add.text(W/2,30,'\ud83c\udf19 SELECT YOUR NIGHT',{fontFamily:'Orbitron',fontSize:'16px',color:'#ff9900',fontStyle:'bold'}).setOrigin(0.5);
     const back=this.add.text(16,30,'\u2039 BACK',{fontFamily:'Orbitron',fontSize:'13px',color:'#888899'}).setOrigin(0,0.5).setInteractive({useHandCursor:true});
     back.on('pointerdown',()=>{this.cameras.main.fadeOut(250,0,0,0);this.time.delayedCall(250,()=>this.scene.start('HubScene'));});
-    const container=this.add.container(0,0);
-    const sections=[
-      {label:'\ud83d\udccd NORTHWOOD HIGH',color:'#4488ff',start:1,end:10},
-      {label:'\ud83d\udccd MAIN ST ROASTERS',color:'#ff8800',start:11,end:20},
-      {label:'\ud83d\udccd TIKI TAN',color:'#ff44aa',start:21,end:30},
-      {label:'\ud83d\udccd THE STREETS',color:'#ffcc00',start:31,end:50},
-      {label:"\ud83d\udccd BRODY'S HOUSE",color:'#ff4444',start:51,end:100},
+    const NIGHTS=[
+      {n:1,name:'NIGHT ONE',sub:"Brody's first escape attempt",diff:'EASY',dc:'#00ff88'},
+      {n:2,name:'NIGHT TWO',sub:'The neighbor upgraded his glasses',diff:'EASY',dc:'#00ff88'},
+      {n:3,name:'NIGHT THREE',sub:'Karen has a new clipboard',diff:'MEDIUM',dc:'#ffcc00'},
+      {n:4,name:'NIGHT FOUR',sub:'Steiner assigned extra homework',diff:'MEDIUM',dc:'#ffcc00'},
+      {n:5,name:'NIGHT FIVE',sub:'Coach added Saturday practice',diff:'MEDIUM',dc:'#ffcc00'},
+      {n:6,name:'NIGHT SIX',sub:'Berg called a staff meeting',diff:'HARD',dc:'#ff8800'},
+      {n:7,name:'NIGHT SEVEN',sub:'Peyton got a new phone plan',diff:'HARD',dc:'#ff8800'},
+      {n:8,name:'NIGHT EIGHT',sub:'Everyone has your schedule',diff:'HARD',dc:'#ff8800'},
+      {n:9,name:'NIGHT NINE',sub:'They formed an official committee',diff:'EXPERT',dc:'#ff4400'},
+      {n:10,name:'NIGHT TEN',sub:'Mama found the search history',diff:'INSANE',dc:'#ff0044'},
     ];
     let yPos=75;
-    sections.forEach(sec=>{
-      container.add(this.add.text(20,yPos,sec.label,{fontFamily:'Orbitron',fontSize:'13px',color:sec.color,fontStyle:'bold'}).setDepth(5));
-      yPos+=28;
-      const cellSize=58,padding=8,cols=5;let col=0,rowY=yPos;
-      for(let lvl=sec.start;lvl<=sec.end;lvl++){
-        const cx=16+col*(cellSize+padding),cy=rowY,isU=unlocked.includes(lvl),lvlS=stars[lvl]||0,isSel=lvl===DTM.getCurrentLevel();
-        const cell=this.add.graphics().setDepth(4);
-        if(isSel){cell.fillStyle(0xff9900,0.3);cell.fillRoundedRect(cx,cy,cellSize,cellSize,8);cell.lineStyle(2,0xff9900,1);cell.strokeRoundedRect(cx,cy,cellSize,cellSize,8);}
-        else if(isU){cell.fillStyle(0x1a1a2e,0.9);cell.fillRoundedRect(cx,cy,cellSize,cellSize,8);cell.lineStyle(1,0x333355,1);cell.strokeRoundedRect(cx,cy,cellSize,cellSize,8);}
-        else{cell.fillStyle(0x0a0a0a,0.9);cell.fillRoundedRect(cx,cy,cellSize,cellSize,8);cell.lineStyle(1,0x222233,0.5);cell.strokeRoundedRect(cx,cy,cellSize,cellSize,8);}
-        container.add(cell);
-        if(isU){
-          container.add(this.add.text(cx+cellSize/2,cy+18,String(lvl),{fontFamily:'Orbitron',fontSize:'14px',color:isSel?'#ff9900':'#ffffff',fontStyle:'bold'}).setOrigin(0.5).setDepth(5));
-          if(lvlS>0)container.add(this.add.text(cx+cellSize/2,cy+38,'\u2b50'.repeat(lvlS),{fontSize:'10px'}).setOrigin(0.5).setDepth(5));
-          const zone=this.add.zone(cx,cy,cellSize,cellSize).setOrigin(0,0).setDepth(6).setInteractive({useHandCursor:true});
-          zone.on('pointerdown',()=>{DTM.setCurrentLevel(lvl);this.cameras.main.fadeOut(200,0,0,0);this.time.delayedCall(200,()=>this.scene.start('HubScene'));});
-          container.add(zone);
-        }else{container.add(this.add.text(cx+cellSize/2,cy+cellSize/2,'\ud83d\udd12',{fontSize:'18px'}).setOrigin(0.5).setDepth(5));}
-        col++;if(col>=cols){col=0;rowY+=cellSize+padding;}
+    NIGHTS.forEach(ni=>{
+      const isU=unlocked.includes(ni.n),ns=stars[ni.n]||0,isSel=DTM.getCurrentLevel()===ni.n;
+      const card=this.add.graphics();card.fillStyle(isSel?0xff9900:isU?0x1a1a2e:0x0a0a0a,isSel?0.3:0.9);card.fillRoundedRect(16,yPos,W-32,68,8);card.lineStyle(isSel?3:1,isSel?0xff9900:isU?0x333355:0x1a1a1a,1);card.strokeRoundedRect(16,yPos,W-32,68,8);
+      if(isU){
+        this.add.text(36,yPos+20,`NIGHT ${ni.n}`,{fontFamily:'Orbitron',fontSize:'16px',color:isSel?'#ff9900':'#ffffff',fontStyle:'bold'}).setOrigin(0,0.5);
+        this.add.text(36,yPos+46,`"${ni.sub}"`,{fontFamily:'Orbitron',fontSize:'9px',color:'#888899',fontStyle:'italic'}).setOrigin(0,0.5);
+        this.add.text(W-24,yPos+20,ni.diff,{fontFamily:'Orbitron',fontSize:'11px',color:ni.dc,fontStyle:'bold'}).setOrigin(1,0.5);
+        const ss=ns>0?'\u2b50'.repeat(ns)+'\u2606'.repeat(3-ns):'\u2606\u2606\u2606';
+        this.add.text(W-24,yPos+46,ss,{fontSize:'12px'}).setOrigin(1,0.5);
+        const zone=this.add.zone(16,yPos,W-32,68).setOrigin(0,0).setInteractive({useHandCursor:true});
+        zone.on('pointerdown',()=>{DTM.setCurrentLevel(ni.n);this.cameras.main.fadeOut(200,0,0,0);this.time.delayedCall(200,()=>this.scene.start('HubScene'));});
+      }else{
+        this.add.text(W/2,yPos+24,`\ud83d\udd12  NIGHT ${ni.n}`,{fontFamily:'Orbitron',fontSize:'15px',color:'#333344',fontStyle:'bold'}).setOrigin(0.5);
+        this.add.text(W/2,yPos+46,`Complete Night ${ni.n-1} to unlock`,{fontFamily:'Orbitron',fontSize:'10px',color:'#222233'}).setOrigin(0.5);
       }
-      if(col>0)rowY+=cellSize+padding;
-      yPos=rowY+16;
+      yPos+=76;
     });
-    const totalH=yPos+100,maxScroll=Math.max(0,totalH-(H-140));
-    let startY=0,containerY=0;
-    this.input.on('pointerdown',p=>{startY=p.y;});
-    this.input.on('pointermove',p=>{if(p.isDown){containerY=Phaser.Math.Clamp(containerY+(p.y-startY)*0.8,-maxScroll,0);container.setY(containerY);startY=p.y;}});
     DTM.bottomNav(this,'chapter');this.cameras.main.fadeIn(350,0,0,0);
   }
 }
@@ -481,11 +476,11 @@ class GameScene extends Phaser.Scene {
     this.isDevMode=false;
     if((DTM.getName()||'').toLowerCase().trim()==='vince'&&(DTM.getPin()||'').trim()==='8675'){
       this.isDevMode=true;this.pDmg*=10;this.pMaxHP=9999;this.pHP=9999;this.pSpeed*=2;this.fireRate=100;this.critRate=0.5;this.critDmg=3.0;this.magnetR=300;
-      try{localStorage.setItem('dtm_unlocked',JSON.stringify(Array.from({length:100},(_,i)=>i+1)));}catch(e){}
+      try{localStorage.setItem('dtm_unlocked',JSON.stringify([1,2,3,4,5,6,7,8,9,10]));}catch(e){}
       console.log('\ud83d\udd25 DEV MODE ACTIVE');
     }
     const allowed=DTM.enemiesForLevel(L);
-    this.activeRounds=ROUNDS.filter(r=>r.enemies.every(eg=>allowed.includes(eg.type)));
+    this.activeRounds=ROUNDS; // all 10 rounds every night, difficulty scales by night number
   }
 
   create(){
@@ -640,7 +635,7 @@ class GameScene extends Phaser.Scene {
     e.spawnedMinions=0;e.patrolTarget=null;
     const ln=this.levelNum||1;
     e.tier=ln<=10?1:ln<=30?2:3;
-    const hm=1+Math.floor(ln/10)*0.2;
+    const hm=0.6+(ln-1)*0.38;
     switch(tex){
       case 'ew':e.setDisplaySize(100,100);e.hp=Math.floor(600*hm);e.spd=38;e.dmg=8;e.gd=3;e.sv=50;e.burstColor=0xaaaaaa;break;
       case 'ef':e.setDisplaySize(95,95);e.play('karen_walk');e.hp=Math.floor(450*hm);e.spd=85;e.dmg=10;e.gd=3;e.sv=60;e.burstColor=0xff8800;break;

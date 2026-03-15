@@ -2,13 +2,14 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>DON'T TELL MAMA</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/phaser/3.60.0/phaser.min.js"></script>
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
   body { background:#000; display:flex; justify-content:center; align-items:center; height:100vh; overflow:hidden; }
+  input.dtm-input { -webkit-text-size-adjust:100%; font-size:16px !important; }
 </style>
 </head>
 <body>
@@ -196,7 +197,7 @@ class AuthScene extends Phaser.Scene {
     this.add.text(W/2,175,"Brody's Great Escape",{fontFamily:'Orbitron',fontSize:'13px',color:'#888899'}).setOrigin(0.5);
     let activeTab='login';const formObjs=[];
     const clearForm=()=>{formObjs.forEach(o=>{if(o&&o.remove)o.remove();else if(o&&o.destroy)o.destroy();});formObjs.length=0;document.querySelectorAll('.dtm-input').forEach(el=>el.remove());};
-    const makeInput=(placeholder,yPct,type='text')=>{const el=document.createElement('input');el.type=type;el.placeholder=placeholder;el.className='dtm-input';el.maxLength=type==='password'?50:20;el.style.cssText=`position:fixed;left:50%;transform:translateX(-50%);top:${yPct}%;width:300px;padding:12px 16px;font-size:15px;font-family:Orbitron,sans-serif;background:#1a1a2e;color:#fff;border:2px solid #333355;border-radius:10px;text-align:left;outline:none;z-index:1000;box-sizing:border-box;`;el.addEventListener('focus',()=>el.style.borderColor='#ff9900');el.addEventListener('blur',()=>el.style.borderColor='#333355');document.body.appendChild(el);formObjs.push(el);return el;};
+    const makeInput=(placeholder,yPct,type='text')=>{const el=document.createElement('input');el.type=type;el.placeholder=placeholder;el.className='dtm-input';el.maxLength=type==='password'?50:30;el.setAttribute('autocomplete',type==='password'?'current-password':'username');const cv=document.querySelector('canvas');const rect=cv?cv.getBoundingClientRect():{left:0,top:0,width:window.innerWidth,height:window.innerHeight};const sx=rect.width/W,sy=rect.height/H;const iw=Math.min(300*sx,rect.width-40);const ix=rect.left+(rect.width-iw)/2;const iy=rect.top+(yPct*rect.height);el.style.cssText=`position:fixed;left:${ix}px;top:${iy}px;width:${iw}px;padding:${12*sy}px ${16*sx}px;font-size:16px;font-family:Orbitron,sans-serif;background:#1a1a2e;color:#ffffff;border:2px solid #333355;border-radius:10px;outline:none;z-index:9999;box-sizing:border-box;-webkit-appearance:none;appearance:none;`;el.addEventListener('focus',()=>el.style.borderColor='#ff9900');el.addEventListener('blur',()=>el.style.borderColor='#333355');document.body.appendChild(el);formObjs.push(el);return el;};
     // Tabs
     const ltBg=this.add.graphics(),stBg=this.add.graphics();
     const drawTabs=(a)=>{ltBg.clear();stBg.clear();ltBg.fillStyle(a==='login'?0xff9900:0x1a1a2e,1);ltBg.fillRoundedRect(20,205,165,36,8);stBg.fillStyle(a==='signup'?0xff9900:0x1a1a2e,1);stBg.fillRoundedRect(205,205,165,36,8);};
@@ -225,7 +226,9 @@ class AuthScene extends Phaser.Scene {
     };
     ltZ.on('pointerdown',showLogin);stZ.on('pointerdown',showSignup);
     showLogin();
-    this.events.on('shutdown',()=>document.querySelectorAll('.dtm-input').forEach(el=>el.remove()));
+    const repoInputs=()=>document.querySelectorAll('.dtm-input').forEach(el=>{el.style.position='fixed';});
+    window.addEventListener('scroll',repoInputs);window.addEventListener('resize',repoInputs);
+    this.events.on('shutdown',()=>{window.removeEventListener('scroll',repoInputs);window.removeEventListener('resize',repoInputs);document.querySelectorAll('.dtm-input').forEach(el=>el.remove());});
     this.cameras.main.fadeIn(400,0,0,0);
   }
 }
@@ -455,8 +458,8 @@ class GameScene extends Phaser.Scene {
   }
 
   init(data){
-    this.pHP=150;this.pMaxHP=150;this.pSpeed=185;this.pDmg=22;
-    this.fireRate=1050;this.piercing=false;this.orbitCnt=0;
+    this.pHP=150;this.pMaxHP=150;this.pSpeed=185;this.pDmg=8;
+    this.fireRate=1200;this.piercing=false;this.orbitCnt=0;
     this.hasPulse=false;this.magnetR=75;this.regenRate=0;
     this.lastShot=0;this.pXP=0;this.pLevel=1;this.xpNeeded=10;
     this.score=0;this.kills=0;this.elapsed=0;this.totalTime=15*60*1000;
@@ -477,10 +480,10 @@ class GameScene extends Phaser.Scene {
     this.roundStartTime=0;this.roundMinTimeMet=false;this.roundTimerTxt=null;
     this.critRate=BALANCE.critBase;this.critDmg=BALANCE.critDmgBase;
     // Free progression bonuses every 5 levels
-    const freeFireBonus=Math.floor(this.levelNum/5)*30;
-    const freeDmgBonus=Math.floor(this.levelNum/5)*2;
-    this.fireRate=Math.max(300,1050-freeFireBonus);
-    this.pDmg=22+freeDmgBonus;
+    const freeFireBonus=Math.floor(this.levelNum/5)*25;
+    const freeDmgBonus=Math.floor(this.levelNum/5)*3;
+    this.fireRate=Math.max(300,1200-freeFireBonus);
+    this.pDmg=8+freeDmgBonus;
     // Apply locker upgrades
     const u=DTM.getUpgrades();
     this.pSpeed=Math.floor(185*(1+(u.sneakers||0)*0.15));
@@ -654,13 +657,13 @@ class GameScene extends Phaser.Scene {
     e.tier=ln<=10?1:ln<=30?2:3;
     const tm={1:1.0,2:1.6,3:2.4}[e.tier];
     switch(tex){
-      case 'ew':e.setDisplaySize(100,100);e.hp=Math.floor(320*hs*tm);e.maxHp=e.hp;e.spd=Math.floor(42*ss);e.dmg=20;e.gd=2;e.sv=10;e.burstColor=0xff3333;break;
-      case 'ef':e.setDisplaySize(95,95);e.play('karen_walk');e.hp=Math.floor(240*hs*tm);e.maxHp=e.hp;e.spd=Math.floor(95*ss);e.dmg=18;e.gd=2;e.sv=15;e.burstColor=0xff8800;break;
-      case 'es':e.setDisplaySize(95,95);e.play('steiner_walk');e.hp=Math.floor(380*hs*tm);e.maxHp=e.hp;e.spd=Math.floor(62*ss);e.dmg=22;e.gd=3;e.sv=30;e.burstColor=0xcc44ff;e.patrolTarget={x:Phaser.Math.Between(60,W-60),y:Phaser.Math.Between(100,H-100)};break;
-      case 'et':e.setDisplaySize(120,120);e.hp=Math.floor(650*hs*tm);e.maxHp=e.hp;e.spd=Math.floor(32*ss);e.dmg=40;e.gd=5;e.sv=55;e.burstColor=0xaa0000;e.chargeDmg=80;break;
-      case 'coach':e.setDisplaySize(108,108);e.play('coach_run');e.hp=Math.floor(400*hs*tm);e.maxHp=e.hp;e.spd=Math.floor(85*ss);e.dmg=22;e.gd=8;e.sv=150;e.burstColor=0x4488ff;e.lastWhistle=0;e.lastDrill=0;break;
-      case 'sister':e.setDisplaySize(100,100);e.play('peyton_snitch');e.hp=Math.floor(500*hs*tm);e.maxHp=e.hp;e.spd=Math.floor(75*ss);e.dmg=14;e.gd=8;e.sv=300;e.burstColor=0xcc44ff;break;
-      case 'boss':e.setDisplaySize(155,155);e.play('mama_charge');e.hp=Math.floor(1200*hs*tm);e.maxHp=e.hp;e.spd=58;e.dmg=55;e.gd=20;e.sv=600;e.burstColor=0xff0000;e.chargeDmg=70;
+      case 'ew':e.setDisplaySize(100,100);e.hp=Math.floor(100*hs*tm);e.maxHp=e.hp;e.spd=Math.floor(42*ss);e.dmg=20;e.gd=2;e.sv=10;e.burstColor=0xff3333;break;
+      case 'ef':e.setDisplaySize(95,95);e.play('karen_walk');e.hp=Math.floor(80*hs*tm);e.maxHp=e.hp;e.spd=Math.floor(95*ss);e.dmg=18;e.gd=2;e.sv=15;e.burstColor=0xff8800;break;
+      case 'es':e.setDisplaySize(95,95);e.play('steiner_walk');e.hp=Math.floor(120*hs*tm);e.maxHp=e.hp;e.spd=Math.floor(62*ss);e.dmg=22;e.gd=3;e.sv=30;e.burstColor=0xcc44ff;e.patrolTarget={x:Phaser.Math.Between(60,W-60),y:Phaser.Math.Between(100,H-100)};break;
+      case 'et':e.setDisplaySize(120,120);e.hp=Math.floor(200*hs*tm);e.maxHp=e.hp;e.spd=Math.floor(32*ss);e.dmg=40;e.gd=5;e.sv=55;e.burstColor=0xaa0000;e.chargeDmg=80;break;
+      case 'coach':e.setDisplaySize(108,108);e.play('coach_run');e.hp=Math.floor(140*hs*tm);e.maxHp=e.hp;e.spd=Math.floor(85*ss);e.dmg=22;e.gd=8;e.sv=150;e.burstColor=0x4488ff;e.lastWhistle=0;e.lastDrill=0;break;
+      case 'sister':e.setDisplaySize(100,100);e.play('peyton_snitch');e.hp=Math.floor(160*hs*tm);e.maxHp=e.hp;e.spd=Math.floor(75*ss);e.dmg=14;e.gd=8;e.sv=300;e.burstColor=0xcc44ff;break;
+      case 'boss':e.setDisplaySize(155,155);e.play('mama_charge');e.hp=Math.floor(600*hs*tm);e.maxHp=e.hp;e.spd=58;e.dmg=55;e.gd=20;e.sv=600;e.burstColor=0xff0000;e.chargeDmg=70;
         this.bossOrbs=[0xff9900,0xff4400,0xff2244,0xffdd00].map(c=>{const o=this.add.graphics().setDepth(7);o.fillStyle(c,0.85);o.fillCircle(0,0,6);o.bossRef=e;return o;});break;
     }
     e.hpGfx=this.add.graphics().setDepth(7);

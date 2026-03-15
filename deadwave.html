@@ -71,7 +71,7 @@ const DTM = {
   getCurrentLevel:()=>parseInt(localStorage.getItem('dtm_currentlevel')||'1'),
   setCurrentLevel:(n)=>localStorage.setItem('dtm_currentlevel',String(n)),
   getPin:()=>localStorage.getItem('dtm_pin')||'0000',
-  _gfetch:async(url)=>{try{const c=new AbortController();const t=setTimeout(()=>c.abort(),8000);const r=await fetch(url,{signal:c.signal});clearTimeout(t);if(!r.ok)return{error:`Server error: ${r.status}`};return await r.json();}catch(e){if(e.name==='AbortError')return{error:'Request timed out'};return{error:e.message};}},
+  _gfetch:async(url)=>{try{console.log('FETCH:',url);const c=new AbortController();const t=setTimeout(()=>c.abort(),8000);const r=await fetch(url,{signal:c.signal});clearTimeout(t);if(!r.ok){console.error('FETCH ERR:',r.status);return{error:`Server error: ${r.status}`};}const d=await r.json();console.log('FETCH OK:',d);return d;}catch(e){console.error('FETCH FAIL:',e.message);if(e.name==='AbortError')return{error:'Request timed out'};return{error:e.message};}},
   locationForLevel:(n)=>{
     if(n<=10) return{name:'NORTHWOOD HIGH',color:'#4488ff'};
     if(n<=20) return{name:'MAIN ST ROASTERS',color:'#ff8800'};
@@ -344,7 +344,8 @@ class LeaderboardScene extends Phaser.Scene {
     const loadBoard=async(period)=>{
       loadingTxt.setVisible(true);listContainer.destroy();listContainer=this.add.container(0,0);
       const data=await DTM.fetchLeaderboard(period);loadingTxt.setVisible(false);
-      if(!data.success&&data.error){listContainer.add(this.add.text(W/2,H/2,"\ud83d\ude05 Couldn't reach\nthe Snitch List",{fontFamily:'Orbitron',fontSize:'14px',color:'#ff4444',align:'center'}).setOrigin(0.5));return;}
+      console.log('loadBoard result:',JSON.stringify(data));
+      if(!data||(!data.success&&data.error)){listContainer.add(this.add.text(W/2,H/2,"\ud83d\ude05 Couldn't reach\nthe Snitch List\n\n"+String(data?.error||'unknown'),{fontFamily:'Orbitron',fontSize:'12px',color:'#ff4444',align:'center',wordWrap:{width:300}}).setOrigin(0.5));return;}
       const scores=data.scores||[];
       if(scores.length===0){listContainer.add(this.add.text(W/2,H/2-40,'\ud83c\udfc6',{fontSize:'48px'}).setOrigin(0.5));listContainer.add(this.add.text(W/2,H/2+20,'No scores yet!\nBe the FIRST on the\nNorthwood Snitch List!',{fontFamily:'Orbitron',fontSize:'14px',color:'#ff9900',align:'center',lineSpacing:8}).setOrigin(0.5));return;}
       const myName=DTM.getName().toLowerCase();let myRank=-1;

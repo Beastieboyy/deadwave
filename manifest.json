@@ -1,0 +1,17 @@
+{
+  "name": "Don't Tell Mama",
+  "short_name": "DTM",
+  "description": "Brody's Great Escape",
+  "start_url": "/deadwave/deadwave.html",
+  "display": "fullscreen",
+  "orientation": "portrait",
+  "background_color": "#0d0d1a",
+  "theme_color": "#ff9900",
+  "icons": [
+    {
+      "src": "/favicon.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    }
+  ]
+}

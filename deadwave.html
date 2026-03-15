@@ -2,13 +2,19 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>DON'T TELL MAMA</title>
+<link rel="manifest" href="manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Don't Tell Mama">
+<link rel="apple-touch-icon" href="/favicon.png">
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/phaser/3.60.0/phaser.min.js"></script>
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
-  body { background:#000; display:flex; justify-content:center; align-items:center; height:100vh; overflow:hidden; }
+  html, body { width:100%; height:100%; overflow:hidden; background:#000; position:fixed; top:0; left:0; }
+  canvas { display:block; margin:0 auto; padding-top:env(safe-area-inset-top); padding-bottom:env(safe-area-inset-bottom); padding-left:env(safe-area-inset-left); padding-right:env(safe-area-inset-right); }
   input.dtm-input { -webkit-text-size-adjust:100%; font-size:16px !important; }
 </style>
 </head>
@@ -285,6 +291,18 @@ class HubScene extends Phaser.Scene {
     const chapBtn=DTM.makeBtn(this,16,578,W-32,48,'SELECT A DIFFERENT NIGHT  \u203a',0x1a1a2e);
     chapBtn.text.setColor('#888899').setFontSize('13px');chapBtn.bg.on('pointerdown',()=>{this.cameras.main.fadeOut(250,0,0,0);this.time.delayedCall(250,()=>this.scene.start('ChapterScene'));});
     DTM.bottomNav(this,'hub');this.cameras.main.fadeIn(350,0,0,0);
+    // Add to Home Screen tip (iOS only, one-time)
+    if(!window.navigator.standalone&&!localStorage.getItem('dtm_hometip')&&/iPhone|iPad/.test(navigator.userAgent)){
+      localStorage.setItem('dtm_hometip','1');
+      this.time.delayedCall(2000,()=>{
+        const tip=this.add.graphics().setDepth(300);tip.fillStyle(0x1a1a2e,0.97);tip.fillRoundedRect(16,H-130,W-32,100,12);tip.lineStyle(2,0xff9900,0.8);tip.strokeRoundedRect(16,H-130,W-32,100,12);
+        const t1=this.add.text(W/2,H-105,'\ud83d\udca1 TIP: Add to Home Screen for fullscreen!',{fontFamily:'Orbitron',fontSize:'11px',color:'#ff9900',fontStyle:'bold'}).setOrigin(0.5).setDepth(301);
+        const t2=this.add.text(W/2,H-80,'Safari \u2192 Share \u2192 Add to Home Screen',{fontFamily:'Orbitron',fontSize:'10px',color:'#888899'}).setOrigin(0.5).setDepth(301);
+        const cl=this.add.text(W-28,H-132,'\u2715',{fontFamily:'Orbitron',fontSize:'14px',color:'#888899'}).setOrigin(0.5).setDepth(301).setInteractive({useHandCursor:true});
+        cl.on('pointerdown',()=>[tip,t1,t2,cl].forEach(o=>o.destroy()));
+        this.time.delayedCall(6000,()=>[tip,t1,t2,cl].forEach(o=>{if(o.scene)o.destroy();}));
+      });
+    }
   }
 }
 
@@ -1050,7 +1068,7 @@ stripWhiteBGs().then(()=>{
     type:Phaser.AUTO,width:W,height:H,backgroundColor:'#07070f',
     physics:{default:'arcade',arcade:{debug:false,gravity:{y:0}}},
     scene:[MenuScene,AuthScene,HubScene,ChapterScene,GameScene,ResultScene,LeaderboardScene,UpgradeScene],
-    scale:{mode:Phaser.Scale.FIT,autoCenter:Phaser.Scale.CENTER_BOTH},
+    scale:{mode:Phaser.Scale.FIT,autoCenter:Phaser.Scale.CENTER_BOTH,width:W,height:H,expandParent:true},
     parent:document.body,
   });
 });

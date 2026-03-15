@@ -900,12 +900,15 @@ class GameScene extends Phaser.Scene {
       add(this.add.text(cx+72,cy+42,sk.name,{fontFamily:'Orbitron',fontSize:'15px',color:colH,fontStyle:'bold'}).setOrigin(0,0.5).setDepth(202));
       add(this.add.text(cx+72,cy+78,sk.desc,{fontFamily:'Orbitron',fontSize:'11px',color:'#9999bb',wordWrap:{width:cW-90}}).setOrigin(0,0.5).setDepth(202));
       add(this.add.text(cx+cW-16,cy+cH/2,`[${i+1}]`,{fontFamily:'Orbitron',fontSize:'13px',color:'#555577'}).setOrigin(1,0.5).setDepth(202));
-      const zone=add(this.add.zone(cx,cy,cW,cH).setOrigin(0,0).setDepth(203).setInteractive({useHandCursor:true}));
-      zone.on('pointerdown',()=>close(sk.id));
+      const zone=add(this.add.zone(cx,cy,cW,cH).setOrigin(0,0).setDepth(210).setInteractive({useHandCursor:true}));
+      zone.on('pointerdown',()=>{console.log('Skill tapped:',sk.id);close(sk.id);});
     });
+    // Skip button
+    const skipBtn=add(this.add.text(W/2,H-110,'[ TAP HERE IF STUCK \u2014 SKIP ]',{fontFamily:'Orbitron',fontSize:'11px',color:'#555577'}).setOrigin(0.5).setDepth(210).setInteractive({useHandCursor:true}));
+    skipBtn.on('pointerdown',()=>{console.log('Skip tapped');close(chosen[0].id);});
     this._kh=(ev)=>{const idx=['1','2','3'].indexOf(ev.key);if(idx>=0&&chosen[idx])close(chosen[idx].id);};
     this.input.keyboard.on('keydown',this._kh);
-    this.time.delayedCall(30000,()=>{if(this.levelUpActive)close(chosen[0].id);});
+    this.time.delayedCall(20000,()=>{if(this.levelUpActive){console.warn('Level up auto-close 20s');close(chosen[0].id);}});
     this.cameras.main.flash(250,0,255,160);
   }
 

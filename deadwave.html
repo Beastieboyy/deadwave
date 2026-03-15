@@ -299,19 +299,24 @@ class ChapterScene extends Phaser.Scene {
     ];
     let yPos=75;
     NIGHTS.forEach(ni=>{
-      const isU=unlocked.includes(ni.n),ns=stars[ni.n]||0,isSel=DTM.getCurrentLevel()===ni.n;
-      const card=this.add.graphics();card.fillStyle(isSel?0xff9900:isU?0x1a1a2e:0x0a0a0a,isSel?0.3:0.9);card.fillRoundedRect(16,yPos,W-32,68,8);card.lineStyle(isSel?3:1,isSel?0xff9900:isU?0x333355:0x1a1a1a,1);card.strokeRoundedRect(16,yPos,W-32,68,8);
+      const isU=unlocked.includes(ni.n),ns=stars[ni.n]||0,isSel=DTM.getCurrentLevel()===ni.n;const cY=yPos;
+      const card=this.add.graphics().setDepth(2);
       if(isU){
-        this.add.text(36,yPos+20,`NIGHT ${ni.n}`,{fontFamily:'Orbitron',fontSize:'16px',color:isSel?'#ff9900':'#ffffff',fontStyle:'bold'}).setOrigin(0,0.5);
-        this.add.text(36,yPos+46,`"${ni.sub}"`,{fontFamily:'Orbitron',fontSize:'9px',color:'#888899',fontStyle:'italic'}).setOrigin(0,0.5);
-        this.add.text(W-24,yPos+20,ni.diff,{fontFamily:'Orbitron',fontSize:'11px',color:ni.dc,fontStyle:'bold'}).setOrigin(1,0.5);
+        card.fillStyle(isSel?0x2a1a00:0x1a1a2e,0.95);card.fillRoundedRect(16,cY,W-32,68,8);card.lineStyle(isSel?3:1,isSel?0xff9900:0x333355,1);card.strokeRoundedRect(16,cY,W-32,68,8);
+        this.add.text(36,cY+20,`NIGHT ${ni.n}`,{fontFamily:'Orbitron',fontSize:'16px',color:isSel?'#ff9900':'#ffffff',fontStyle:'bold'}).setOrigin(0,0.5).setDepth(3);
+        this.add.text(36,cY+46,`"${ni.sub}"`,{fontFamily:'Orbitron',fontSize:'10px',color:'#888899',fontStyle:'italic'}).setOrigin(0,0.5).setDepth(3);
+        this.add.text(W-24,cY+18,ni.diff,{fontFamily:'Orbitron',fontSize:'11px',color:ni.dc,fontStyle:'bold'}).setOrigin(1,0.5).setDepth(3);
         const ss=ns>0?'\u2b50'.repeat(ns)+'\u2606'.repeat(3-ns):'\u2606\u2606\u2606';
-        this.add.text(W-24,yPos+46,ss,{fontSize:'12px'}).setOrigin(1,0.5);
-        const zone=this.add.zone(16,yPos,W-32,68).setOrigin(0,0).setInteractive({useHandCursor:true});
+        this.add.text(W-24,cY+48,ss,{fontSize:'12px'}).setOrigin(1,0.5).setDepth(3);
+        if(isSel)this.add.text(36,cY+34,'\u25b6',{fontFamily:'Orbitron',fontSize:'14px',color:'#ff9900'}).setOrigin(0,0.5).setDepth(3);
+        const zone=this.add.zone(16,cY,W-32,68).setOrigin(0,0).setDepth(10).setInteractive({useHandCursor:true});
+        zone.on('pointerover',()=>{card.clear();card.fillStyle(0x2a2a4a,0.95);card.fillRoundedRect(16,cY,W-32,68,8);card.lineStyle(2,0xff9900,0.6);card.strokeRoundedRect(16,cY,W-32,68,8);});
+        zone.on('pointerout',()=>{card.clear();card.fillStyle(isSel?0x2a1a00:0x1a1a2e,0.95);card.fillRoundedRect(16,cY,W-32,68,8);card.lineStyle(isSel?3:1,isSel?0xff9900:0x333355,1);card.strokeRoundedRect(16,cY,W-32,68,8);});
         zone.on('pointerdown',()=>{DTM.setCurrentLevel(ni.n);this.cameras.main.fadeOut(200,0,0,0);this.time.delayedCall(200,()=>this.scene.start('HubScene'));});
       }else{
-        this.add.text(W/2,yPos+24,`\ud83d\udd12  NIGHT ${ni.n}`,{fontFamily:'Orbitron',fontSize:'15px',color:'#333344',fontStyle:'bold'}).setOrigin(0.5);
-        this.add.text(W/2,yPos+46,`Complete Night ${ni.n-1} to unlock`,{fontFamily:'Orbitron',fontSize:'10px',color:'#222233'}).setOrigin(0.5);
+        card.fillStyle(0x0a0a0a,0.95);card.fillRoundedRect(16,cY,W-32,68,8);card.lineStyle(1,0x1a1a1a,1);card.strokeRoundedRect(16,cY,W-32,68,8);
+        this.add.text(W/2,cY+24,`\ud83d\udd12  NIGHT ${ni.n}`,{fontFamily:'Orbitron',fontSize:'15px',color:'#333344',fontStyle:'bold'}).setOrigin(0.5).setDepth(3);
+        this.add.text(W/2,cY+46,ni.n===1?'Play to unlock!':`Complete Night ${ni.n-1} to unlock`,{fontFamily:'Orbitron',fontSize:'10px',color:'#222233'}).setOrigin(0.5).setDepth(3);
       }
       yPos+=76;
     });

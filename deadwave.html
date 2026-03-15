@@ -425,17 +425,16 @@ class GameScene extends Phaser.Scene {
   constructor(){super('GameScene');}
 
   preload(){
-    const u=(f)=>window.__cleanURLs&&window.__cleanURLs[f]||f;
-    this.load.spritesheet('player',u('thekid.png'),{frameWidth:448,frameHeight:297});
-    this.load.image('ew',u('gary.png'));
-    this.load.spritesheet('ef',u('karen.png'),{frameWidth:352,frameHeight:768});
-    this.load.spritesheet('es',u('steiner.png'),{frameWidth:252,frameHeight:1051});
-    this.load.image('et',u('mrberg.png'));
-    this.load.spritesheet('boss',u('mama.png'),{frameWidth:432,frameHeight:614});
-    this.load.spritesheet('sister',u('sister.png'),{frameWidth:448,frameHeight:597});
-    this.load.spritesheet('coach',u('footballcoach.png'),{frameWidth:632,frameHeight:421});
-    this.load.image('gem',u('shard.png'));
-    this.load.image('bullet',u('bullet.png'));
+    this.load.spritesheet('player','thekid.png',{frameWidth:448,frameHeight:297});
+    this.load.image('ew','gary.png');
+    this.load.spritesheet('ef','karen.png',{frameWidth:352,frameHeight:768});
+    this.load.spritesheet('es','steiner.png',{frameWidth:252,frameHeight:1051});
+    this.load.image('et','mrberg.png');
+    this.load.spritesheet('boss','mama.png',{frameWidth:432,frameHeight:614});
+    this.load.spritesheet('sister','sister.png',{frameWidth:448,frameHeight:597});
+    this.load.spritesheet('coach','footballcoach.png',{frameWidth:632,frameHeight:421});
+    this.load.image('gem','shard.png');
+    this.load.image('bullet','bullet.png');
     this.load.image('bg','bg.png');
     this.load.image('blade','disc.png');
   }
@@ -1077,47 +1076,14 @@ class ResultScene extends Phaser.Scene {
 }
 
 // ─────────────────────────────────────────────────
-// WHITE BACKGROUND REMOVAL & LAUNCH
+// LAUNCH (sprites pre-processed with Pillow — no runtime bg removal)
 // ─────────────────────────────────────────────────
-async function stripWhiteBGs(){
-  const files=['thekid.png','gary.png','karen.png','steiner.png','mrberg.png','mama.png','sister.png','footballcoach.png','bullet.png','shard.png'];
-  window.__cleanURLs={};
-  for(const file of files){
-    try{
-      const resp=await fetch(file);const blob=await resp.blob();const imgURL=URL.createObjectURL(blob);
-      const img=await new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=rej;i.src=imgURL;});
-      const c=document.createElement('canvas');c.width=img.width;c.height=img.height;
-      const ctx=c.getContext('2d');ctx.drawImage(img,0,0);
-      const id=ctx.getImageData(0,0,c.width,c.height);const d=id.data;
-      const cw=c.width,ch=c.height;
-      // Check if image already has transparency — skip if so
-      let hasAlpha=false;for(let i=3;i<d.length;i+=4){if(d[i]<250){hasAlpha=true;break;}}
-      if(hasAlpha){console.log(file,'has transparency — skip');window.__cleanURLs[file]=imgURL;continue;}
-      // Sample 8 edge points to find background color
-      const gp=(px,py)=>{const idx=(py*cw+px)*4;return[d[idx],d[idx+1],d[idx+2]];};
-      const corners=[gp(0,0),gp(cw-1,0),gp(0,ch-1),gp(cw-1,ch-1),gp(Math.floor(cw/2),0),gp(Math.floor(cw/2),ch-1),gp(0,Math.floor(ch/2)),gp(cw-1,Math.floor(ch/2))];
-      const lightC=corners.filter(p=>p[0]>180&&p[1]>180&&p[2]>180);
-      let bgR=255,bgG=255,bgB=255,isLight=false;
-      if(lightC.length>=2){bgR=Math.round(lightC.reduce((s,p)=>s+p[0],0)/lightC.length);bgG=Math.round(lightC.reduce((s,p)=>s+p[1],0)/lightC.length);bgB=Math.round(lightC.reduce((s,p)=>s+p[2],0)/lightC.length);isLight=true;}
-      else if(lightC.length===1){bgR=255;bgG=255;bgB=255;isLight=true;}
-      if(isLight){for(let i=0;i<d.length;i+=4){const r=d[i],g=d[i+1],b=d[i+2];const diff=Math.abs(r-bgR)+Math.abs(g-bgG)+Math.abs(b-bgB);if(diff<60)d[i+3]=0;else if(diff<120)d[i+3]=Math.floor(d[i+3]*(diff-60)/60);}}
-      ctx.putImageData(id,0,0);
-      const cleanBlob=await new Promise(res=>c.toBlob(res,'image/png'));
-      window.__cleanURLs[file]=URL.createObjectURL(cleanBlob);
-      URL.revokeObjectURL(imgURL);
-    }catch(e){console.warn('stripWhiteBGs fail:',file,e.message);window.__cleanURLs[file]=file;}
-  }
-  console.log('stripWhiteBGs done:',Object.keys(window.__cleanURLs).length,'files');
-}
-
-stripWhiteBGs().then(()=>{
-  new Phaser.Game({
+new Phaser.Game({
     type:Phaser.AUTO,width:W,height:H,backgroundColor:'#07070f',dom:{createContainer:true},
     physics:{default:'arcade',arcade:{debug:false,gravity:{y:0}}},
     scene:[MenuScene,NicknameScene,HubScene,ChapterScene,GameScene,ResultScene,LeaderboardScene,UpgradeScene],
     scale:{mode:Phaser.Scale.FIT,autoCenter:Phaser.Scale.CENTER_BOTH,width:W,height:H,expandParent:true},
     parent:document.body,
-  });
 });
 </script>
 </body>

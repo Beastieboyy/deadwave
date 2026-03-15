@@ -418,15 +418,30 @@ class GameScene extends Phaser.Scene {
     this.specialHitCount=0;
     this.roundStartTime=0;this.roundMinTimeMet=false;this.roundTimerTxt=null;
     this.critRate=BALANCE.critBase;this.critDmg=BALANCE.critDmgBase;
-    // Apply locker upgrades using BALANCE system
+    // Free progression bonuses every 5 levels
+    const freeFireBonus=Math.floor(this.levelNum/5)*30;
+    const freeDmgBonus=Math.floor(this.levelNum/5)*2;
+    this.fireRate=Math.max(300,1050-freeFireBonus);
+    this.pDmg=22+freeDmgBonus;
+    // Apply locker upgrades
     const u=DTM.getUpgrades();
     this.pSpeed=Math.floor(185*(1+(u.sneakers||0)*0.15));
     this.pDmg=Math.floor(this.pDmg*(1+(u.backpack||0)*BALANCE.equipGain.backpack));
     this.fireRate=Math.max(200,this.fireRate-(u.phone||0)*BALANCE.equipGain.phone);
     this.pMaxHP+=(u.hoodie||0)*BALANCE.equipGain.hat;
     this.pHP=this.pMaxHP;
-    // Difficulty scaling per level
-    this.diffScale=1+(this.levelNum-1)*BALANCE.enemyHPScale;
+    // Smooth logarithmic difficulty curve
+    this.diffScale=Math.pow(this.levelNum,0.65)*0.72+0.28;
+    const tierSoftener={11:0.85,21:0.82,31:0.80,41:0.82,51:0.80};
+    this.diffScale*=(tierSoftener[this.levelNum]||1.0);
+    // Separate HP and speed scaling
+    this.enemyHPScale=this.diffScale;
+    this.enemySpdScale=1+(this.diffScale-1)*0.4;
+    // Comeback buff — 2+ losses on same level
+    const lossKey=`dtm_losses_${this.levelNum}`;
+    this.comebackBuff=false;
+    const losses=parseInt(localStorage.getItem(lossKey)||'0');
+    if(losses>=2){this.comebackBuff=true;this.pMaxHP=Math.floor(this.pMaxHP*1.3);this.pHP=this.pMaxHP;this.pDmg=Math.floor(this.pDmg*1.25);}
     // Filter rounds by level
     const allowed=DTM.enemiesForLevel(this.levelNum);
     this.activeRounds=ROUNDS.filter(r=>r.enemies.every(eg=>allowed.includes(eg.type)));
@@ -446,6 +461,7 @@ class GameScene extends Phaser.Scene {
     this.time.addEvent({delay:80,callback:this.doMagnet,callbackScope:this,loop:true});
     this.cameras.main.fadeIn(500,0,0,0);
     DTM.MUSIC.play('game');
+    if(this.comebackBuff)this.time.delayedCall(1500,()=>this.floatText(W/2,H/2,'\ud83d\udcaa COMEBACK BUFF ACTIVE!',0x00ff88));
     // Pause button
     const pauseBtn=this.add.text(W-14,14,'\u23f8',{fontSize:'22px',color:'#ffffff'}).setOrigin(1,0).setDepth(150).setInteractive({useHandCursor:true});
     pauseBtn.on('pointerdown',()=>this.togglePause());
@@ -572,19 +588,18 @@ class GameScene extends Phaser.Scene {
     e.isCharging=false;e.chargeDmg=0;
     e.abilityTimer=0;e.abilityTimer2=0;e.abilityTimer3=0;
     e.spawnedMinions=0;e.patrolTarget=null;
-    const ds=this.diffScale;
+    const hs=this.enemyHPScale,ss=this.enemySpdScale;
     const ln=this.levelNum||1;
     e.tier=ln<=10?1:ln<=30?2:3;
     const tm={1:1.0,2:1.6,3:2.4}[e.tier];
-    const sm=1+(e.tier-1)*0.3;
     switch(tex){
-      case 'ew':e.setDisplaySize(100,100);e.hp=Math.floor(720*ds*tm);e.maxHp=e.hp;e.spd=Math.floor(42*sm);e.dmg=20;e.gd=2;e.sv=10;e.burstColor=0xff3333;break;
-      case 'ef':e.setDisplaySize(95,95);e.play('karen_walk');e.hp=Math.floor(560*ds*tm);e.maxHp=e.hp;e.spd=Math.floor(110*sm);e.dmg=18;e.gd=2;e.sv=15;e.burstColor=0xff8800;break;
-      case 'es':e.setDisplaySize(95,95);e.play('steiner_walk');e.hp=Math.floor(800*ds*tm);e.maxHp=e.hp;e.spd=Math.floor(75*sm);e.dmg=22;e.gd=3;e.sv=30;e.burstColor=0xcc44ff;e.patrolTarget={x:Phaser.Math.Between(60,W-60),y:Phaser.Math.Between(100,H-100)};break;
-      case 'et':e.setDisplaySize(120,120);e.hp=Math.floor(1520*ds*tm);e.maxHp=e.hp;e.spd=Math.floor(35*sm);e.dmg=40;e.gd=5;e.sv=55;e.burstColor=0xaa0000;e.chargeDmg=80;break;
-      case 'coach':e.setDisplaySize(108,108);e.play('coach_run');e.hp=Math.floor(880*ds*tm);e.maxHp=e.hp;e.spd=Math.floor(95*sm);e.dmg=22;e.gd=8;e.sv=150;e.burstColor=0x4488ff;e.lastWhistle=0;e.lastDrill=0;break;
-      case 'sister':e.setDisplaySize(100,100);e.play('peyton_snitch');e.hp=Math.floor(1800*ds*tm);e.maxHp=e.hp;e.spd=Math.floor(85*sm);e.dmg=14;e.gd=8;e.sv=300;e.burstColor=0xcc44ff;break;
-      case 'boss':e.setDisplaySize(155,155);e.play('mama_charge');e.hp=Math.floor(5000*ds*tm);e.maxHp=e.hp;e.spd=65;e.dmg=55;e.gd=20;e.sv=600;e.burstColor=0xff0000;e.chargeDmg=70;
+      case 'ew':e.setDisplaySize(100,100);e.hp=Math.floor(320*hs*tm);e.maxHp=e.hp;e.spd=Math.floor(42*ss);e.dmg=20;e.gd=2;e.sv=10;e.burstColor=0xff3333;break;
+      case 'ef':e.setDisplaySize(95,95);e.play('karen_walk');e.hp=Math.floor(240*hs*tm);e.maxHp=e.hp;e.spd=Math.floor(95*ss);e.dmg=18;e.gd=2;e.sv=15;e.burstColor=0xff8800;break;
+      case 'es':e.setDisplaySize(95,95);e.play('steiner_walk');e.hp=Math.floor(380*hs*tm);e.maxHp=e.hp;e.spd=Math.floor(62*ss);e.dmg=22;e.gd=3;e.sv=30;e.burstColor=0xcc44ff;e.patrolTarget={x:Phaser.Math.Between(60,W-60),y:Phaser.Math.Between(100,H-100)};break;
+      case 'et':e.setDisplaySize(120,120);e.hp=Math.floor(650*hs*tm);e.maxHp=e.hp;e.spd=Math.floor(32*ss);e.dmg=40;e.gd=5;e.sv=55;e.burstColor=0xaa0000;e.chargeDmg=80;break;
+      case 'coach':e.setDisplaySize(108,108);e.play('coach_run');e.hp=Math.floor(400*hs*tm);e.maxHp=e.hp;e.spd=Math.floor(85*ss);e.dmg=22;e.gd=8;e.sv=150;e.burstColor=0x4488ff;e.lastWhistle=0;e.lastDrill=0;break;
+      case 'sister':e.setDisplaySize(100,100);e.play('peyton_snitch');e.hp=Math.floor(500*hs*tm);e.maxHp=e.hp;e.spd=Math.floor(75*ss);e.dmg=14;e.gd=8;e.sv=300;e.burstColor=0xcc44ff;break;
+      case 'boss':e.setDisplaySize(155,155);e.play('mama_charge');e.hp=Math.floor(1200*hs*tm);e.maxHp=e.hp;e.spd=58;e.dmg=55;e.gd=20;e.sv=600;e.burstColor=0xff0000;e.chargeDmg=70;
         this.bossOrbs=[0xff9900,0xff4400,0xff2244,0xffdd00].map(c=>{const o=this.add.graphics().setDepth(7);o.fillStyle(c,0.85);o.fillCircle(0,0,6);o.bossRef=e;return o;});break;
     }
     e.hpGfx=this.add.graphics().setDepth(7);
@@ -594,6 +609,9 @@ class GameScene extends Phaser.Scene {
     const tierCol={1:0x888888,2:0x4488ff,3:0xaa44ff}[e.tier];
     e.tierDot=this.add.graphics().setDepth(20);e.tierDot.fillStyle(tierCol,1);e.tierDot.fillCircle(0,0,5);
     if(tex==='boss')e.phaseLabel=this.add.text(0,0,'\ud83e\udd24 PHASE 1',{fontFamily:'Orbitron',fontSize:'9px',color:'#ff9900',stroke:'#000',strokeThickness:2}).setDepth(20).setOrigin(0.5,1);
+    // First encounter bonus — 30% HP reduction
+    const seen=JSON.parse(localStorage.getItem('dtm_seen')||'[]');
+    if(!seen.includes(tex)&&!e.isMinion){e.hp=Math.floor(e.hp*0.7);e.maxHp=e.hp;seen.push(tex);localStorage.setItem('dtm_seen',JSON.stringify(seen));this.time.delayedCall(500,()=>this.showNewEnemyIntro(tex));}
     // Track tier abilities
     e.tierAbilityTimer=0;e.tierAbility2Timer=0;e.tierTriggeredOnce=false;
     return e;
@@ -804,6 +822,7 @@ class GameScene extends Phaser.Scene {
 
   diePlayer(){
     if(this.dead)return;this.dead=true;this.physics.pause();DTM.MUSIC.play('gameover');
+    const lk=`dtm_losses_${this.levelNum}`;localStorage.setItem(lk,String((parseInt(localStorage.getItem(lk)||'0'))+1));
     const hs=parseInt(localStorage.getItem('dw_hs')||0);if(this.kills>hs)localStorage.setItem('dw_hs',this.kills);
     this.cameras.main.shake(900,0.022);
     this.time.delayedCall(700,()=>this.scene.start('ResultScene',{win:false,kills:this.kills,level:this.levelNum,elapsed:this.elapsed,rounds:this.roundsCompleted,snacksEarned:this.snacksEarned,specialHits:this.specialHitCount,finalHP:this.pHP,maxHP:this.pMaxHP}));
@@ -811,9 +830,21 @@ class GameScene extends Phaser.Scene {
 
   winGame(){
     if(this.dead)return;this.dead=true;this.physics.pause();DTM.MUSIC.play('victory');
+    localStorage.removeItem(`dtm_losses_${this.levelNum}`);
     const hs=parseInt(localStorage.getItem('dw_hs')||0);if(this.kills>hs)localStorage.setItem('dw_hs',this.kills);
     this.cameras.main.flash(1200,255,255,255);
     this.time.delayedCall(900,()=>this.scene.start('ResultScene',{win:true,kills:this.kills,level:this.levelNum,elapsed:this.elapsed,rounds:this.roundsCompleted,snacksEarned:this.snacksEarned,specialHits:this.specialHitCount,finalHP:this.pHP,maxHP:this.pMaxHP}));
+  }
+
+  showNewEnemyIntro(type){
+    const nameMap={ew:'RODNEY',ef:'KAREN',es:'MRS. STEINER',et:'MR. BERG',coach:'COACH ANDREWS',sister:'PEYTON'};
+    const quoteMap={ew:'"I\'m telling your mother!"',ef:'"Do you have a hall pass??"',es:'"Show your work!!"',et:'"My office. NOW."',coach:'"Drop and give me 20!"',sister:'"I\'m TELLIIIING!!"'};
+    const ic=this.add.graphics().setDepth(205);ic.fillStyle(0x0d0d1a,0.95);ic.fillRoundedRect(W/2-140,H/2-80,280,140,12);ic.lineStyle(2,0xff9900,1);ic.strokeRoundedRect(W/2-140,H/2-80,280,140,12);
+    const nt=this.add.text(W/2,H/2-58,'\u26a0 NEW SNITCH!',{fontFamily:'Orbitron',fontSize:'13px',color:'#ff9900'}).setOrigin(0.5).setDepth(206);
+    const nm=this.add.text(W/2,H/2-28,nameMap[type]||'???',{fontFamily:'Orbitron',fontSize:'20px',color:'#ffffff',fontStyle:'bold'}).setOrigin(0.5).setDepth(206);
+    const qt=this.add.text(W/2,H/2+8,quoteMap[type]||'',{fontFamily:'Orbitron',fontSize:'11px',color:'#888899',fontStyle:'italic'}).setOrigin(0.5).setDepth(206);
+    const ht=this.add.text(W/2,H/2+38,'\u2b07 30% HP \u2014 first encounter bonus',{fontFamily:'Orbitron',fontSize:'9px',color:'#00ff88'}).setOrigin(0.5).setDepth(206);
+    this.time.delayedCall(2500,()=>[ic,nt,nm,qt,ht].forEach(o=>this.tweens.add({targets:o,alpha:0,duration:400,onComplete:()=>o.destroy()})));
   }
 
   togglePause(){
@@ -890,6 +921,7 @@ class ResultScene extends Phaser.Scene {
     const hubBtn=DTM.makeBtn(this,W/2+6,510,(W-52)/2,56,'\ud83c\udfe0 HOME',0x1a1a2e);
     hubBtn.text.setColor('#ff9900');hubBtn.bg.on('pointerdown',()=>{this.cameras.main.fadeOut(250,0,0,0);this.time.delayedCall(250,()=>this.scene.start('HubScene'));});
     if(win){const nextBtn=DTM.makeBtn(this,20,578,W-40,52,`NEXT NIGHT ${level+1} \u203a`,0x00aa44);nextBtn.bg.on('pointerdown',()=>{DTM.setCurrentLevel(level+1);this.cameras.main.fadeOut(250,0,0,0);this.time.delayedCall(250,()=>this.scene.start('GameScene',{level:level+1}));});}
+    if(!win){const lc=parseInt(localStorage.getItem(`dtm_losses_${level}`)||'0');if(lc>=1)this.add.text(W/2,580,'\ud83d\udca1 Tip: Upgrade your gear\nin the Locker!',{fontFamily:'Orbitron',fontSize:'11px',color:'#888899',align:'center'}).setOrigin(0.5);if(lc>=2)this.add.text(W/2,616,'\ud83d\udcaa Comeback buff active next try!',{fontFamily:'Orbitron',fontSize:'10px',color:'#00ff88'}).setOrigin(0.5);}
     this.cameras.main.fadeIn(400,0,0,0);
   }
 }

@@ -71,6 +71,10 @@ const DTM = {
   getCurrentLevel:()=>parseInt(localStorage.getItem('dtm_currentlevel')||'1'),
   setCurrentLevel:(n)=>localStorage.setItem('dtm_currentlevel',String(n)),
   getPin:()=>localStorage.getItem('dtm_pin')||'0000',
+  getInventory:()=>JSON.parse(localStorage.getItem('dtm_gear_inv')||'[]'),
+  saveInventory:(inv)=>localStorage.setItem('dtm_gear_inv',JSON.stringify(inv)),
+  getEquipped:()=>JSON.parse(localStorage.getItem('dtm_gear_equipped')||'{}'),
+  saveEquipped:(eq)=>localStorage.setItem('dtm_gear_equipped',JSON.stringify(eq)),
   _xget:async(url)=>{console.log('XHR:',url);return new Promise((resolve)=>{const xhr=new XMLHttpRequest();xhr.open('GET',url,true);xhr.timeout=8000;xhr.onload=()=>{try{const d=JSON.parse(xhr.responseText);console.log('XHR OK:',d);resolve(d);}catch(e){console.error('XHR parse:',e);resolve({error:'Invalid response'});}};xhr.onerror=()=>{console.error('XHR err');resolve({error:'Network error'});};xhr.ontimeout=()=>{console.error('XHR timeout');resolve({error:'Request timed out'});};xhr.send();});},
   locationForLevel:(n)=>{
     if(n<=10) return{name:'NORTHWOOD HIGH',color:'#4488ff'};
@@ -140,6 +144,9 @@ const BALANCE={
   enemyHPScale:0.12,enemySpdScale:0.04,
   minRoundTime:35000,
 };
+const GEAR_DEFS={backpack:{slot:'backpack',icon:'\ud83c\udf92',name:'BACKPACK',stat:'dmg',label:'Damage',color:0x4488ff},hoodie:{slot:'hoodie',icon:'\ud83d\udc55',name:'HOODIE',stat:'maxhp',label:'Max HP',color:0xff4444},chain:{slot:'chain',icon:'\ud83d\udcff',name:'CHAIN',stat:'magnet',label:'Magnet',color:0xffcc00},kicks:{slot:'kicks',icon:'\ud83d\udc5f',name:'KICKS',stat:'speed',label:'Speed',color:0x00ff88},gloves:{slot:'gloves',icon:'\ud83e\udde4',name:'GLOVES',stat:'firerate',label:'Fire Rate',color:0xff8800},drip:{slot:'drip',icon:'\ud83d\udd76\ufe0f',name:'DRIP',stat:'crit',label:'Crit Rate',color:0xcc44ff}};
+const RARITIES=[{name:'BEAT UP',color:0x888888,mult:1.0},{name:'DECENT',color:0x00aa44,mult:1.4},{name:'FRESH',color:0x4488ff,mult:1.9},{name:'DRIP',color:0xaa44ff,mult:2.6},{name:'HEAT',color:0xffaa00,mult:3.5},{name:'NORTHWOOD LEGEND',color:0xff2244,mult:5.0}];
+const GEAR_STAT_BASE={dmg:4,maxhp:20,magnet:40,speed:15,firerate:80,crit:0.05};
 
 // ─────────────────────────────────────────────────
 // MENU SCENE
@@ -467,6 +474,9 @@ class GameScene extends Phaser.Scene {
     this.roundsCompleted=0;this.snacksEarned=0;this.specialHitCount=0;
     this.roundStartTime=0;this.roundMinTimeMet=false;this.roundTimerTxt=null;
     this.comebackBuff=false;
+    this.runGear=[];this.groundGear=[];
+    // Apply permanently equipped gear
+    const eq=DTM.getEquipped();Object.values(eq).forEach(item=>{if(!item)return;const def=GEAR_DEFS[item.slot];if(!def)return;const v=item.statVal;switch(def.stat){case'dmg':this.pDmg+=v;break;case'maxhp':this.pMaxHP+=v;this.pHP=this.pMaxHP;break;case'magnet':this.magnetR+=v;break;case'speed':this.pSpeed+=v;break;case'firerate':this.fireRate=Math.max(300,this.fireRate-v);break;case'crit':this.critRate+=v;break;}});
     const allowed=DTM.enemiesForLevel(L);
     this.activeRounds=ROUNDS.filter(r=>r.enemies.every(eg=>allowed.includes(eg.type)));
   }
@@ -479,7 +489,7 @@ class GameScene extends Phaser.Scene {
     this.physics.add.collider(this.enemies,this.enemies);
     // Safety cleanup for stuck enemies
     this.time.addEvent({delay:2000,loop:true,callback:()=>{this.enemies.getChildren().forEach(e=>{if(!e||!e.active)return;if(e.hp<=0&&!e.dead){console.warn('Stuck enemy force-killed:',e.etype);this.killEnemy(e);}if(e.x<-200||e.x>W+200||e.y<-200||e.y>H+200){console.warn('Off-screen enemy removed:',e.etype);this.killEnemy(e);}});}});
-    this.createAnims();this.createPlayer();this.createUI();this.setupInput();this.setupJoystick();
+    this.createAnims();this.createPlayer();this.createUI();this.createGearHUD();this.setupInput();this.setupJoystick();
     // Collisions handled manually in checkCollisions() — no physics.add.overlap
     this.time.addEvent({delay:3000,callback:this.doPulse,callbackScope:this,loop:true});
     this.time.addEvent({delay:1000,callback:this.doRegen,callbackScope:this,loop:true});
@@ -828,6 +838,9 @@ class GameScene extends Phaser.Scene {
     const flash=this.add.graphics().setDepth(10);flash.fillStyle(0xffffff,0.4);flash.fillCircle(e.x,e.y,e.displayWidth);this.tweens.add({targets:flash,alpha:0,duration:150,onComplete:()=>flash.destroy()});
     this._lastKillPos={x:e.x,y:e.y};
     this.snacksEarned+=(e.gd||1);
+    // Gear drop
+    const dc={ew:0.12,ef:0.15,es:0.18,et:0.25,coach:0.20,sister:0.35,boss:1.0};
+    if(Math.random()<(dc[e.etype]||0.12))this.spawnGearDrop(e.x,e.y);
     if(e.etype==='coach'){const dt=this.add.text(W/2,H/2-40,"I'll see you at 6am Monday!!",{fontFamily:'Orbitron',fontSize:'16px',color:'#4488ff',stroke:'#000',strokeThickness:4}).setDepth(201).setOrigin(0.5);this.tweens.add({targets:dt,alpha:0,y:H/2-120,duration:3000,onComplete:()=>dt.destroy()});const fb=this.add.graphics().setDepth(5);fb.fillStyle(0x8B4513,1);fb.fillEllipse(e.x,e.y,24,18);fb.fillStyle(0xffffff,0.8);fb.fillRect(e.x-8,e.y-1,16,2);const fz=this.add.zone(e.x,e.y,30,30).setDepth(5);this.physics.add.existing(fz);this.physics.add.overlap(this.player,fz,()=>{this.pHP=this.pMaxHP;this.updateHP();fb.destroy();fz.destroy();this.floatText(this.player.x,this.player.y-30,'+FULL HEAL!',0x00ff88);});this.time.delayedCall(10000,()=>{if(fb.scene)fb.destroy();if(fz.scene)fz.destroy();});}
     else if(e.isPeyton){
       const rd=this.activeRounds?.[this.roundNum-1];
@@ -844,25 +857,8 @@ class GameScene extends Phaser.Scene {
     for(let i=0;i<(e.gd||1);i++){const gx=e.x+Phaser.Math.Between(-18,18),gy=e.y+Phaser.Math.Between(-18,18);const gem=this.gems.create(gx,gy,'gem').setDepth(5).setDisplaySize(20,20);gem.xp=1;this.tweens.add({targets:gem,y:gy-22,duration:220,yoyo:true,ease:'Bounce'});}
     // (death explosion already handled above with multi-ring)
     if(e.hpGfx){e.hpGfx.destroy();e.hpGfx=null;}if(e.hpTxt){e.hpTxt.destroy();e.hpTxt=null;}if(e.nameBg){e.nameBg.destroy();e.nameBg=null;}if(e.nameLabel){e.nameLabel.destroy();e.nameLabel=null;}if(e.tierDot){e.tierDot.destroy();e.tierDot=null;}if(e.phaseLabel){e.phaseLabel.destroy();e.phaseLabel=null;}if(e._shield){e._shield.destroy();e._shield=null;}
-    // Equipment drop (25% chance)
-    if(Math.random()<0.25&&!e.isMinion){
-      const eqTypes=[{key:'shoes',icon:'\ud83d\udc5f',color:0x00ff88,stat:'speed',val:12},{key:'backpack',icon:'\ud83c\udf92',color:0x4488ff,stat:'damage',val:0.1},{key:'phone',icon:'\ud83d\udcf1',color:0xaa44ff,stat:'firerate',val:60},{key:'hat',icon:'\ud83e\udde2',color:0xff8800,stat:'maxhp',val:30},{key:'chain',icon:'\ud83d\udd17',color:0xffcc00,stat:'magnet',val:40}];
-      const eq=eqTypes[Phaser.Math.Between(0,eqTypes.length-1)];
-      const roll=Math.random();const rarity=roll<0.45?'beat-up':roll<0.7?'decent':roll<0.85?'fresh':roll<0.94?'drip':roll<0.98?'heat':'legendary';
-      const rm=BALANCE.rarityMult[rarity]||1;
-      const rarCol={'beat-up':0x888888,decent:0x00ff88,fresh:0x4488ff,drip:0xaa44ff,legendary:0xffd700}[rarity];
-      const eg=this.add.graphics().setDepth(5);eg.fillStyle(eq.color,0.9);eg.fillRoundedRect(e.x-16,e.y-16,32,32,6);eg.lineStyle(2,rarCol,1);eg.strokeRoundedRect(e.x-16,e.y-16,32,32,6);
-      const ei=this.add.text(e.x,e.y,eq.icon,{fontSize:'18px'}).setDepth(6).setOrigin(0.5);
-      const ez=this.add.zone(e.x,e.y,40,40).setDepth(6);this.physics.add.existing(ez);
-      this.physics.add.overlap(this.player,ez,()=>{
-        const baseGain=BALANCE.equipGain[eq.key]||eq.val;
-        const v=eq.stat==='damage'?baseGain*rm:Math.floor(baseGain*rm);
-        if(eq.stat==='speed')this.pSpeed+=v;else if(eq.stat==='damage')this.pDmg+=1;else if(eq.stat==='firerate')this.fireRate=Math.max(400,this.fireRate-Math.floor(v));else if(eq.stat==='maxhp'){this.pMaxHP+=Math.floor(v);this.pHP=Math.min(this.pHP+Math.floor(v),this.pMaxHP);this.updateHP();}else if(eq.stat==='magnet')this.magnetR+=Math.floor(v);
-        SFX.play('equip');this.floatText(this.player.x,this.player.y-40,`+${eq.icon} ${rarity.toUpperCase()}`,rarCol);
-        if(rarity==='legendary'){SFX.play('legendary');this.cameras.main.flash(400,255,215,0);const lt=this.add.text(W/2,H/2,'LEGENDARY DROP!! \ud83d\udd25',{fontFamily:'Orbitron',fontSize:'18px',color:'#ffd700',stroke:'#000',strokeThickness:5,fontStyle:'bold'}).setDepth(201).setOrigin(0.5);this.time.delayedCall(2000,()=>lt.destroy());}
-        eg.destroy();ei.destroy();ez.destroy();
-      });
-      this.time.delayedCall(12000,()=>{if(eg.scene)eg.destroy();if(ei.scene)ei.destroy();if(ez.scene)ez.destroy();});
+    // Old equipment system removed — gear drops handled by spawnGearDrop above
+    if(false){
     }
     e.destroy();
   }
@@ -962,6 +958,8 @@ class GameScene extends Phaser.Scene {
         }
       }
     }
+    // Ground gear auto-pickup
+    (this.groundGear||[]).forEach(item=>{if(!item.bg?.scene||item.collected)return;const dx=this.player.x-item.x,dy=this.player.y-item.y;if(Math.sqrt(dx*dx+dy*dy)<35)this.pickupGear(item);});
     // Gem pickup — distance check
     const gems=this.gems.getChildren();
     for(let gi=gems.length-1;gi>=0;gi--){
@@ -985,6 +983,48 @@ class GameScene extends Phaser.Scene {
         const hs=parseInt(localStorage.getItem('dw_hs')||0);if(this.kills>hs)localStorage.setItem('dw_hs',this.kills);
     this.cameras.main.flash(1200,255,255,255);
     this.time.delayedCall(900,()=>this.scene.start('ResultScene',{win:true,kills:this.kills,level:this.levelNum,elapsed:this.elapsed,rounds:this.roundsCompleted,snacksEarned:this.snacksEarned,specialHits:this.specialHitCount,finalHP:this.pHP,maxHP:this.pMaxHP}));
+  }
+
+  // ── GEAR SYSTEM ──
+  createGearHUD(){
+    this.gearHUDSlots={};const slots=Object.keys(GEAR_DEFS);const slotW=42;const startX=W/2-(slots.length*slotW)/2+slotW/2;const y=H-95;
+    slots.forEach((slot,i)=>{const x=startX+i*slotW;const def=GEAR_DEFS[slot];
+      const bg=this.add.graphics().setDepth(98);bg.fillStyle(0x0d0d1a,0.8);bg.fillRoundedRect(x-16,y-16,32,32,4);bg.lineStyle(1,0x333355,0.8);bg.strokeRoundedRect(x-16,y-16,32,32,4);
+      const ic=this.add.text(x,y,def.icon,{fontSize:'16px'}).setOrigin(0.5).setDepth(99).setAlpha(0.3);
+      this.gearHUDSlots[slot]={bg,iconTxt:ic,x,y};
+    });
+  }
+  updateGearHUD(){
+    if(!this.gearHUDSlots)return;const equipped={};
+    (this.runGear||[]).forEach(item=>{if(!equipped[item.slot]||item.rarityIdx>equipped[item.slot].rarityIdx)equipped[item.slot]=item;});
+    Object.keys(this.gearHUDSlots).forEach(slot=>{const hud=this.gearHUDSlots[slot];const item=equipped[slot];
+      if(!item){hud.iconTxt.setAlpha(0.3);return;}
+      hud.bg.clear();hud.bg.fillStyle(item.rarity.color,0.2);hud.bg.fillRoundedRect(hud.x-16,hud.y-16,32,32,4);hud.bg.lineStyle(2,item.rarity.color,1);hud.bg.strokeRoundedRect(hud.x-16,hud.y-16,32,32,4);hud.iconTxt.setAlpha(1);
+    });
+  }
+  spawnGearDrop(x,y){
+    const slots=Object.keys(GEAR_DEFS);const slot=slots[Phaser.Math.Between(0,slots.length-1)];const def=GEAR_DEFS[slot];
+    const roll=Math.random();let ri=roll<0.45?0:roll<0.72?1:roll<0.88?2:roll<0.96?3:roll<0.995?4:5;
+    ri=Math.min(5,ri+Math.floor((this.levelNum||1)/20));
+    const rarity=RARITIES[ri];const statVal=Math.floor(GEAR_STAT_BASE[def.stat]*rarity.mult);
+    const item={slot,def,rarityIdx:ri,rarity,statVal,collected:false,x,y};
+    const bg=this.add.graphics().setDepth(8);bg.fillStyle(rarity.color,0.25);bg.fillRoundedRect(x-18,y-18,36,36,6);bg.lineStyle(2,rarity.color,0.9);bg.strokeRoundedRect(x-18,y-18,36,36,6);
+    const icon=this.add.text(x,y,def.icon,{fontSize:'20px'}).setOrigin(0.5).setDepth(9);
+    this.tweens.add({targets:[bg,icon],scaleX:1.15,scaleY:1.15,duration:600,yoyo:true,repeat:-1});
+    if(ri>=5){this.cameras.main.flash(400,255,215,0);this.floatText(x,y-40,'\ud83d\udd34 NORTHWOOD LEGEND!!',0xff2244);SFX.play('legendary');}
+    item.bg=bg;item.icon=icon;
+    this.groundGear=this.groundGear||[];this.groundGear.push(item);
+    this.time.delayedCall(12000,()=>{if(bg.scene)bg.destroy();if(icon.scene)icon.destroy();this.groundGear=(this.groundGear||[]).filter(g=>g!==item);});
+  }
+  pickupGear(item){
+    if(item.collected)return;item.collected=true;
+    if(item.bg?.scene)item.bg.destroy();if(item.icon?.scene)item.icon.destroy();
+    this.groundGear=(this.groundGear||[]).filter(g=>g!==item);
+    const def=item.def,val=item.statVal,rarity=item.rarity;let applied='';
+    switch(def.stat){case'dmg':this.pDmg+=val;applied=`+${val} DMG`;break;case'maxhp':this.pMaxHP+=val;this.pHP=Math.min(this.pHP+val,this.pMaxHP);this.updateHP();applied=`+${val} HP`;break;case'magnet':this.magnetR+=val;applied=`+${val} RANGE`;break;case'speed':this.pSpeed+=val;applied=`+${val} SPD`;break;case'firerate':this.fireRate=Math.max(300,this.fireRate-val);applied=`-${val}ms`;break;case'crit':this.critRate+=val;applied=`+${Math.floor(val*100)}% CRIT`;break;}
+    this.floatText(this.player.x,this.player.y-50,`${def.icon} ${rarity.name} ${def.name}\n${applied}`,rarity.color);
+    this.runGear=this.runGear||[];this.runGear.push(item);
+    SFX.play('equip');this.cameras.main.flash(150,255,255,255);this.updateGearHUD();
   }
 
   showNewEnemyIntro(type){
@@ -1054,7 +1094,11 @@ class ResultScene extends Phaser.Scene {
     const timeLeft=Math.max(0,15*60*1000-elapsed);
     const stars=win?(specialHits===0?3:(finalHP>maxHP*0.5?2:1)):0;
     const score=DTM.calcScore(kills,rounds||0,timeLeft,stars,level);
-    if(win){DTM.setStars(level,stars);DTM.unlockLevel(level+1);DTM.addSnacks(snacksEarned||0);const hs=parseInt(localStorage.getItem('dw_hs')||'0');if(kills>hs)localStorage.setItem('dw_hs',kills);}
+    const gearRewards=[];
+    if(win){DTM.setStars(level,stars);DTM.unlockLevel(level+1);DTM.addSnacks(snacksEarned||0);const hs=parseInt(localStorage.getItem('dw_hs')||'0');if(kills>hs)localStorage.setItem('dw_hs',kills);
+      const slots=Object.keys(GEAR_DEFS);const numR=Math.min(2,1+Math.floor(level/10));
+      for(let i=0;i<numR;i++){const sl=slots[Phaser.Math.Between(0,slots.length-1)];const def=GEAR_DEFS[sl];const maxR=Math.min(5,Math.floor(level/8));const ri=Phaser.Math.Between(0,maxR);const rar=RARITIES[ri];const sv=Math.floor(GEAR_STAT_BASE[def.stat]*rar.mult);const gi={id:Date.now()+'_'+i,slot:sl,rarityIdx:ri,statVal:sv,level:1,name:rar.name+' '+def.name};gearRewards.push(gi);const inv=DTM.getInventory();inv.push(gi);DTM.saveInventory(inv);}
+    }
     const headerColor=win?'#00ff88':'#ff2244';
     const headerText=win?'\ud83d\udc3e THE PANTHER PROWLS FREE!':'\ud83d\udc80 CAUGHT BY THE SNITCHES!';
     this.add.text(W/2,80,headerText,{fontFamily:'Orbitron',fontSize:'22px',fontStyle:'bold',color:headerColor,stroke:'#000',strokeThickness:5,wordWrap:{width:320}}).setOrigin(0.5);
@@ -1067,6 +1111,7 @@ class ResultScene extends Phaser.Scene {
     const result=await DTM.submitScore(score,level,kills,stars);
     if(result.rank)rankTxt.setText(`\ud83c\udfc6 YOUR RANK: #${result.rank} on the Snitch List!`).setColor('#ffcc00');
     else rankTxt.setText('\ud83d\udce1 Score saved locally').setColor('#888899');
+    if(gearRewards.length>0){this.add.text(W/2,428,'\ud83c\udf81 GEAR EARNED:',{fontFamily:'Orbitron',fontSize:'12px',color:'#ffcc00'}).setOrigin(0.5);gearRewards.forEach((gi,i)=>{const rar=RARITIES[gi.rarityIdx];const col='#'+rar.color.toString(16).padStart(6,'0');const def=GEAR_DEFS[gi.slot];this.add.text(W/2,450+i*20,`${def.icon} ${gi.name}`,{fontFamily:'Orbitron',fontSize:'11px',color:col}).setOrigin(0.5);});}
     const retryBtn=DTM.makeBtn(this,20,510,(W-52)/2,56,'\u21ba RETRY');
     retryBtn.bg.on('pointerdown',()=>{this.cameras.main.fadeOut(250,0,0,0);this.time.delayedCall(250,()=>this.scene.start('GameScene',{level:level}));});
     const hubBtn=DTM.makeBtn(this,W/2+6,510,(W-52)/2,56,'\ud83c\udfe0 HOME',0x1a1a2e);

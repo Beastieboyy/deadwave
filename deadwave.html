@@ -347,8 +347,10 @@ class LeaderboardScene extends Phaser.Scene {
     const loadBoard=async(period)=>{
       loadingTxt.setVisible(true);listContainer.destroy();listContainer=this.add.container(0,0);
       const data=await DTM.fetchLeaderboard(period);loadingTxt.setVisible(false);
-      if(data.error){listContainer.add(this.add.text(W/2,H/2,"\ud83d\ude05 Couldn't reach\nthe Snitch List",{fontFamily:'Orbitron',fontSize:'14px',color:'#ff4444',align:'center'}).setOrigin(0.5));return;}
-      const scores=data.scores||[];const myName=DTM.getName().toLowerCase();let myRank=-1;
+      if(!data.success&&data.error){listContainer.add(this.add.text(W/2,H/2,"\ud83d\ude05 Couldn't reach\nthe Snitch List",{fontFamily:'Orbitron',fontSize:'14px',color:'#ff4444',align:'center'}).setOrigin(0.5));return;}
+      const scores=data.scores||[];
+      if(scores.length===0){listContainer.add(this.add.text(W/2,H/2-40,'\ud83c\udfc6',{fontSize:'48px'}).setOrigin(0.5));listContainer.add(this.add.text(W/2,H/2+20,'No scores yet!\nBe the FIRST on the\nNorthwood Snitch List!',{fontFamily:'Orbitron',fontSize:'14px',color:'#ff9900',align:'center',lineSpacing:8}).setOrigin(0.5));return;}
+      const myName=DTM.getName().toLowerCase();let myRank=-1;
       scores.forEach((s,i)=>{
         const y=105+i*54,isMe=s.player_name.toLowerCase()===myName;
         const rowBg=this.add.graphics();rowBg.fillStyle(isMe?0x2a1a00:i%2===0?0x0d0d1a:0x111122,1);rowBg.fillRoundedRect(12,y,W-24,48,6);
@@ -360,7 +362,6 @@ class LeaderboardScene extends Phaser.Scene {
         listContainer.add(this.add.text(72,y+34,`Night ${s.level_reached}`,{fontFamily:'Orbitron',fontSize:'10px',color:'#666688'}).setOrigin(0,0.5));
         listContainer.add(this.add.text(W-24,y+24,s.score.toLocaleString(),{fontFamily:'Orbitron',fontSize:'14px',color:'#ff9900',fontStyle:'bold'}).setOrigin(1,0.5));
       });
-      if(scores.length===0)listContainer.add(this.add.text(W/2,H/2,'No scores yet!\nBe the first on\nthe Snitch List! \ud83d\udc40',{fontFamily:'Orbitron',fontSize:'14px',color:'#888899',align:'center'}).setOrigin(0.5));
       if(myRank>0){
         const pinBg=this.add.graphics();pinBg.fillStyle(0x1a0d00,0.97);pinBg.fillRect(0,H-130,W,50);pinBg.lineStyle(1,0xff9900,0.5);pinBg.lineBetween(0,H-130,W,H-130);
         listContainer.add(pinBg);listContainer.add(this.add.text(W/2,H-105,`YOU: #${myRank} \u2022 ${DTM.getName().toUpperCase()}`,{fontFamily:'Orbitron',fontSize:'13px',color:'#ff9900',fontStyle:'bold'}).setOrigin(0.5));
@@ -438,41 +439,42 @@ class GameScene extends Phaser.Scene {
   }
 
   init(data){
+    // ══ LEVEL & DIFFICULTY ══
     this.levelNum=data?.level||DTM.getCurrentLevel()||1;
     const L=this.levelNum;
-    // Difficulty scale (logarithmic)
-    this.diffScale=Math.pow(L,0.55)*0.78+0.22;
+    this.diffScale=Math.pow(L,0.52)*0.82+0.18;
     this.diffScale*=({11:0.88,21:0.85,31:0.82,41:0.85,51:0.82}[L]||1.0);
-    this.enemySpdScale=1+(this.diffScale-1)*0.35;
-    // Player stats
-    this.pMaxHP=150;this.pHP=150;this.pSpeed=175;
-    this.pDmg=6+Math.floor(L/5)*2;
-    this.fireRate=Math.max(350,1400-Math.floor(L/5)*30);
+    // ══ PLAYER STATS — single source of truth ══
+    this.pDmg=5+Math.floor(L*0.22);
+    this.fireRate=Math.max(400,1400-Math.floor(L*5));
+    this.pMaxHP=150;this.pHP=150;this.pSpeed=170;
     this.piercing=false;this.orbitCnt=0;this.hasPulse=false;
     this.magnetR=70;this.regenRate=0;
     this.critRate=0.05;this.critDmg=1.5;
+    this.orbitBlades=[];this.orbitAng=0;
+    // ══ LOCKER UPGRADES (flat additive, never multiplicative) ══
+    const u=DTM.getUpgrades();
+    this.pSpeed+=(u.sneakers||0)*12;
+    this.pDmg+=Math.floor((u.backpack||0)*0.8);
+    this.fireRate=Math.max(400,this.fireRate-(u.phone||0)*35);
+    this.pMaxHP+=(u.hoodie||0)*30;this.pHP=this.pMaxHP;
+    // ══ GAME STATE ══
     this.lastShot=0;this.pXP=0;this.pLevel=1;this.xpNeeded=10;
     this.score=0;this.kills=0;this.elapsed=0;this.totalTime=15*60*1000;
     this.roundNum=0;this.roundActive=false;this.roundEnemies=[];
     this.paused=false;this.dead=false;this.playerFrozen=false;this.forcedRun=false;
     this.playerIframes=0;this.xpMult=1;
-    this.orbitBlades=[];this.orbitAng=0;this.bossOrbs=[];this.bossOrbAng=0;
+    this.bossOrbs=[];this.bossOrbAng=0;
     this.joyActive=false;this.joyAng=0;this.joyDist=0;this.joyBaseX=0;this.joyBaseY=0;
     this.uidCounter=0;this.projectiles=[];
     this.comboCount=0;this.comboTimer=0;this.scoreMult=1;this.lastComboTime=0;
     this.roundsCompleted=0;this.snacksEarned=0;this.specialHitCount=0;
     this.roundStartTime=0;this.roundMinTimeMet=false;this.roundTimerTxt=null;
-    // Locker upgrades
-    const u=DTM.getUpgrades();
-    this.pSpeed+=(u.sneakers||0)*14;
-    this.pDmg=Math.floor(this.pDmg*(1+(u.backpack||0)*0.10));
-    this.fireRate=Math.max(350,this.fireRate-(u.phone||0)*40);
-    this.pMaxHP+=(u.hoodie||0)*35;this.pHP=this.pMaxHP;
-    // Comeback buff
+    // ══ COMEBACK BUFF ══
     const lossKey=`dtm_losses_${L}`;this.comebackBuff=false;
     const losses=parseInt(localStorage.getItem(lossKey)||'0');
-    if(losses>=2){this.comebackBuff=true;this.pMaxHP=Math.floor(this.pMaxHP*1.3);this.pHP=this.pMaxHP;this.pDmg=Math.floor(this.pDmg*1.25);}
-    // Filter rounds
+    if(losses>=2){this.comebackBuff=true;this.pMaxHP=Math.floor(this.pMaxHP*1.3);this.pHP=this.pMaxHP;this.pDmg+=3;}
+    // ══ ROUND FILTER ══
     const allowed=DTM.enemiesForLevel(L);
     this.activeRounds=ROUNDS.filter(r=>r.enemies.every(eg=>allowed.includes(eg.type)));
   }
@@ -615,9 +617,10 @@ class GameScene extends Phaser.Scene {
   randEdge(){const s=Phaser.Math.Between(0,3);switch(s){case 0:return{x:Phaser.Math.Between(0,W),y:-40};case 1:return{x:W+40,y:Phaser.Math.Between(0,H)};case 2:return{x:Phaser.Math.Between(0,W),y:H+40};case 3:return{x:-40,y:Phaser.Math.Between(0,H)};}}
 
   getEnemyStats(type){
-    const d=this.diffScale,ss=this.enemySpdScale;
-    const s={ew:{hp:Math.floor(280*d),spd:Math.floor(38*ss),dmg:12,gd:2,sv:50,bc:0xaaaaaa},ef:{hp:Math.floor(200*d),spd:Math.floor(88*ss),dmg:10,gd:2,sv:60,bc:0xff8800},es:{hp:Math.floor(340*d),spd:Math.floor(55*ss),dmg:14,gd:3,sv:80,bc:0x4444ff},et:{hp:Math.floor(600*d),spd:Math.floor(28*ss),dmg:25,gd:5,sv:150,bc:0xff0000},coach:{hp:Math.floor(420*d),spd:Math.floor(72*ss),dmg:16,gd:4,sv:120,bc:0x4488ff},sister:{hp:Math.floor(500*d),spd:Math.floor(68*ss),dmg:14,gd:6,sv:200,bc:0xcc44ff},boss:{hp:Math.floor(1200*d),spd:Math.floor(52*ss),dmg:30,gd:15,sv:500,bc:0xff6600}};
-    return s[type]||s.ew;
+    const d=this.diffScale,ss=1+(d-1)*0.35;
+    const base={ew:{hp:260,spd:38,dmg:12,gd:2,sv:50,bc:0xaaaaaa},ef:{hp:200,spd:85,dmg:10,gd:2,sv:60,bc:0xff8800},es:{hp:320,spd:55,dmg:14,gd:3,sv:80,bc:0x4444ff},et:{hp:580,spd:28,dmg:25,gd:5,sv:150,bc:0xff0000},coach:{hp:400,spd:70,dmg:16,gd:4,sv:120,bc:0x4488ff},sister:{hp:480,spd:65,dmg:14,gd:6,sv:200,bc:0xcc44ff},boss:{hp:1100,spd:50,dmg:30,gd:15,sv:500,bc:0xff6600}};
+    const b=base[type]||base.ew;
+    return{...b,hp:Math.floor(b.hp*d),spd:Math.floor(b.spd*ss),maxHp:Math.floor(b.hp*d)};
   }
 
   spawnEnemy(tex){
@@ -701,8 +704,8 @@ class GameScene extends Phaser.Scene {
     // Combo decay after 3s
     if(this.comboCount>0&&this.time.now-this.lastComboTime>3000){this.comboCount=0;this.scoreMult=1;}
     this.multTxt.setText(this.scoreMult>1?`x${this.scoreMult}`:'');
-    const _dps=(this.pDmg/(this.fireRate/1000)).toFixed(1);const _e0=this.enemies.getChildren().find(e=>!e.dead);
-    this.debugTxt.setText(`DMG:${this.pDmg} RATE:${this.fireRate}ms DPS:${_dps}\nENEMY HP:${_e0?Math.ceil(_e0.hp):'--'}/${_e0?_e0.maxHp:'--'} TTK:${_e0?(_e0.hp/parseFloat(_dps)).toFixed(0):'--'}s\nSCALE:${this.diffScale.toFixed(2)} LVL:${this.levelNum}`);
+    const _dps=(this.pDmg/(this.fireRate/1000)).toFixed(1);const _e0=this.enemies?.getChildren?.()?.find?.(e=>!e.dead);
+    this.debugTxt?.setText?.(`LVL:${this.levelNum} SCALE:${this.diffScale?.toFixed(2)}\nDMG:${this.pDmg} RATE:${this.fireRate}ms DPS:${_dps}/s\nENEMY HP:${_e0?Math.ceil(_e0.hp)+'/'+_e0.maxHp:'\u2014'}\nTTK:${_e0?(_e0.hp/parseFloat(_dps)).toFixed(0)+'s':'\u2014'}`);
     // Low HP vignette
     if(!this.vigGfx)this.vigGfx=this.add.graphics().setDepth(95);
     this.vigGfx.clear();
@@ -853,7 +856,7 @@ class GameScene extends Phaser.Scene {
       this.physics.add.overlap(this.player,ez,()=>{
         const baseGain=BALANCE.equipGain[eq.key]||eq.val;
         const v=eq.stat==='damage'?baseGain*rm:Math.floor(baseGain*rm);
-        if(eq.stat==='speed')this.pSpeed+=v;else if(eq.stat==='damage')this.pDmg=Math.floor(this.pDmg*(1+v));else if(eq.stat==='firerate')this.fireRate=Math.max(150,this.fireRate-v);else if(eq.stat==='maxhp'){this.pMaxHP+=v;this.pHP=Math.min(this.pHP+v,this.pMaxHP);this.updateHP();}else if(eq.stat==='magnet')this.magnetR+=v;
+        if(eq.stat==='speed')this.pSpeed+=v;else if(eq.stat==='damage')this.pDmg+=Math.max(1,Math.floor(v*10));else if(eq.stat==='firerate')this.fireRate=Math.max(400,this.fireRate-v);else if(eq.stat==='maxhp'){this.pMaxHP+=v;this.pHP=Math.min(this.pHP+v,this.pMaxHP);this.updateHP();}else if(eq.stat==='magnet')this.magnetR+=v;
         SFX.play('equip');this.floatText(this.player.x,this.player.y-40,`+${eq.icon} ${rarity.toUpperCase()}`,rarCol);
         if(rarity==='legendary'){SFX.play('legendary');this.cameras.main.flash(400,255,215,0);const lt=this.add.text(W/2,H/2,'LEGENDARY DROP!! \ud83d\udd25',{fontFamily:'Orbitron',fontSize:'18px',color:'#ffd700',stroke:'#000',strokeThickness:5,fontStyle:'bold'}).setDepth(201).setOrigin(0.5);this.time.delayedCall(2000,()=>lt.destroy());}
         eg.destroy();ei.destroy();ez.destroy();
@@ -891,7 +894,7 @@ class GameScene extends Phaser.Scene {
     const kh=(ev)=>{const idx=['1','2','3'].indexOf(ev.key);if(idx>=0&&chosen[idx])this.applySkill(chosen[idx]);};this.input.keyboard.on('keydown',kh);this._kh=kh;
   }
 
-  applySkill(sk){this.children.list.filter(c=>c.depth>=200).forEach(c=>c.destroy());if(this._kh){this.input.keyboard.off('keydown',this._kh);this._kh=null;}this.paused=false;this.physics.resume();switch(sk.id){case'dmg':this.pDmg=Math.floor(this.pDmg*1.45);break;case'rate':this.fireRate=Math.max(350,Math.floor(this.fireRate*0.65));break;case'spd':this.pSpeed=Math.floor(this.pSpeed*1.25);break;case'pierce':this.piercing=true;break;case'orbit':this.addOrbit();break;case'pulse':this.hasPulse=true;break;case'mag':this.magnetR*=2;break;case'regen':this.regenRate+=3;break;case'maxhp':this.pMaxHP+=60;this.pHP=Math.min(this.pHP+60,this.pMaxHP);this.updateHP();break;}this.cameras.main.flash(250,0,255,160);}
+  applySkill(sk){this.children.list.filter(c=>c.depth>=200).forEach(c=>c.destroy());if(this._kh){this.input.keyboard.off('keydown',this._kh);this._kh=null;}this.paused=false;this.physics.resume();switch(sk.id){case'dmg':this.pDmg=Math.floor(this.pDmg*1.45);break;case'rate':this.fireRate=Math.max(400,Math.floor(this.fireRate*0.65));break;case'spd':this.pSpeed=Math.floor(this.pSpeed*1.25);break;case'pierce':this.piercing=true;break;case'orbit':this.addOrbit();break;case'pulse':this.hasPulse=true;break;case'mag':this.magnetR*=2;break;case'regen':this.regenRate+=3;break;case'maxhp':this.pMaxHP+=60;this.pHP=Math.min(this.pHP+60,this.pMaxHP);this.updateHP();break;}this.cameras.main.flash(250,0,255,160);}
 
   addOrbit(){this.orbitCnt++;const blade=this.add.sprite(this.player.x,this.player.y,'blade').setDepth(9).setDisplaySize(30,30);blade.orbitR=58;blade.dmg=this.pDmg*0.55;blade.cd={};this.orbitBlades.push(blade);}
 

@@ -323,8 +323,10 @@ class ChapterScene extends Phaser.Scene {
 class LeaderboardScene extends Phaser.Scene {
   constructor(){super('LeaderboardScene');}
   create(){
+    console.log('LeaderboardScene CREATE fired');
+    this.add.rectangle(W/2,H/2,W,H,0x0d0d1a).setDepth(0);
+    this.add.text(W/2,40,'LOADING RANKS...',{fontFamily:'Orbitron',fontSize:'16px',color:'#ff9900'}).setOrigin(0.5).setDepth(1);
     DTM.makeBG(this);
-    console.log('LeaderboardScene: API=',DTM.API,'name=',DTM.getName());
     const hg=this.add.graphics();hg.fillStyle(0x0d0d0d,0.95);hg.fillRect(0,0,W,60);hg.lineStyle(2,0xffcc00,0.4);hg.lineBetween(0,60,W,60);
     this.add.text(W/2,30,'\ud83d\udc3e NORTHWOOD SNITCH LIST',{fontFamily:'Orbitron',fontSize:'15px',color:'#ffcc00',fontStyle:'bold'}).setOrigin(0.5);
     const back=this.add.text(16,30,'\u2039 BACK',{fontFamily:'Orbitron',fontSize:'13px',color:'#888899'}).setOrigin(0,0.5).setInteractive({useHandCursor:true});
@@ -344,13 +346,16 @@ class LeaderboardScene extends Phaser.Scene {
     const loadBoard=async(period)=>{
       if(listContainer&&listContainer.scene)listContainer.destroy();
       listContainer=this.add.container(0,0);
-      const loadTxt=this.add.text(W/2,H/2,'\u23f3 Loading...',{fontFamily:'Orbitron',fontSize:'16px',color:'#888899'}).setOrigin(0.5);
+      const dbgTxt=this.add.text(W/2,H/2-20,'Connecting...',{fontFamily:'Orbitron',fontSize:'14px',color:'#ffff00',stroke:'#000',strokeThickness:3}).setOrigin(0.5).setDepth(999);
       let data=null,fetchErr=null;
       try{
         const url=DTM.API+'?action=leaderboard&period='+period;
+        dbgTxt.setText('Fetching: '+url.substring(0,40)+'...');
         data=await DTM._xget(url);
-        if(data.error)fetchErr=data.error;
-      }catch(e){fetchErr=e.message;}
+        if(data.error){fetchErr=data.error;dbgTxt.setText('ERR: '+fetchErr);}
+        else dbgTxt.setText('Got '+(data.scores?.length||0)+' scores');
+      }catch(e){fetchErr=e.message;dbgTxt.setText('CATCH: '+e.message);}
+      this.time.delayedCall(3000,()=>{if(dbgTxt.scene)dbgTxt.destroy();});
       if(loadTxt&&loadTxt.scene)loadTxt.destroy();
       if(fetchErr){listContainer.add(this.add.text(W/2,H/2,`Fetch error:\n${fetchErr}`,{fontFamily:'Orbitron',fontSize:'11px',color:'#ff4444',align:'center',wordWrap:{width:320}}).setOrigin(0.5));return;}
       if(!data){listContainer.add(this.add.text(W/2,H/2,'No response from server',{fontFamily:'Orbitron',fontSize:'12px',color:'#ff4444'}).setOrigin(0.5));return;}

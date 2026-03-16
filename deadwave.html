@@ -643,7 +643,7 @@ class GameScene extends Phaser.Scene {
 
   createPlayer(){
     this.player=this.physics.add.sprite(W/2,H/2,'player').setDepth(10).setCollideWorldBounds(true);
-    this.player.setDisplaySize(58,58).setBodySize(28,28);
+    this.player.setDisplaySize(90,90).setBodySize(32,32);
     const ch=DTM.getCharacter();const animMap={brody:'brody_idle',waylon:'waylon_run',jack:'jack_walk',joey:'joey_run',braden:'braden_film',peyton:'peyton_snitch'};
     if(ch.sprite&&ch.sprite!=='player')try{this.player.setTexture(ch.sprite);}catch(e){}
     const pa=animMap[ch.key]||'brody_idle';if(this.anims.exists(pa))this.player.play(pa);
@@ -833,7 +833,7 @@ class GameScene extends Phaser.Scene {
     if(rem<120000)this.timerTxt.setColor('#ff4444');
     if(rem<=0){this.winGame();return;}
     if(this.playerIframes>0)this.playerIframes-=delta;
-    this.playerLabel.setPosition(this.player.x,this.player.y-this.player.displayHeight/2-4);
+    this.playerLabel.setPosition(this.player.x,this.player.y-this.player.displayHeight/2-8);
     // Minimum round timer
     if(this.roundActive&&this.roundStartTime>0){
       const rElapsed=this.elapsed-this.roundStartTime;

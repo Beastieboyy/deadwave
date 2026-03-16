@@ -126,17 +126,17 @@ DTM.MUSIC={current:null,_lastKey:'menu',
 const ROUNDS = [
   {label:'PEYTON SAW YOU',sub:'Your little sister never sleeps.',loc:"\ud83d\udccd BRODY'S BEDROOM WINDOW",enemies:[{type:'sister',count:1}],speech:{sister:'"BRODY. I SAW THAT."'},deathQ:{sister:'FINE!! Telling in the morning!!'},story:"Brody reaches the window...\nPeyton is already awake."},
   {label:"NOSEY NEIGHBOR'S WATCHING",sub:"Rodney hasn't slept since 1987.",loc:'\ud83d\udccd THE FRONT YARD',enemies:[{type:'ew',count:1}],speech:{ew:'"HEY! I SEE YOU OUT THERE!"'},deathQ:{ew:"I'm calling the HOA!!"},story:'Made it outside...\nThen the porch light came on.'},
-  {label:'SHE CALLED THE NEIGHBORS',sub:"Peyton has Rodney saved as 'Emergency Snitch'",loc:'\ud83d\udccd THE SIDEWALK',enemies:[{type:'sister',count:1},{type:'ew',count:1}],speech:{sister:'"I CALLED FOR BACKUP."',ew:'"ON MY WAY!!"'},deathQ:{sister:'This is NOT over!!',ew:'HOA meeting tomorrow!!'},story:'Peyton already texted everyone.\nOf course she did.'},
-  {label:'HALL MONITOR ON DUTY',sub:'Karen patrols the halls at 3am. Voluntarily.',loc:'\ud83d\udccd NORTHWOOD HALLWAY',enemies:[{type:'ef',count:1}],speech:{ef:'"EXCUSE ME. DO YOU HAVE A PASS?"'},deathQ:{ef:'DETENTION!! ...whenever school starts!!'},story:'Somehow ended up at school.\nKaren never actually goes home.'},
-  {label:"STEINER'S GRADING PAPERS",sub:'At 3am. On a Friday.',loc:'\ud83d\udccd NORTHWOOD MATH WING',enemies:[{type:'es',count:1}],speech:{es:'"I HOPE YOU STUDIED, BRODY."'},deathQ:{es:'F MINUS!! See me after class!!'},story:'The math wing is lit up.\nShe never leaves.'},
-  {label:'THEY COORDINATE',sub:"They have a group chat called 'Brody Watch'",loc:'\ud83d\udccd NORTHWOOD MAIN ENTRANCE',enemies:[{type:'ef',count:1},{type:'es',count:1}],speech:{ef:'"WE CALLED EACH OTHER."',es:'"WE COORDINATE."'},deathQ:{ef:'The group chat hears about this!!',es:'Show your work next time!!'},story:'Two of them now.\nThey have a system.'},
-  {label:'COACH NEVER SLEEPS',sub:'He was already running drills. At 3am.',loc:'\ud83d\udccd NORTHWOOD FOOTBALL FIELD',enemies:[{type:'coach',count:1}],speech:{coach:'"SON. DROP AND GIVE ME 20."'},deathQ:{coach:'SEE YOU AT 6AM MONDAY!! SUICIDES!!'},story:'The field lights are on.\nCoach Andrews never left.'},
-  {label:'BERG IS NOTIFIED',sub:'The VP never actually leaves school property.',loc:'\ud83d\udccd MAIN STREET ROASTERS',enemies:[{type:'et',count:1}],speech:{et:'"MY OFFICE. NOW."'},deathQ:{et:'THIS GOES ON YOUR PERMANENT RECORD!!'},story:'Berg is at the coffee shop.\nAt 3am.\nHe lives here apparently.'},
-  {label:'PEYTON TEXTED BERG',sub:'She has his personal number. Nobody knows why.',loc:'\ud83d\udccd THE STREETS',enemies:[{type:'sister',count:1},{type:'et',count:1}],speech:{sister:'"I TEXTED MR. BERG."',et:'"SHE HAS MY NUMBER."'},deathQ:{sister:'You got lucky!!',et:'This conversation is not over!!'},story:'Almost home...\nPeyton is relentless.'},
+  {label:'JOEY WANTS TO RACE',sub:'"Watch my form bro. I\'m literally fast."',loc:'\ud83d\udccd THE SIDEWALK',enemies:[{type:'joey',count:1}],speech:{joey:'"BRO WATCH MY FORM!!"'},deathQ:{joey:'I let you win. I was saving energy.'},story:"Joey appeared out of nowhere.\nHe's been waiting for this."},
+  {label:'WAYLON HEARD THE COMMOTION',sub:'He brought the soccer ball. Of course.',loc:'\ud83d\udccd THE STREET',enemies:[{type:'waylon',count:1}],speech:{waylon:'"GAME ON, BRODY!!"'},deathQ:{waylon:"That's a foul!! I'm calling VAR!!"},story:'A soccer ball bounces past.\nWaylon is already warmed up.'},
+  {label:'JACK IS MONITORING',sub:'"This increases neighborhood risk index."',loc:'\ud83d\udccd MAIN ST ROASTERS',enemies:[{type:'jack',count:1}],speech:{jack:'"THIS IS BAD FOR THE PORTFOLIO."'},deathQ:{jack:"This is just a dip!! I'm HODLING!!"},story:'Jack is tracking everything.\nOn three different apps.'},
+  {label:'HALL MONITOR KAREN',sub:'Karen patrols at 3am. Voluntarily.',loc:'\ud83d\udccd NORTHWOOD HALLWAY',enemies:[{type:'ef',count:1}],speech:{ef:'"EXCUSE ME. DO YOU HAVE A PASS?"'},deathQ:{ef:'DETENTION!! ...whenever school starts!!'},story:'Somehow ended up at school.\nKaren never goes home.'},
+  {label:"STEINER'S GRADING",sub:'At 3am. On a Friday.',loc:'\ud83d\udccd NORTHWOOD MATH WING',enemies:[{type:'es',count:1}],speech:{es:'"I HOPE YOU STUDIED, BRODY."'},deathQ:{es:'F MINUS!! See me after class!!'},story:'The math wing is lit up.\nShe never leaves.'},
+  {label:'BERG + COACH',sub:'The staff team up. This is serious.',loc:'\ud83d\udccd NORTHWOOD',enemies:[{type:'et',count:1},{type:'coach',count:1}],speech:{et:'"MY OFFICE. NOW."',coach:'"DROP AND GIVE ME 20."'},deathQ:{et:'PERMANENT RECORD!!',coach:'6AM MONDAY!!'},story:'Berg and Coach found each other.\nThis is organized now.'},
+  {label:'BRADEN GOES LIVE',sub:'"Bro I just need the content."',loc:'\ud83d\udccd THE STREETS',enemies:[{type:'braden',count:1}],speech:{braden:'"BRO THIS IS GOING VIRAL"'},deathQ:{braden:'BRO I GOT IT ALL ON CAMERA THOUGH \ud83d\ude02'},story:"Braden has his phone out.\nThe flash is already on."},
   {label:'\u2620 MAMA IS AWAKE \u2620',sub:'Peyton woke her up. Obviously.',loc:"\ud83d\udccd BRODY'S FRONT DOOR",enemies:[{type:'boss',count:1},{type:'sister',count:1}],speech:{boss:'"WHERE. HAVE. YOU. BEEN."',sister:'"I TOLD YOU SO."'},deathQ:{boss:"...we'll talk about this tomorrow.",sister:'ok fine you win'},story:"The front door opens.\nMama is standing there.\nPeyton is behind her.\nSmiling."},
 ];
 const TIER_QUOTES={ew:['Neighborhood watch','Got night vision','Running the block'],ef:['Hall monitor','Vice principal energy','The warden'],es:['Pop quiz','Midterm mode','Final exam'],et:['Office hours','Suspension notice','Expelled'],coach:['Practice time','Two-a-days','Championship run'],sister:['Snitching','Going live','Nuclear option'],boss:['Disappointed','Furious','Full name mode']};
-const ENAMES={ew:'NOSEY NEIGHBOR',ef:'KAREN',es:'MRS. STEINER',et:'MR. BERG',coach:'COACH ANDREWS',sister:'PEYTON',boss:'MAMA'};
+const ENAMES={ew:'NOSEY NEIGHBOR',ef:'KAREN',es:'MRS. STEINER',et:'MR. BERG',coach:'COACH ANDREWS',sister:'PEYTON',boss:'MAMA',waylon:'WAYLON',jack:'JACK',joey:'JOEY',braden:'BRADEN'};
 const BALANCE={
   rarityMult:{'beat-up':1.0,decent:1.2,fresh:1.45,drip:1.8,heat:2.3,legendary:3.2},
   equipGain:{shoes:8,backpack:0.08,phone:45,hat:25,chain:30},
@@ -341,13 +341,13 @@ class RoundSelectScene extends Phaser.Scene {
     const RI=[
       {r:1,enemy:'PEYTON',icon:'\ud83d\udc67',desc:'Your little sister never sleeps.',c:0xcc44ff},
       {r:2,enemy:'NOSEY NEIGHBOR',icon:'\u2615',desc:'Porch light just came on.',c:0x888888},
-      {r:3,enemy:'PEYTON + NEIGHBOR',icon:'\ud83d\udcf1',desc:'She called the neighbors.',c:0xcc44ff},
-      {r:4,enemy:'HALL MONITOR KAREN',icon:'\ud83d\udccb',desc:'Karen patrols at 3am.',c:0xff8800},
-      {r:5,enemy:'MRS. STEINER',icon:'\ud83d\udcda',desc:'Grading papers at 3am.',c:0x4444ff},
-      {r:6,enemy:'KAREN + STEINER',icon:'\ud83e\udd1d',desc:"Group chat: 'Brody Watch'",c:0xff4444},
-      {r:7,enemy:'COACH ANDREWS',icon:'\ud83c\udfc8',desc:'Already running drills.',c:0x4488ff},
-      {r:8,enemy:'MR. BERG',icon:'\ud83d\udcfb',desc:'The VP never leaves.',c:0xff0000},
-      {r:9,enemy:'PEYTON + BERG',icon:'\ud83d\ude08',desc:'She has his number.',c:0xaa0000},
+      {r:3,enemy:'JOEY',icon:'\ud83c\udfc3',desc:'"Watch my form bro."',c:0x4444ff},
+      {r:4,enemy:'WAYLON',icon:'\u26bd',desc:'He brought the soccer ball.',c:0x0044ff},
+      {r:5,enemy:'JACK',icon:'\ud83d\udcc8',desc:'"Neighborhood risk index."',c:0x00aa44},
+      {r:6,enemy:'KAREN',icon:'\ud83d\udccb',desc:'Karen patrols at 3am.',c:0xff8800},
+      {r:7,enemy:'MRS. STEINER',icon:'\ud83d\udcda',desc:'At 3am. On a Friday.',c:0x4444aa},
+      {r:8,enemy:'BERG + COACH',icon:'\ud83d\udcfb',desc:'The staff team up.',c:0xff0000},
+      {r:9,enemy:'BRADEN',icon:'\ud83d\udcf1',desc:'"Bro I just need the content."',c:0xff6600},
       {r:10,enemy:'\u2620 MAMA \u2620',icon:'\ud83d\udc69',desc:'Peyton woke her up.',c:0xff6600,boss:true},
     ];
     let yPos=72;
@@ -486,6 +486,10 @@ class GameScene extends Phaser.Scene {
     this.load.spritesheet('boss','mama.png?v=1773607616',{frameWidth:209,frameHeight:298});
     this.load.spritesheet('sister','sister.png?v=1773607616',{frameWidth:216,frameHeight:288});
     this.load.spritesheet('coach','footballcoach.png?v=1773607616',{frameWidth:306,frameHeight:204});
+    this.load.spritesheet('waylon','waylon.png',{frameWidth:352,frameHeight:509});
+    this.load.spritesheet('jack','jack.png',{frameWidth:352,frameHeight:763});
+    this.load.spritesheet('joey','joey.png',{frameWidth:352,frameHeight:509});
+    this.load.spritesheet('braden','braden.png',{frameWidth:704,frameHeight:381});
     this.load.image('gem','shard.png?v=1773607616');
     this.load.image('bullet','bullet.png?v=1773607616');
     this.load.image('bg','bg.png?v=1773607616');
@@ -570,6 +574,10 @@ class GameScene extends Phaser.Scene {
       this.anims.create({key:'mama_charge',frames:this.anims.generateFrameNumbers('boss',{start:0,end:3}),frameRate:6,repeat:-1});
       this.anims.create({key:'peyton_snitch',frames:this.anims.generateFrameNumbers('sister',{start:0,end:3}),frameRate:7,repeat:-1});
       this.anims.create({key:'coach_run',frames:this.anims.generateFrameNumbers('coach',{start:0,end:3}),frameRate:10,repeat:-1});
+      this.anims.create({key:'waylon_run',frames:this.anims.generateFrameNumbers('waylon',{start:0,end:3}),frameRate:10,repeat:-1});
+      this.anims.create({key:'jack_walk',frames:this.anims.generateFrameNumbers('jack',{start:0,end:3}),frameRate:8,repeat:-1});
+      this.anims.create({key:'joey_run',frames:this.anims.generateFrameNumbers('joey',{start:0,end:3}),frameRate:12,repeat:-1});
+      this.anims.create({key:'braden_film',frames:this.anims.generateFrameNumbers('braden',{start:0,end:3}),frameRate:8,repeat:-1});
     }
   }
 
@@ -702,6 +710,10 @@ class GameScene extends Phaser.Scene {
         e.gd=6;e.sv=200;e.burstColor=0xcc44ff;break;
       case 'boss':e.setDisplaySize(155,155);e.play('mama_charge');e.hp=Math.floor(2400*hm);e.spd=50;e.dmg=25;e.gd=15;e.sv=500;e.burstColor=0xff6600;e.chargeDmg=35;
         this.bossOrbs=[0xff9900,0xff4400,0xff2244,0xffdd00].map(c=>{const o=this.add.graphics().setDepth(7);o.fillStyle(c,0.85);o.fillCircle(0,0,6);o.bossRef=e;return o;});break;
+      case 'waylon':e.setDisplaySize(80,80);e.hp=Math.floor(500*hm);e.spd=80;e.dmg=12;e.gd=3;e.sv=80;e.burstColor=0x0044ff;if(this.anims.exists('waylon_run'))e.play('waylon_run');e.waylonCD=0;break;
+      case 'jack':e.setDisplaySize(80,80);e.hp=Math.floor(450*hm);e.spd=65;e.dmg=10;e.gd=3;e.sv=90;e.burstColor=0x00aa44;if(this.anims.exists('jack_walk'))e.play('jack_walk');e.jackCD=0;e.jackStealCD=0;break;
+      case 'joey':e.setDisplaySize(80,80);e.hp=Math.floor(380*hm);e.spd=110;e.dmg=8;e.gd=2;e.sv=70;e.burstColor=0x4444ff;if(this.anims.exists('joey_run'))e.play('joey_run');e.joeyCD=0;e.joeyBurst=false;break;
+      case 'braden':e.setDisplaySize(85,85);e.hp=Math.floor(600*hm);e.spd=75;e.dmg=14;e.gd=5;e.sv=200;e.burstColor=0xff6600;if(this.anims.exists('braden_film'))e.play('braden_film');e.bradenLiveCD=0;e.bradenSpawnCD=0;e.bradenLaughCD=0;break;
     }
     if(!e.hp||e.hp<=0){console.error('Enemy 0 HP on spawn! type:',tex);e.hp=100;}
     e.maxHp=e.hp;
@@ -844,6 +856,11 @@ class GameScene extends Phaser.Scene {
       if(e.etype==='coach'&&!e.isMinion){const now=this.time.now;if(now-e.lastWhistle>8000){e.lastWhistle=now;this.floatText(e.x,e.y-30,'HUSTLE UP!!',0x4488ff);const orig=this.pSpeed;this.pSpeed=Math.floor(orig*1.8);this.cameras.main.flash(200,68,136,255);this.time.delayedCall(2000,()=>{this.pSpeed=orig;});}if(now-e.lastDrill>13000){e.lastDrill=now;this.floatText(e.x,e.y-50,'RUN IT AGAIN!!',0xff8800);if(!this.forcedRun){this.forcedRun=true;const ang=Phaser.Math.Between(0,360)*Math.PI/180;this.player.setVelocity(Math.cos(ang)*this.pSpeed*1.4,Math.sin(ang)*this.pSpeed*1.4);this.time.delayedCall(1500,()=>{this.forcedRun=false;});}}}
       if(e.isPeyton){const iCD=e._invCD||8000,iDur=e._invDur||2500;if(e.abilityTimer>=iCD&&!e.invincible){e.abilityTimer=0;e.invincible=true;e.setAlpha(0.5);this.floatText(e.x,e.y-50,"shhhh I'm on the phone",0xcc44ff);e._shield=this.add.graphics().setDepth(8);e._shield.lineStyle(2,0xcc44ff,0.6);e._shield.strokeCircle(0,0,50);this.time.delayedCall(iDur,()=>{if(!e.dead){e.invincible=false;e.setAlpha(1);if(e._shield){e._shield.destroy();e._shield=null;}}});}if(e._shield&&!e.dead)e._shield.setPosition(e.x,e.y);e.abilityTimer2=(e.abilityTimer2||0)+delta;if(e.abilityTimer2>=15000){e.abilityTimer2=0;this.floatText(e.x,e.y-40,"I'm calling the neighbor!",0xcc44ff);this.spawnMinion('ew',45,60);}}
       if(e.isBoss){const pct=e.hp/e.maxHp;if(pct>0.6&&e.abilityTimer>=5000){e.abilityTimer=0;const d=Phaser.Math.Distance.Between(e.x,e.y,px,py);if(d<120){this.floatText(e.x,e.y-60,'WHERE HAVE YOU BEEN??',0xff4444);this.hurtPlayer(60);const a=Phaser.Math.Angle.Between(e.x,e.y,px,py);this.player.x+=Math.cos(a)*80;this.player.y+=Math.sin(a)*80;}}if(pct<=0.6&&pct>0.3){e.abilityTimer2=(e.abilityTimer2||0)+delta;if(e.abilityTimer2>=8000){e.abilityTimer2=0;this.floatText(e.x,e.y-60,"I'm texting your father!!",0xff8800);const f=this.add.graphics().setDepth(99);f.fillStyle(0xff6600,0.2);f.fillRect(0,0,W,H);this.time.delayedCall(300,()=>f.destroy());this.spawnMinion('et',60,150);}}if(pct<=0.3){e.setTint(0xff8844);if(e.abilityTimer>=4000&&!e.isCharging){e.abilityTimer=0;e.isCharging=true;this.floatText(e.x,e.y-60,'GET BACK HERE!!',0xff2244);const a=Phaser.Math.Angle.Between(e.x,e.y,px,py);e.setVelocity(Math.cos(a)*380,Math.sin(a)*380);this.cameras.main.shake(300,0.012);this.time.delayedCall(1000,()=>{if(!e.dead){e.isCharging=false;e.setVelocity(0,0);}});}}}
+      // ── FRIEND ABILITIES ──
+      if(e.etype==='waylon'){const now=this.time.now;if(now-(e.waylonCD||0)>9000){e.waylonCD=now;this.floatText(e.x,e.y-50,'\u26bd RED CARD!!',0x0044ff);const ball=this.add.graphics().setDepth(8);ball.fillStyle(0xffffff,1);ball.fillCircle(0,0,10);ball.x=e.x;ball.y=e.y;const ang=Phaser.Math.Angle.Between(e.x,e.y,px,py);let bvx=Math.cos(ang)*200,bvy=Math.sin(ang)*200,bnc=0;const bt=this.time.addEvent({delay:16,loop:true,callback:()=>{ball.x+=bvx*0.016;ball.y+=bvy*0.016;if(ball.x<0||ball.x>W){bvx*=-1;bnc++;}if(ball.y<0||ball.y>H){bvy*=-1;bnc++;}if(bnc>=3||!ball.scene){bt.destroy();if(ball.scene)ball.destroy();return;}const d2=Math.sqrt((px-ball.x)**2+(py-ball.y)**2);if(d2<20&&this.time.now-this.lastHurtTime>600){this.lastHurtTime=this.time.now;this.hurtPlayer(15);bt.destroy();if(ball.scene)ball.destroy();}}});}}
+      if(e.etype==='jack'){const now=this.time.now;if(now-(e.jackCD||0)>12000){e.jackCD=now;this.floatText(e.x,e.y-50,'\ud83d\udcc8 TO THE MOON!!',0x00aa44);const os=e.spd;e.spd=280;this.time.delayedCall(1200,()=>{if(!e.dead)e.spd=os;});}if(now-(e.jackStealCD||0)>3000){const jd=Math.sqrt((px-e.x)**2+(py-e.y)**2);if(jd<50){e.jackStealCD=now;const st=Math.min(20,DTM.getSnacks());if(st>0){DTM.spendSnacks(st);this.floatText(e.x,e.y-40,`-${st} \ud83c\udf55 STOLEN!`,0xff0000);}}}}
+      if(e.etype==='joey'){const now=this.time.now;if(!e.joeyBurst&&now-(e.joeyCD||0)>8000){e.joeyCD=now;e.joeyBurst=true;e.spd=260;this.floatText(e.x,e.y-40,'WATCH MY FORM!!',0x4444ff);this.time.delayedCall(2000,()=>{if(!e.dead){e.spd=30;e.joeyBurst=false;this.floatText(e.x,e.y-40,'*heavy breathing*',0x888888);this.time.delayedCall(3000,()=>{if(!e.dead)e.spd=110;});}});}if(!e.joeyBurst&&Math.random()<0.002){const cs=e.spd;e.spd=0;this.floatText(e.x,e.y-30,'\ud83d\ude23 CRAMP!!',0x4444ff);this.time.delayedCall(2000,()=>{if(!e.dead)e.spd=cs;});}}
+      if(e.etype==='braden'){const now=this.time.now;if(now-(e.bradenLiveCD||0)>10000){e.bradenLiveCD=now;this.floatText(e.x,e.y-60,'\ud83d\udd34 GOING LIVE!!',0xff0000);const lv=this.add.text(W-16,140,'\ud83d\udd34 LIVE',{fontFamily:'Orbitron',fontSize:'12px',color:'#ff0000',fontStyle:'bold'}).setOrigin(1,0).setDepth(50);this.tweens.add({targets:lv,alpha:0.2,duration:500,yoyo:true,repeat:4,onComplete:()=>lv.destroy()});this.enemies.getChildren().forEach(en=>{if(!en.dead&&en!==e){const os2=en.spd;en.spd=Math.floor(os2*1.5);this.time.delayedCall(5000,()=>{if(!en.dead)en.spd=os2;});}});}if(now-(e.bradenSpawnCD||0)>20000){e.bradenSpawnCD=now;this.floatText(e.x,e.y-50,'texting Peyton... \ud83d\ude08',0xcc44ff);this.time.delayedCall(1500,()=>{if(!this.dead)this.spawnMinion('ew',45,60);});}const bd=Math.sqrt((px-e.x)**2+(py-e.y)**2);if(bd<100&&now-(e.bradenLaughCD||0)>6000){e.bradenLaughCD=now;this.floatText(px,py-40,'\ud83d\ude02 BROOOO',0xffcc00);this.forcedRun=true;this.time.delayedCall(1000,()=>{this.forcedRun=false;});}}
       if(e.hpGfx){e.hpGfx.clear();const p=Phaser.Math.Clamp(e.hp/e.maxHp,0,1),bw=e.displayWidth+40,bh=14,bx=e.x-bw/2,by=e.y-e.displayHeight/2-22;e.hpGfx.fillStyle(0x2a2a2a,0.9);e.hpGfx.fillRoundedRect(bx,by,bw,bh,4);const col=p>0.6?0x00ee44:p>0.3?0xffaa00:0xff2200;e.hpGfx.fillStyle(col,1);e.hpGfx.fillRoundedRect(bx,by,Math.floor(bw*p),bh,4);e.hpGfx.lineStyle(1,0x000000,0.5);e.hpGfx.strokeRoundedRect(bx,by,bw,bh,4);if(!e.hpTxt){e.hpTxt=this.add.text(e.x,by-2,`${Math.ceil(e.hp)}/${e.maxHp}`,{fontFamily:'Orbitron',fontSize:'8px',color:'#ffffff',stroke:'#000',strokeThickness:2}).setOrigin(0.5,1).setDepth(8);}else{e.hpTxt.setText(`${Math.ceil(e.hp)}/${e.maxHp}`).setPosition(e.x,by-2);}}
       if(e.nameLabel){const nx=e.x,ny=e.y-e.displayHeight/2-6;e.nameLabel.setPosition(nx,ny);if(e.nameBg){e.nameBg.clear();const tw=e.nameLabel.width+14,th=18;e.nameBg.fillStyle(0x000000,0.7);e.nameBg.fillRoundedRect(nx-tw/2,ny-th,tw,th,4);}}
       if(e.tierDot){const nlw=(e.nameLabel?e.nameLabel.width/2:30)+8;e.tierDot.setPosition(e.x-nlw,e.y-e.displayHeight/2-22);}
@@ -908,7 +925,8 @@ class GameScene extends Phaser.Scene {
       // Round 10: Mama dies → Peyton surrenders
       if(this.roundNum>=10){const pey=this.enemies.getChildren().find(en=>en.isPeyton&&!en.dead);if(pey){pey.spd=0;this.floatText(pey.x,pey.y-40,'ok fine you win',0xcc44ff);this.time.delayedCall(2000,()=>{if(!pey.dead)this.killEnemy(pey);});}}
     }
-    else{const rd2=this.activeRounds?.[this.roundNum-1];const quip=rd2?.deathQ?.[e.etype]||{ew:"I'm telling your mother!",ef:'DETENTION!!',es:'F MINUS!!',et:'SUSPENDED!!',coach:'6AM MONDAY!!'}[e.etype];if(quip)this.floatText(e.x,e.y-28,quip,0xffdd00);}
+    if(e.etype==='braden'){const ph=this.add.text(e.x,e.y,'\ud83d\udcf1',{fontSize:'24px'}).setDepth(8);this.tweens.add({targets:ph,y:e.y+20,duration:300,ease:'Bounce'});this.bradenPhone={phone:ph,x:e.x,y:e.y+20,pickup:()=>{this.pHP=this.pMaxHP;this.updateHP();ph.destroy();this.floatText(this.player.x,this.player.y-40,'\ud83d\udcf1 FOOTAGE DELETED! +FULL HEAL!',0x00ff88);this.bradenPhone=null;}};this.time.delayedCall(15000,()=>{if(ph.scene)ph.destroy();this.bradenPhone=null;});}
+    else{const rd2=this.activeRounds?.[this.roundNum-1];const quip=rd2?.deathQ?.[e.etype]||{ew:"I'm telling your mother!",ef:'DETENTION!!',es:'F MINUS!!',et:'SUSPENDED!!',coach:'6AM MONDAY!!',waylon:"That's a foul!! I'm calling VAR!!",jack:"This is just a dip!! I'm HODLING!!",joey:'I let you win. I was saving energy.',braden:'BRO I GOT IT ALL ON CAMERA THOUGH \ud83d\ude02'}[e.etype];if(quip)this.floatText(e.x,e.y-28,quip,0xffdd00);}
     for(let i=0;i<(e.gd||1);i++){const gx=e.x+Phaser.Math.Between(-18,18),gy=e.y+Phaser.Math.Between(-18,18);const gem=this.gems.create(gx,gy,'gem').setDepth(5).setDisplaySize(20,20);gem.xp=1;this.tweens.add({targets:gem,y:gy-22,duration:220,yoyo:true,ease:'Bounce'});}
     // (death explosion already handled above with multi-ring)
     if(e.hpGfx){e.hpGfx.destroy();e.hpGfx=null;}if(e.hpTxt){e.hpTxt.destroy();e.hpTxt=null;}if(e.nameBg){e.nameBg.destroy();e.nameBg=null;}if(e.nameLabel){e.nameLabel.destroy();e.nameLabel=null;}if(e.tierDot){e.tierDot.destroy();e.tierDot=null;}if(e.phaseLabel){e.phaseLabel.destroy();e.phaseLabel=null;}if(e._shield){e._shield.destroy();e._shield=null;}
@@ -1016,6 +1034,8 @@ class GameScene extends Phaser.Scene {
         }
       }
     }
+    // Braden phone pickup
+    if(this.bradenPhone){const bp=this.bradenPhone;const dx2=this.player.x-bp.x,dy2=this.player.y-bp.y;if(Math.sqrt(dx2*dx2+dy2*dy2)<35){bp.pickup();}}
     // Ground gear auto-pickup
     (this.groundGear||[]).forEach(item=>{if(!item.bg?.scene||item.collected)return;const dx=this.player.x-item.x,dy=this.player.y-item.y;if(Math.sqrt(dx*dx+dy*dy)<35)this.pickupGear(item);});
     // Gem pickup — distance check

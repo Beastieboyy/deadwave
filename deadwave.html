@@ -214,7 +214,8 @@ class NicknameScene extends Phaser.Scene {
 // ─────────────────────────────────────────────────
 class CharacterSelectScene extends Phaser.Scene {
   constructor(){super('CharacterSelectScene');}
-  create(){
+  create(){try{this._build();}catch(err){console.error('CharSelect err:',err);localStorage.setItem('dtm_character',JSON.stringify({key:'brody',sprite:'player',name:'BRODY',stats:{speed:170,hp:100,snacks:0},villainRound:null}));this.scene.start('HubScene');}}
+  _build(){
     DTM.makeBG(this);
     const hg=this.add.graphics();hg.fillStyle(0x0d0d0d,0.95);hg.fillRect(0,0,W,65);hg.lineStyle(2,0xff9900,0.4);hg.lineBetween(0,65,W,65);
     this.add.text(W/2,22,'\ud83d\udc3e PANTHER PROWL',{fontFamily:'Orbitron',fontSize:'16px',color:'#ff9900',fontStyle:'bold'}).setOrigin(0.5);
@@ -230,7 +231,8 @@ class CharacterSelectScene extends Phaser.Scene {
     CHARS.forEach(c=>{
       const colH='#'+c.color.toString(16).padStart(6,'0');const ch=110;
       const card=this.add.graphics().setDepth(2);card.fillStyle(0x1a1a2e,0.97);card.fillRoundedRect(16,yPos,W-32,ch,10);card.lineStyle(2,c.color,0.7);card.strokeRoundedRect(16,yPos,W-32,ch,10);
-      this.add.image(60,yPos+ch/2,c.sprite).setDepth(3).setDisplaySize(70,70);
+      if(this.textures.exists(c.sprite))this.add.image(60,yPos+ch/2,c.sprite).setDepth(3).setDisplaySize(70,70);
+      else this.add.text(60,yPos+ch/2,c.name[0],{fontFamily:'Orbitron',fontSize:'28px',color:colH,fontStyle:'bold'}).setOrigin(0.5).setDepth(3);
       this.add.text(110,yPos+20,c.name,{fontFamily:'Orbitron',fontSize:'18px',color:colH,fontStyle:'bold'}).setOrigin(0,0.5).setDepth(3);
       this.add.text(110,yPos+42,`"${c.sub}"`,{fontFamily:'Orbitron',fontSize:'9px',color:'#888899',fontStyle:'italic',wordWrap:{width:W-145}}).setOrigin(0,0.5).setDepth(3);
       this.add.text(110,yPos+62,`SPD:${c.stats.speed}  HP:${c.stats.hp}${c.stats.snacks>0?' +'+c.stats.snacks+'\ud83c\udf55':''}`,{fontFamily:'Orbitron',fontSize:'10px',color:'#aaaacc'}).setOrigin(0,0.5).setDepth(3);

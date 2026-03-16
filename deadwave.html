@@ -71,7 +71,7 @@ const DTM = {
   getCurrentLevel:()=>parseInt(localStorage.getItem('dtm_currentlevel')||'1'),
   setCurrentLevel:(n)=>localStorage.setItem('dtm_currentlevel',String(n)),
   getPin:()=>localStorage.getItem('dtm_pin')||'0000',
-  getCharacter:()=>{try{return JSON.parse(localStorage.getItem('dtm_character'));}catch(e){}return{key:'brody',sprite:'player',name:'BRODY',stats:{speed:170,hp:100,snacks:0},villainRound:null};},
+  getCharacter:()=>{try{const r=localStorage.getItem('dtm_character');const p=r?JSON.parse(r):null;if(p&&p.key&&p.name)return p;}catch(e){}return{key:'brody',sprite:'player',name:'BRODY',sub:'The original sneaker-outer',stats:{speed:170,hp:100,snacks:0},perk:'\u2696\ufe0f Balanced stats',perkCol:'#ffffff',color:0x00ffcc,villainRound:null,vs:null,vq:null,vr:null};},
   getInventory:()=>JSON.parse(localStorage.getItem('dtm_gear_inv')||'[]'),
   saveInventory:(inv)=>localStorage.setItem('dtm_gear_inv',JSON.stringify(inv)),
   getEquipped:()=>JSON.parse(localStorage.getItem('dtm_gear_equipped')||'{}'),
@@ -279,7 +279,7 @@ class HubScene extends Phaser.Scene {
     });
     DTM.makeCard(this,16,85,W-32,310,0.95);
     this.add.text(W/2,108,`NIGHT ${level}`,{fontFamily:'Orbitron',fontSize:'28px',fontStyle:'bold',color:'#ffffff'}).setOrigin(0.5);
-    const charD=DTM.getCharacter();const charBtn=this.add.text(W/2,168,`Playing as: ${charD.name}  \u270f`,{fontFamily:'Orbitron',fontSize:'11px',color:'#888899'}).setOrigin(0.5).setInteractive({useHandCursor:true});
+    const charD=DTM.getCharacter();const charName=charD?.name||'BRODY';const charBtn=this.add.text(W/2,168,`Playing as: ${charName}  \u270f`,{fontFamily:'Orbitron',fontSize:'11px',color:'#888899'}).setOrigin(0.5).setInteractive({useHandCursor:true});
     charBtn.on('pointerdown',()=>{this.cameras.main.fadeOut(250,0,0,0);this.time.delayedCall(250,()=>this.scene.start('CharacterSelectScene'));});
     this.add.text(W/2,145,'\ud83d\udccd '+loc.name,{fontFamily:'Orbitron',fontSize:'13px',color:loc.color}).setOrigin(0.5);
     const levelStars=stars[level]||0;

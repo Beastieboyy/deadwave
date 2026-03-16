@@ -540,8 +540,8 @@ class GameScene extends Phaser.Scene {
     this.load.spritesheet('sister','sister.png?v=1773607616',{frameWidth:216,frameHeight:288});
     this.load.spritesheet('coach','footballcoach.png?v=1773607616',{frameWidth:306,frameHeight:204});
     this.load.spritesheet('waylon','waylon.png',{frameWidth:352,frameHeight:509});
-    this.load.spritesheet('jack','jack.png',{frameWidth:352,frameHeight:763});
-    this.load.spritesheet('joey','joey.png',{frameWidth:352,frameHeight:509});
+    this.load.spritesheet('jack','jack.png?v=1773623687',{frameWidth:352,frameHeight:763});
+    this.load.spritesheet('joey','joey.png?v=1773623687',{frameWidth:352,frameHeight:509});
     this.load.spritesheet('braden','braden.png',{frameWidth:704,frameHeight:381});
     this.load.image('gem','shard.png?v=1773607616');
     this.load.image('bullet','bullet.png?v=1773607616');
@@ -780,7 +780,7 @@ class GameScene extends Phaser.Scene {
       case 'jack':e.setDisplaySize(80,80);e.hp=Math.floor(450*hm);e.spd=65;e.dmg=10;e.gd=3;e.sv=90;e.burstColor=0x00aa44;if(this.anims.exists('jack_walk'))e.play('jack_walk');e.jackCD=0;e.jackStealCD=0;break;
       case 'joey':e.setDisplaySize(80,80);e.hp=Math.floor(380*hm);e.spd=110;e.dmg=8;e.gd=2;e.sv=70;e.burstColor=0x4444ff;if(this.anims.exists('joey_run'))e.play('joey_run');e.joeyCD=0;e.joeyBurst=false;break;
       case 'braden':e.setDisplaySize(85,85);e.hp=Math.floor(600*hm);e.spd=75;e.dmg=14;e.gd=5;e.sv=200;e.burstColor=0xff6600;if(this.anims.exists('braden_film'))e.play('braden_film');e.bradenLiveCD=0;e.bradenSpawnCD=0;e.bradenLaughCD=0;break;
-      case 'brody_villain':e.setDisplaySize(75,75);e.hp=Math.floor(550*hm);e.spd=90;e.dmg=14;e.gd=4;e.sv=150;e.burstColor=0x00ffcc;e.setTexture('player');if(this.anims.exists('brody_idle'))e.play('brody_idle');e.isBrodyVillain=true;break;
+      case 'brody_villain':e.setTexture('player');e.setDisplaySize(75,75);e.setBodySize(28,28);e.hp=Math.floor(550*hm);e.spd=90;e.dmg=14;e.gd=4;e.sv=150;e.burstColor=0x00ffcc;if(this.anims.exists('brody_idle'))e.play('brody_idle');e.isBrodyVillain=true;break;
     }
     if(!e.hp||e.hp<=0){console.error('Enemy 0 HP on spawn! type:',tex);e.hp=100;}
     e.maxHp=e.hp;

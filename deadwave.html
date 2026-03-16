@@ -71,6 +71,7 @@ const DTM = {
   getCurrentLevel:()=>parseInt(localStorage.getItem('dtm_currentlevel')||'1'),
   setCurrentLevel:(n)=>localStorage.setItem('dtm_currentlevel',String(n)),
   getPin:()=>localStorage.getItem('dtm_pin')||'0000',
+  getCharacter:()=>{try{return JSON.parse(localStorage.getItem('dtm_character'));}catch(e){}return{key:'brody',sprite:'player',name:'BRODY',stats:{speed:170,hp:100,snacks:0},villainRound:null};},
   getInventory:()=>JSON.parse(localStorage.getItem('dtm_gear_inv')||'[]'),
   saveInventory:(inv)=>localStorage.setItem('dtm_gear_inv',JSON.stringify(inv)),
   getEquipped:()=>JSON.parse(localStorage.getItem('dtm_gear_equipped')||'{}'),
@@ -209,6 +210,44 @@ class NicknameScene extends Phaser.Scene {
 }
 
 // ─────────────────────────────────────────────────
+// CHARACTER SELECT SCENE
+// ─────────────────────────────────────────────────
+class CharacterSelectScene extends Phaser.Scene {
+  constructor(){super('CharacterSelectScene');}
+  create(){
+    DTM.makeBG(this);
+    const hg=this.add.graphics();hg.fillStyle(0x0d0d0d,0.95);hg.fillRect(0,0,W,65);hg.lineStyle(2,0xff9900,0.4);hg.lineBetween(0,65,W,65);
+    this.add.text(W/2,22,'\ud83d\udc3e PANTHER PROWL',{fontFamily:'Orbitron',fontSize:'16px',color:'#ff9900',fontStyle:'bold'}).setOrigin(0.5);
+    this.add.text(W/2,46,'WHO ARE YOU TONIGHT?',{fontFamily:'Orbitron',fontSize:'11px',color:'#888899',letterSpacing:3}).setOrigin(0.5);
+    const CHARS=[
+      {key:'brody',sprite:'player',name:'BRODY',sub:'The original sneaker-outer',stats:{speed:170,hp:100,snacks:0},perk:'\u2696\ufe0f Balanced stats',pc:'#ffffff',color:0x00ffcc,vr:null},
+      {key:'waylon',sprite:'waylon',name:'WAYLON',sub:'Soccer kid. Very competitive.',stats:{speed:210,hp:85,snacks:0},perk:'\u26bd Speed boost',pc:'#4488ff',color:0x0044ff,vr:3,vs:'"YOU WERE SUPPOSED TO PASS!!"',vq:'Next time I\'m playing keeper!!'},
+      {key:'jack',sprite:'jack',name:'JACK',sub:'"The market never sleeps."',stats:{speed:140,hp:110,snacks:50},perk:'\ud83d\udcc8 Start with +50 snacks',pc:'#00aa44',color:0x00aa44,vr:4,vs:'"BRO JUST VENMO ME"',vq:'This is just a dip!!'},
+      {key:'joey',sprite:'joey',name:'JOEY',sub:'"Watch my form. I\'m literally fast."',stats:{speed:240,hp:75,snacks:0},perk:'\ud83c\udfc3 Fastest \u2014 but random cramps',pc:'#ff8800',color:0x4444ff,vr:2,vs:'"I THOUGHT YOU WERE FAST??"',vq:'I let you win.'},
+      {key:'braden',sprite:'braden',name:'BRADEN',sub:'Just needs the content.',stats:{speed:160,hp:95,snacks:0},perk:'\ud83d\ude02 Enemies laugh = brief stun',pc:'#ff6600',color:0xff6600,vr:8,vs:'"DELETE THAT VIDEO RIGHT NOW"',vq:'BRO I GOT IT ALL ON CAMERA'},
+    ];
+    let yPos=75;
+    CHARS.forEach(c=>{
+      const colH='#'+c.color.toString(16).padStart(6,'0');const ch=110;
+      const card=this.add.graphics().setDepth(2);card.fillStyle(0x1a1a2e,0.97);card.fillRoundedRect(16,yPos,W-32,ch,10);card.lineStyle(2,c.color,0.7);card.strokeRoundedRect(16,yPos,W-32,ch,10);
+      this.add.image(60,yPos+ch/2,c.sprite).setDepth(3).setDisplaySize(70,70);
+      this.add.text(110,yPos+20,c.name,{fontFamily:'Orbitron',fontSize:'18px',color:colH,fontStyle:'bold'}).setOrigin(0,0.5).setDepth(3);
+      this.add.text(110,yPos+42,`"${c.sub}"`,{fontFamily:'Orbitron',fontSize:'9px',color:'#888899',fontStyle:'italic',wordWrap:{width:W-145}}).setOrigin(0,0.5).setDepth(3);
+      this.add.text(110,yPos+62,`SPD:${c.stats.speed}  HP:${c.stats.hp}${c.stats.snacks>0?' +'+c.stats.snacks+'\ud83c\udf55':''}`,{fontFamily:'Orbitron',fontSize:'10px',color:'#aaaacc'}).setOrigin(0,0.5).setDepth(3);
+      this.add.text(110,yPos+82,c.perk,{fontFamily:'Orbitron',fontSize:'10px',color:c.pc,fontStyle:'bold'}).setOrigin(0,0.5).setDepth(3);
+      if(c.vr!==null){this.add.text(W-24,yPos+34,'\u26a0\ufe0f BRODY\nBECOMES\nVILLAIN',{fontFamily:'Orbitron',fontSize:'8px',color:'#ff4444',align:'right',lineSpacing:2}).setOrigin(1,0.5).setDepth(3);}
+      const cY=yPos;
+      const zone=this.add.zone(16,yPos,W-32,ch).setOrigin(0,0).setDepth(10).setInteractive({useHandCursor:true});
+      zone.on('pointerover',()=>{card.clear();card.fillStyle(0x2a2a4a,0.97);card.fillRoundedRect(16,cY,W-32,ch,10);card.lineStyle(3,c.color,1);card.strokeRoundedRect(16,cY,W-32,ch,10);});
+      zone.on('pointerout',()=>{card.clear();card.fillStyle(0x1a1a2e,0.97);card.fillRoundedRect(16,cY,W-32,ch,10);card.lineStyle(2,c.color,0.7);card.strokeRoundedRect(16,cY,W-32,ch,10);});
+      zone.on('pointerdown',()=>{localStorage.setItem('dtm_character',JSON.stringify(c));this.cameras.main.flash(300,(c.color>>16)&255,(c.color>>8)&255,c.color&255);this.cameras.main.fadeOut(300,0,0,0);this.time.delayedCall(300,()=>this.scene.start('HubScene'));});
+      yPos+=ch+8;
+    });
+    this.cameras.main.fadeIn(400,0,0,0);
+  }
+}
+
+// ─────────────────────────────────────────────────
 // HUB SCENE
 // ─────────────────────────────────────────────────
 class HubScene extends Phaser.Scene {
@@ -238,6 +277,8 @@ class HubScene extends Phaser.Scene {
     });
     DTM.makeCard(this,16,85,W-32,310,0.95);
     this.add.text(W/2,108,`NIGHT ${level}`,{fontFamily:'Orbitron',fontSize:'28px',fontStyle:'bold',color:'#ffffff'}).setOrigin(0.5);
+    const charD=DTM.getCharacter();const charBtn=this.add.text(W/2,168,`Playing as: ${charD.name}  \u270f`,{fontFamily:'Orbitron',fontSize:'11px',color:'#888899'}).setOrigin(0.5).setInteractive({useHandCursor:true});
+    charBtn.on('pointerdown',()=>{this.cameras.main.fadeOut(250,0,0,0);this.time.delayedCall(250,()=>this.scene.start('CharacterSelectScene'));});
     this.add.text(W/2,145,'\ud83d\udccd '+loc.name,{fontFamily:'Orbitron',fontSize:'13px',color:loc.color}).setOrigin(0.5);
     const levelStars=stars[level]||0;
     const starStr='\u2b50'.repeat(levelStars)+'\u2606'.repeat(3-levelStars);
@@ -530,6 +571,12 @@ class GameScene extends Phaser.Scene {
     const eq=DTM.getEquipped();Object.values(eq).forEach(item=>{if(!item)return;const def=GEAR_DEFS[item.slot];if(!def)return;const v=item.statVal;switch(def.stat){case'dmg':this.pDmg+=v;break;case'maxhp':this.pMaxHP+=v;this.pHP=this.pMaxHP;break;case'magnet':this.magnetR+=v;break;case'speed':this.pSpeed+=v;break;case'firerate':this.fireRate=Math.max(300,this.fireRate-v);break;case'crit':this.critRate+=v;break;}});
     // Dev mode
     this.isDevMode=false;
+    // Character select stats
+    const char=DTM.getCharacter();this.selectedChar=char;
+    this.pSpeed=char.stats?.speed||170;this.pMaxHP=char.stats?.hp||100;this.pHP=this.pMaxHP;
+    if(char.stats?.snacks>0)DTM.addSnacks(char.stats.snacks);
+    this.isJoey=char.key==='joey';this.isBraden=char.key==='braden';
+    this.joeyPlayerCrampCD=0;this.joeyCramped=false;
     if((DTM.getName()||'').toLowerCase().trim()==='vince'&&(DTM.getPin()||'').trim()==='8675'){
       this.isDevMode=true;this.pDmg*=2;this.pMaxHP=300;this.pHP=300;this.pSpeed*=1.3;this.fireRate=500;this.critRate=0.15;this.critDmg=2.0;this.magnetR=150;
       try{localStorage.setItem('dtm_unlocked',JSON.stringify([1,2,3,4,5,6,7,8,9,10]));}catch(e){}
@@ -584,9 +631,11 @@ class GameScene extends Phaser.Scene {
   createPlayer(){
     this.player=this.physics.add.sprite(W/2,H/2,'player').setDepth(10).setCollideWorldBounds(true);
     this.player.setDisplaySize(58,58).setBodySize(28,28);
-    this.player.play('brody_idle');
+    const ch=DTM.getCharacter();const animMap={brody:'brody_idle',waylon:'waylon_run',jack:'jack_walk',joey:'joey_run',braden:'braden_film'};
+    if(ch.sprite&&ch.sprite!=='player')try{this.player.setTexture(ch.sprite);}catch(e){}
+    const pa=animMap[ch.key]||'brody_idle';if(this.anims.exists(pa))this.player.play(pa);
     this.glow=this.add.graphics().setDepth(9);
-    this.playerLabel=this.add.text(0,0,DTM.getName()||'BRODY',{fontFamily:'Orbitron',fontSize:'13px',fontStyle:'bold',color:'#00ffcc',stroke:'#000000',strokeThickness:5}).setDepth(22).setOrigin(0.5,1);
+    this.playerLabel=this.add.text(0,0,DTM.getCharacter().name||DTM.getName()||'BRODY',{fontFamily:'Orbitron',fontSize:'13px',fontStyle:'bold',color:'#00ffcc',stroke:'#000000',strokeThickness:5}).setDepth(22).setOrigin(0.5,1);
   }
 
   createUI(){
@@ -631,8 +680,12 @@ class GameScene extends Phaser.Scene {
 
   startRound(n){
     this.roundNum=n;this.roundActive=true;this.roundEnemies=[];this.roundEnemiesExpected=0;
-    const rd=this.activeRounds[n-1];
+    let rd=this.activeRounds[n-1];
     if(!rd){this.winGame();return;}
+    // Villain swap: if playing as friend, Brody replaces that friend's round
+    const vc=this.selectedChar;
+    if(vc&&vc.vr!==null&&vc.vr!==undefined&&(n-1)===vc.vr){rd={...rd,label:'BRODY FOUND OUT',sub:vc.vs||'"..."',story:'Wait... is that BRODY??\nHe looks angry.',enemies:[{type:'brody_villain',count:1}],speech:{brody_villain:vc.vs||'"..."'},deathQ:{brody_villain:vc.vq||'This isn\'t over!!'}};}
+    this.currentRound=rd;
     this.roundTxt.setText(`ROUND ${n}/${this.activeRounds.length}`);
     // Round intro card
     const ln=this.levelNum||1;const tier=ln<=10?1:ln<=30?2:3;
@@ -714,6 +767,7 @@ class GameScene extends Phaser.Scene {
       case 'jack':e.setDisplaySize(80,80);e.hp=Math.floor(450*hm);e.spd=65;e.dmg=10;e.gd=3;e.sv=90;e.burstColor=0x00aa44;if(this.anims.exists('jack_walk'))e.play('jack_walk');e.jackCD=0;e.jackStealCD=0;break;
       case 'joey':e.setDisplaySize(80,80);e.hp=Math.floor(380*hm);e.spd=110;e.dmg=8;e.gd=2;e.sv=70;e.burstColor=0x4444ff;if(this.anims.exists('joey_run'))e.play('joey_run');e.joeyCD=0;e.joeyBurst=false;break;
       case 'braden':e.setDisplaySize(85,85);e.hp=Math.floor(600*hm);e.spd=75;e.dmg=14;e.gd=5;e.sv=200;e.burstColor=0xff6600;if(this.anims.exists('braden_film'))e.play('braden_film');e.bradenLiveCD=0;e.bradenSpawnCD=0;e.bradenLaughCD=0;break;
+      case 'brody_villain':e.setDisplaySize(75,75);e.hp=Math.floor(550*hm);e.spd=90;e.dmg=14;e.gd=4;e.sv=150;e.burstColor=0x00ffcc;e.setTexture('player');if(this.anims.exists('brody_idle'))e.play('brody_idle');e.isBrodyVillain=true;break;
     }
     if(!e.hp||e.hp<=0){console.error('Enemy 0 HP on spawn! type:',tex);e.hp=100;}
     e.maxHp=e.hp;
@@ -755,6 +809,8 @@ class GameScene extends Phaser.Scene {
     // Ghost-pause recovery
     if(this.paused&&!this.levelUpActive&&!this.dead&&!this.transitioning){console.warn('Ghost pause — recovering');this.paused=false;this.physics.resume();}
     if(this.paused||this.dead)return;
+    // Joey player cramp
+    if(this.isJoey&&!this.joeyCramped){const now2=this.time.now;if(now2-(this.joeyPlayerCrampCD||0)>30000){this.joeyPlayerCrampCD=now2;this.joeyCramped=true;const os=this.pSpeed;this.pSpeed=0;this.floatText(this.player.x,this.player.y-40,'\ud83d\ude23 CRAMP!!',0x4444ff);this.time.delayedCall(2000,()=>{this.pSpeed=os;this.joeyCramped=false;this.floatText(this.player.x,this.player.y-40,"ok I'm good",0x4444ff);});}}
     this.elapsed+=delta;
     const rem=Math.max(0,this.totalTime-this.elapsed);
     const m=Math.floor(rem/60000),s=Math.floor((rem%60000)/1000);
@@ -856,6 +912,8 @@ class GameScene extends Phaser.Scene {
       if(e.etype==='coach'&&!e.isMinion){const now=this.time.now;if(now-e.lastWhistle>8000){e.lastWhistle=now;this.floatText(e.x,e.y-30,'HUSTLE UP!!',0x4488ff);const orig=this.pSpeed;this.pSpeed=Math.floor(orig*1.8);this.cameras.main.flash(200,68,136,255);this.time.delayedCall(2000,()=>{this.pSpeed=orig;});}if(now-e.lastDrill>13000){e.lastDrill=now;this.floatText(e.x,e.y-50,'RUN IT AGAIN!!',0xff8800);if(!this.forcedRun){this.forcedRun=true;const ang=Phaser.Math.Between(0,360)*Math.PI/180;this.player.setVelocity(Math.cos(ang)*this.pSpeed*1.4,Math.sin(ang)*this.pSpeed*1.4);this.time.delayedCall(1500,()=>{this.forcedRun=false;});}}}
       if(e.isPeyton){const iCD=e._invCD||8000,iDur=e._invDur||2500;if(e.abilityTimer>=iCD&&!e.invincible){e.abilityTimer=0;e.invincible=true;e.setAlpha(0.5);this.floatText(e.x,e.y-50,"shhhh I'm on the phone",0xcc44ff);e._shield=this.add.graphics().setDepth(8);e._shield.lineStyle(2,0xcc44ff,0.6);e._shield.strokeCircle(0,0,50);this.time.delayedCall(iDur,()=>{if(!e.dead){e.invincible=false;e.setAlpha(1);if(e._shield){e._shield.destroy();e._shield=null;}}});}if(e._shield&&!e.dead)e._shield.setPosition(e.x,e.y);e.abilityTimer2=(e.abilityTimer2||0)+delta;if(e.abilityTimer2>=15000){e.abilityTimer2=0;this.floatText(e.x,e.y-40,"I'm calling the neighbor!",0xcc44ff);this.spawnMinion('ew',45,60);}}
       if(e.isBoss){const pct=e.hp/e.maxHp;if(pct>0.6&&e.abilityTimer>=5000){e.abilityTimer=0;const d=Phaser.Math.Distance.Between(e.x,e.y,px,py);if(d<120){this.floatText(e.x,e.y-60,'WHERE HAVE YOU BEEN??',0xff4444);this.hurtPlayer(60);const a=Phaser.Math.Angle.Between(e.x,e.y,px,py);this.player.x+=Math.cos(a)*80;this.player.y+=Math.sin(a)*80;}}if(pct<=0.6&&pct>0.3){e.abilityTimer2=(e.abilityTimer2||0)+delta;if(e.abilityTimer2>=8000){e.abilityTimer2=0;this.floatText(e.x,e.y-60,"I'm texting your father!!",0xff8800);const f=this.add.graphics().setDepth(99);f.fillStyle(0xff6600,0.2);f.fillRect(0,0,W,H);this.time.delayedCall(300,()=>f.destroy());this.spawnMinion('et',60,150);}}if(pct<=0.3){e.setTint(0xff8844);if(e.abilityTimer>=4000&&!e.isCharging){e.abilityTimer=0;e.isCharging=true;this.floatText(e.x,e.y-60,'GET BACK HERE!!',0xff2244);const a=Phaser.Math.Angle.Between(e.x,e.y,px,py);e.setVelocity(Math.cos(a)*380,Math.sin(a)*380);this.cameras.main.shake(300,0.012);this.time.delayedCall(1000,()=>{if(!e.dead){e.isCharging=false;e.setVelocity(0,0);}});}}}
+      // Braden perk — enemies occasionally stop to laugh
+      if(this.isBraden&&Math.random()<0.0005&&!e.laughing){const d3=Math.sqrt((px-e.x)**2+(py-e.y)**2);if(d3<120){e.laughing=true;const os3=e.spd;e.spd=0;this.floatText(e.x,e.y-30,'\ud83d\ude02\ud83d\ude02\ud83d\ude02',0xffcc00);this.time.delayedCall(1500,()=>{if(!e.dead){e.spd=os3;e.laughing=false;}});}}
       // ── FRIEND ABILITIES ──
       if(e.etype==='waylon'){const now=this.time.now;if(now-(e.waylonCD||0)>9000){e.waylonCD=now;this.floatText(e.x,e.y-50,'\u26bd RED CARD!!',0x0044ff);const ball=this.add.graphics().setDepth(8);ball.fillStyle(0xffffff,1);ball.fillCircle(0,0,10);ball.x=e.x;ball.y=e.y;const ang=Phaser.Math.Angle.Between(e.x,e.y,px,py);let bvx=Math.cos(ang)*200,bvy=Math.sin(ang)*200,bnc=0;const bt=this.time.addEvent({delay:16,loop:true,callback:()=>{ball.x+=bvx*0.016;ball.y+=bvy*0.016;if(ball.x<0||ball.x>W){bvx*=-1;bnc++;}if(ball.y<0||ball.y>H){bvy*=-1;bnc++;}if(bnc>=3||!ball.scene){bt.destroy();if(ball.scene)ball.destroy();return;}const d2=Math.sqrt((px-ball.x)**2+(py-ball.y)**2);if(d2<20&&this.time.now-this.lastHurtTime>600){this.lastHurtTime=this.time.now;this.hurtPlayer(15);bt.destroy();if(ball.scene)ball.destroy();}}});}}
       if(e.etype==='jack'){const now=this.time.now;if(now-(e.jackCD||0)>12000){e.jackCD=now;this.floatText(e.x,e.y-50,'\ud83d\udcc8 TO THE MOON!!',0x00aa44);const os=e.spd;e.spd=280;this.time.delayedCall(1200,()=>{if(!e.dead)e.spd=os;});}if(now-(e.jackStealCD||0)>3000){const jd=Math.sqrt((px-e.x)**2+(py-e.y)**2);if(jd<50){e.jackStealCD=now;const st=Math.min(20,DTM.getSnacks());if(st>0){DTM.spendSnacks(st);this.floatText(e.x,e.y-40,`-${st} \ud83c\udf55 STOLEN!`,0xff0000);}}}}
@@ -1206,7 +1264,7 @@ class ResultScene extends Phaser.Scene {
 new Phaser.Game({
     type:Phaser.AUTO,width:W,height:H,backgroundColor:'#07070f',dom:{createContainer:true},
     physics:{default:'arcade',arcade:{debug:false,gravity:{y:0}}},
-    scene:[MenuScene,NicknameScene,HubScene,ChapterScene,RoundSelectScene,GameScene,ResultScene,LeaderboardScene,UpgradeScene],
+    scene:[MenuScene,NicknameScene,CharacterSelectScene,HubScene,ChapterScene,RoundSelectScene,GameScene,ResultScene,LeaderboardScene,UpgradeScene],
     scale:{mode:Phaser.Scale.FIT,autoCenter:Phaser.Scale.CENTER_BOTH,width:W,height:H,expandParent:true},
     parent:document.body,
 });

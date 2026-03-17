@@ -727,6 +727,7 @@ class GameScene extends Phaser.Scene {
     this.player.setDisplaySize(90,90).setBodySize(32,32);
     const ch=DTM.getCharacter();const animMap={brody:'brody_idle',waylon:'waylon_run',jack:'jack_walk',joey:'joey_run',braden:'braden_film',peyton:'peyton_snitch'};
     if(ch.sprite&&ch.sprite!=='player')try{this.player.setTexture(ch.sprite);}catch(e){}
+    this.player.setDisplaySize(90,90).setBodySize(32,32);
     const pa=animMap[ch.key]||'brody_idle';if(this.anims.exists(pa))this.player.play(pa);
     this.glow=this.add.graphics().setDepth(9);
     this.playerLabel=this.add.text(0,0,DTM.getCharacter().name||DTM.getName()||'BRODY',{fontFamily:'Orbitron',fontSize:'13px',fontStyle:'bold',color:'#00ffcc',stroke:'#000000',strokeThickness:5}).setDepth(22).setOrigin(0.5,1);
@@ -904,7 +905,7 @@ class GameScene extends Phaser.Scene {
       case 'boss':e.setDisplaySize(110,110);e.setBodySize(40,40);e.play('mama_charge');e.hp=Math.floor(2400*hm);e.spd=50;e.dmg=25;e.gd=15;e.sv=500;e.burstColor=0xff6600;e.chargeDmg=35;
         this.bossOrbs=[0xff9900,0xff4400,0xff2244,0xffdd00].map(c=>{const o=this.add.graphics().setDepth(7);o.fillStyle(c,0.85);o.fillCircle(0,0,6);o.bossRef=e;return o;});break;
       case 'waylon':e.setDisplaySize(90,90);e.setBodySize(32,32);e.hp=Math.floor(500*hm);e.spd=80;e.dmg=12;e.gd=3;e.sv=80;e.burstColor=0x0044ff;if(this.anims.exists('waylon_run'))e.play('waylon_run');e.waylonCD=0;break;
-      case 'jack':e.setDisplaySize(90,90);e.setBodySize(32,32);e.hp=Math.floor(450*hm);e.spd=42;e.dmg=10;e.gd=3;e.sv=90;e.burstColor=0x00aa44;if(this.anims.exists('jack_walk'))e.play('jack_walk');e.jackCD=0;e.jackStealCD=0;break;
+      case 'jack':e.setDisplaySize(90,90);e.setBodySize(32,32);e.hp=Math.floor(350*hm);e.spd=35;e.dmg=8;e.gd=3;e.sv=90;e.burstColor=0x00aa44;if(this.anims.exists('jack_walk'))e.play('jack_walk');e.jackCD=0;e.jackStealCD=0;break;
       case 'joey':e.setDisplaySize(90,90);e.setBodySize(32,32);e.hp=Math.floor(380*hm);e.spd=110;e.dmg=8;e.gd=2;e.sv=70;e.burstColor=0x4444ff;if(this.anims.exists('joey_run'))e.play('joey_run');e.joeyCD=0;e.joeyBurst=false;break;
       case 'braden':e.setDisplaySize(90,90);e.setBodySize(32,32);e.hp=Math.floor(600*hm);e.spd=75;e.dmg=14;e.gd=5;e.sv=200;e.burstColor=0xff6600;if(this.anims.exists('braden_film'))e.play('braden_film');e.bradenLiveCD=0;e.bradenSpawnCD=0;e.bradenLaughCD=0;break;
       case 'brody_villain':e.setTexture('player');e.setDisplaySize(90,90);e.setBodySize(32,32);e.hp=Math.floor(800*hm);e.spd=110;e.dmg=18;e.gd=5;e.sv=150;e.burstColor=0x00ffcc;e.ename='BRODY';if(this.anims.exists('brody_idle'))e.play('brody_idle');e.isBrodyVillain=true;break;
@@ -973,6 +974,7 @@ class GameScene extends Phaser.Scene {
     // Enemy HP regen removed — enemies never heal
     if(this.playerFrozen){this.player.setVelocity(0,0);}else if(this.forcedRun){}else{this.movePlayer();}
     this.autoShoot(time);
+    if(this.hasLaser)this.fireLaser();
     if(this.orbitCnt>0)this.updateOrbits(delta);
     this.updateEnemyAI(time,delta);
     this.updateProjectiles(delta);
@@ -1007,6 +1009,7 @@ class GameScene extends Phaser.Scene {
     const b=this.bullets.create(this.player.x,this.player.y,'bullet').setDepth(8).setDisplaySize(28,12).setFlipX(true);
     b.pdmg=this.pDmg;b.pierce=this.piercing?3:1;b.hits=0;b.hitSet=new Set();
     const ang=Phaser.Math.Angle.Between(this.player.x,this.player.y,t.x,t.y);
+    this.lastAimAngle=ang;
     b.setRotation(ang).setVelocity(Math.cos(ang)*460,Math.sin(ang)*460);
     SFX.play('shoot');
     const f=this.add.graphics().setDepth(11);f.fillStyle(0xffff00,0.75);f.fillCircle(this.player.x,this.player.y,9);
@@ -1164,7 +1167,7 @@ class GameScene extends Phaser.Scene {
     add(this.add.graphics().setDepth(200)).fillStyle(0x000000,0.82).fillRect(0,0,W,H);
     add(this.add.text(W/2,115,'\u26a1 LEVEL UP!',{fontFamily:'Orbitron',fontSize:'28px',color:'#ffcc00',fontStyle:'bold',stroke:'#000',strokeThickness:6}).setDepth(201).setOrigin(0.5));
     add(this.add.text(W/2,153,`LEVEL ${this.pLevel} \u2014 CHOOSE YOUR POWER`,{fontFamily:'Orbitron',fontSize:'11px',color:'#888899',letterSpacing:3}).setDepth(201).setOrigin(0.5));
-    const SKILLS=[{id:'dmg',name:'OVERDRIVE',desc:'+4 Bullet Damage',icon:'\ud83d\udca5',col:0xff4444},{id:'rate',name:'RAPID FIRE',desc:'Fire 120ms Faster',icon:'\u26a1',col:0xffaa00},{id:'spd',name:'AFTERBURN',desc:'+30 Move Speed',icon:'\ud83d\udc5f',col:0x00ccff},{id:'pierce',name:'PENETRATOR',desc:'Bullets Pierce Enemies',icon:'\ud83d\udd31',col:0xcc44ff},{id:'orbit',name:'ORBIT BLADE',desc:'Spinning Blade Weapon',icon:'\ud83c\udf00',col:0x00ff88},{id:'pulse',name:'SHOCKWAVE',desc:'Area Pulse Every 3s',icon:'\ud83d\udcab',col:0xff88ff},{id:'mag',name:'VORTEX',desc:'+60 Snack Pickup Range',icon:'\ud83e\uddf2',col:0xffff44},{id:'regen',name:'NANOBOTS',desc:'+2 HP Regen Per Second',icon:'\u2764\ufe0f',col:0xff6688},{id:'maxhp',name:'FORTIFY',desc:'+25 Max HP + Heal',icon:'\ud83d\udee1\ufe0f',col:0x44aaff}];
+    const SKILLS=[{id:'dmg',name:'OVERDRIVE',desc:'+4 Bullet Damage',icon:'\ud83d\udca5',col:0xff4444},{id:'rate',name:'RAPID FIRE',desc:'Fire 120ms Faster',icon:'\u26a1',col:0xffaa00},{id:'spd',name:'AFTERBURN',desc:'+30 Move Speed',icon:'\ud83d\udc5f',col:0x00ccff},{id:'pierce',name:'PENETRATOR',desc:'Bullets Pierce Enemies',icon:'\ud83d\udd31',col:0xcc44ff},{id:'orbit',name:'ORBIT BLADE',desc:'Spinning Blade Weapon',icon:'\ud83c\udf00',col:0x00ff88},{id:'pulse',name:'SHOCKWAVE',desc:'Area Pulse Every 3s',icon:'\ud83d\udcab',col:0xff88ff},{id:'mag',name:'VORTEX',desc:'+60 Snack Pickup Range',icon:'\ud83e\uddf2',col:0xffff44},{id:'regen',name:'NANOBOTS',desc:'+2 HP Regen Per Second',icon:'\u2764\ufe0f',col:0xff6688},{id:'maxhp',name:'FORTIFY',desc:'+25 Max HP + Heal',icon:'\ud83d\udee1\ufe0f',col:0x44aaff},{id:'laser',name:'LASER BEAM',desc:'Piercing laser every 2.5s (8x dmg)',icon:'\ud83d\udd34',col:0xff0000}];
     const pool=[...SKILLS],chosen=[];for(let i=0;i<3;i++)chosen.push(pool.splice(Phaser.Math.Between(0,pool.length-1),1)[0]);
     const close=(skillId)=>{if(!this.levelUpActive)return;this.levelUpActive=false;if(this._kh){this.input.keyboard.off('keydown',this._kh);this._kh=null;}objs.forEach(o=>{if(o?.scene)try{o.destroy();}catch(e){}});if(skillId)this.applySkill(skillId);this.time.delayedCall(50,()=>{this.paused=false;if(!this.dead)this.physics.resume();});};
     const cW=W-60,cH=140,startY=195;
@@ -1186,9 +1189,20 @@ class GameScene extends Phaser.Scene {
     this.cameras.main.flash(250,0,255,160);
   }
 
-  applySkill(id){switch(id){case'dmg':this.pDmg+=4;break;case'rate':this.fireRate=Math.max(300,this.fireRate-120);break;case'spd':this.pSpeed+=30;break;case'pierce':this.piercing=true;break;case'orbit':this.addOrbit();break;case'pulse':this.hasPulse=true;break;case'mag':this.magnetR+=60;break;case'regen':this.regenRate+=2;break;case'maxhp':this.pMaxHP+=25;this.pHP=Math.min(this.pHP+25,this.pMaxHP);this.updateHP();break;}this.cameras.main.flash(200,0,255,160);}
+  applySkill(id){switch(id){case'dmg':this.pDmg+=4;break;case'rate':this.fireRate=Math.max(300,this.fireRate-120);break;case'spd':this.pSpeed+=30;break;case'pierce':this.piercing=true;break;case'orbit':this.addOrbit();break;case'pulse':this.hasPulse=true;break;case'mag':this.magnetR+=60;break;case'regen':this.regenRate+=2;break;case'maxhp':this.pMaxHP+=25;this.pHP=Math.min(this.pHP+25,this.pMaxHP);this.updateHP();break;case'laser':this.hasLaser=true;this.laserCooldown=0;break;}this.cameras.main.flash(200,0,255,160);}
 
   addOrbit(){this.orbitCnt++;const blade=this.add.sprite(this.player.x,this.player.y,'blade').setDepth(9).setDisplaySize(30,30);blade.orbitR=58;blade.dmg=this.pDmg*0.55;blade.cd={};this.orbitBlades.push(blade);}
+
+  fireLaser(){
+    if(!this.hasLaser)return;const now=this.time.now;if(now-this.laserCooldown<2500)return;this.laserCooldown=now;
+    const ang=this.lastAimAngle||0;const len=W*1.5;
+    const laser=this.add.graphics().setDepth(15);laser.lineStyle(4,0xff0000,1);laser.lineBetween(this.player.x,this.player.y,this.player.x+Math.cos(ang)*len,this.player.y+Math.sin(ang)*len);
+    const glow=this.add.graphics().setDepth(14);glow.lineStyle(12,0xff4444,0.3);glow.lineBetween(this.player.x,this.player.y,this.player.x+Math.cos(ang)*len,this.player.y+Math.sin(ang)*len);
+    SFX.play('shoot');this.cameras.main.shake(100,0.006);
+    const laserDmg=this.pDmg*8;
+    this.enemies.getChildren().forEach(e=>{if(e.dead||!e.active)return;const ex=e.x-this.player.x,ey=e.y-this.player.y;const dot=ex*Math.cos(ang)+ey*Math.sin(ang);const cross=Math.abs(ex*Math.sin(ang)-ey*Math.cos(ang));if(dot>0&&cross<45){e.hp-=laserDmg;this.dmgNum(e.x,e.y-20,laserDmg,'crit');this.spawnHitParticles(e.x,e.y,0xff0000);if(e.hp<=0&&!e.dead)this.killEnemy(e);}});
+    this.tweens.add({targets:[laser,glow],alpha:0,duration:400,onComplete:()=>{if(laser.scene)laser.destroy();if(glow.scene)glow.destroy();}});
+  }
 
   updateOrbits(delta){this.orbitAng+=delta*0.0032;const n=this.orbitBlades.length;this.orbitBlades.forEach((bl,i)=>{const a=this.orbitAng+(i*Math.PI*2/n);bl.x=this.player.x+Math.cos(a)*bl.orbitR;bl.y=this.player.y+Math.sin(a)*bl.orbitR;bl.angle+=8;this.enemies.getChildren().forEach(e=>{if(e.dead||e.invincible)return;const now=Date.now();if(bl.cd[e.uid]&&now-bl.cd[e.uid]<500)return;if(Phaser.Math.Distance.Between(bl.x,bl.y,e.x,e.y)<32){bl.cd[e.uid]=now;e.hp-=bl.dmg;this.dmgNum(e.x,e.y,Math.floor(bl.dmg));if(e.hp<=0)this.killEnemy(e);}});});}
   updateGlow(){this.glow.clear();const p=0.5+0.3*Math.sin(this.time.now*0.005);this.glow.fillStyle(0xff9900,p*0.18);this.glow.fillCircle(this.player.x,this.player.y,24);}

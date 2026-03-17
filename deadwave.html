@@ -254,24 +254,33 @@ class CharacterSelectScene extends Phaser.Scene {
       {key:'braden',sprite:'braden',name:'BRADEN',sub:'Just needs the content.',stats:{speed:160,hp:95,snacks:0},perk:'\ud83d\ude02 Enemies laugh = brief stun',pc:'#ff6600',color:0xff6600,vr:8,vs:'"DELETE THAT VIDEO RIGHT NOW"',vq:'BRO I GOT IT ALL ON CAMERA'},
       {key:'peyton',sprite:'sister',name:'PEYTON',sub:'"I already texted Mom."',stats:{speed:185,hp:90,snacks:0},perk:'\ud83d\udc67 Invincible 2s every 15s',pc:'#cc44ff',color:0xcc44ff,vr:0,vs:'"YOU\'RE SUPPOSED TO BE IN BED!!"',vq:'FINE!! I\'m telling Mom!!'},
     ];
+    const charTapTargets=[];
+    const cardH=110;
     let yPos=75;
     CHARS.forEach(c=>{
-      const colH='#'+c.color.toString(16).padStart(6,'0');const ch=110;
-      const card=this.add.graphics().setDepth(2);card.fillStyle(0x1a1a2e,0.97);card.fillRoundedRect(16,yPos,W-32,ch,10);card.lineStyle(2,c.color,0.7);card.strokeRoundedRect(16,yPos,W-32,ch,10);
-      if(this.textures.exists(c.sprite))this.add.image(60,yPos+ch/2,c.sprite).setDepth(3).setDisplaySize(70,70);
-      else this.add.text(60,yPos+ch/2,c.name[0],{fontFamily:'Orbitron',fontSize:'28px',color:colH,fontStyle:'bold'}).setOrigin(0.5).setDepth(3);
+      const colH='#'+c.color.toString(16).padStart(6,'0');
+      const card=this.add.graphics().setDepth(2);card.fillStyle(0x1a1a2e,0.97);card.fillRoundedRect(16,yPos,W-32,cardH,10);card.lineStyle(2,c.color,0.7);card.strokeRoundedRect(16,yPos,W-32,cardH,10);
+      if(this.textures.exists(c.sprite))this.add.image(60,yPos+cardH/2,c.sprite).setDepth(3).setDisplaySize(70,70);
+      else this.add.text(60,yPos+cardH/2,c.name[0],{fontFamily:'Orbitron',fontSize:'28px',color:colH,fontStyle:'bold'}).setOrigin(0.5).setDepth(3);
       this.add.text(110,yPos+20,c.name,{fontFamily:'Orbitron',fontSize:'18px',color:colH,fontStyle:'bold'}).setOrigin(0,0.5).setDepth(3);
       this.add.text(110,yPos+42,`"${c.sub}"`,{fontFamily:'Orbitron',fontSize:'9px',color:'#888899',fontStyle:'italic',wordWrap:{width:W-145}}).setOrigin(0,0.5).setDepth(3);
       this.add.text(110,yPos+62,`SPD:${c.stats.speed}  HP:${c.stats.hp}${c.stats.snacks>0?' +'+c.stats.snacks+'\ud83c\udf55':''}`,{fontFamily:'Orbitron',fontSize:'10px',color:'#aaaacc'}).setOrigin(0,0.5).setDepth(3);
       this.add.text(110,yPos+82,c.perk,{fontFamily:'Orbitron',fontSize:'10px',color:c.pc,fontStyle:'bold'}).setOrigin(0,0.5).setDepth(3);
       if(c.vr!==null){this.add.text(W-24,yPos+34,'\u26a0\ufe0f BRODY\nBECOMES\nVILLAIN',{fontFamily:'Orbitron',fontSize:'8px',color:'#ff4444',align:'right',lineSpacing:2}).setOrigin(1,0.5).setDepth(3);}
-      const cY=yPos;
-      const zone=this.add.zone(16,yPos,W-32,ch).setOrigin(0,0).setDepth(10).setInteractive({useHandCursor:true});
-      zone.on('pointerover',()=>{card.clear();card.fillStyle(0x2a2a4a,0.97);card.fillRoundedRect(16,cY,W-32,ch,10);card.lineStyle(3,c.color,1);card.strokeRoundedRect(16,cY,W-32,ch,10);});
-      zone.on('pointerout',()=>{card.clear();card.fillStyle(0x1a1a2e,0.97);card.fillRoundedRect(16,cY,W-32,ch,10);card.lineStyle(2,c.color,0.7);card.strokeRoundedRect(16,cY,W-32,ch,10);});
-      zone.on('pointerdown',()=>{localStorage.setItem('dtm_character',JSON.stringify(c));this.cameras.main.flash(300,(c.color>>16)&255,(c.color>>8)&255,c.color&255);this.cameras.main.fadeOut(300,0,0,0);this.time.delayedCall(300,()=>this.scene.start('HubScene'));});
-      yPos+=ch+8;
+      charTapTargets.push({y:yPos,h:cardH,char:c});
+      yPos+=cardH+8;
     });
+    // Scroll setup — camera-based with drag threshold
+    const csTotalH=CHARS.length*(cardH+8)+75;
+    const csVisTop=65,csVisBot=H;
+    const csVisH=csVisBot-csVisTop;
+    const csMaxScroll=Math.max(0,csTotalH-csVisH);
+    let csScroll=0,csPointerDownY=0,csIsDragging=false;
+    const CS_DRAG_THRESHOLD=10;
+    if(csMaxScroll>0){const csListCam=this.cameras.add(0,csVisTop,W,csVisH);csListCam.setBackgroundColor(0x00000000);csListCam.scrollY=0;
+    this.input.on('pointermove',p=>{if(!p.isDown)return;if(Math.abs(p.y-csPointerDownY)>CS_DRAG_THRESHOLD){csIsDragging=true;csScroll=Phaser.Math.Clamp(csScroll+(csPointerDownY-p.y),0,csMaxScroll);csListCam.scrollY=csScroll;csPointerDownY=p.y;}});}
+    this.input.on('pointerdown',p=>{csPointerDownY=p.y;csIsDragging=false;});
+    this.input.on('pointerup',p=>{if(csIsDragging){csIsDragging=false;return;}const adjustedY=p.y-csVisTop+csScroll;charTapTargets.forEach(t=>{if(adjustedY>=t.y&&adjustedY<=t.y+t.h){localStorage.setItem('dtm_character',JSON.stringify(t.char));this.cameras.main.flash(300,(t.char.color>>16)&255,(t.char.color>>8)&255,t.char.color&255);this.cameras.main.fadeOut(300,0,0,0);this.time.delayedCall(300,()=>this.scene.start('HubScene'));}});csIsDragging=false;});
     this.cameras.main.fadeIn(400,0,0,0);
   }
 }
@@ -375,6 +384,7 @@ class ChapterScene extends Phaser.Scene {
     const bestScores=JSON.parse(localStorage.getItem('dtm_best_scores')||'{}');
     const foundKrypto=JSON.parse(localStorage.getItem('dtm_kryptonite_found')||'{}');
     const cardW=W-32,cardH=80;
+    const tapTargets=[];
     let yPos=75;
     ROSTER.forEach((char,idx)=>{
       const isUnlocked=unlocked.includes(idx);
@@ -395,28 +405,26 @@ class ChapterScene extends Phaser.Scene {
         this.add.text(cardW-4,yPos+20,hasKrypto?char.kryptonite.icon+' KNOWN':'\ud83d\udd12 KRYPTONITE',{fontFamily:'Orbitron',fontSize:'9px',color:hasKrypto?'#00ff88':'#555577'}).setOrigin(1,0.5).setDepth(3);
         if(best>0)this.add.text(cardW-4,yPos+40,'BEST: '+best.toLocaleString(),{fontFamily:'Orbitron',fontSize:'9px',color:'#888899'}).setOrigin(1,0.5).setDepth(3);
         if(char.isBoss)this.add.text(cardW-4,yPos+60,'\ud83d\udc51 BOSS',{fontFamily:'Orbitron',fontSize:'10px',color:'#ff6600',fontStyle:'bold'}).setOrigin(1,0.5).setDepth(3);
-        const zone=this.add.zone(16,yPos,cardW,cardH).setOrigin(0,0).setDepth(10).setInteractive({useHandCursor:true});
-        zone.on('pointerover',()=>{card.clear();card.fillStyle(0x2a2a4a,0.97);card.fillRoundedRect(16,yPos,cardW,cardH,8);card.lineStyle(3,char.color,1);card.strokeRoundedRect(16,yPos,cardW,cardH,8);});
-        zone.on('pointerout',()=>{card.clear();card.fillStyle(0x1a1a2e,0.97);card.fillRoundedRect(16,yPos,cardW,cardH,8);card.lineStyle(2,char.color,0.7);card.strokeRoundedRect(16,yPos,cardW,cardH,8);});
-        zone.on('pointerdown',()=>{localStorage.setItem('dtm_opponent',JSON.stringify(char));DTM.setCurrentLevel(idx);this.cameras.main.fadeOut(250,0,0,0);this.time.delayedCall(250,()=>this.scene.start('HubScene'));});
+        tapTargets.push({y:yPos,h:cardH,char,idx});
       }else{
         this.add.text(38,yPos+cardH/2,'\ud83d\udd12',{fontSize:'22px'}).setOrigin(0.5).setDepth(3);
         this.add.text(68,yPos+cardH/2,idx===0?'Play to unlock!':'Beat '+ROSTER[idx-1].name+' to unlock',{fontFamily:'Orbitron',fontSize:'11px',color:'#333344'}).setOrigin(0,0.5).setDepth(3);
       }
       yPos+=cardH+6;
     });
-    // Scroll setup — camera-based like leaderboard
+    // Scroll setup — camera-based with drag threshold
     const totalH=ROSTER.length*(cardH+6)+75;
     const visibleTop=65,visibleBot=H-80;
     const visH=visibleBot-visibleTop;
     const maxScroll=Math.max(0,totalH-visH);
-    let scroll=0,dy0=0,dragging=false;
+    let scroll=0,pointerDownY=0,isDragging=false;
+    const DRAG_THRESHOLD=10;
     const listCam=this.cameras.add(0,visibleTop,W,visH);
     listCam.setBackgroundColor(0x00000000);
     listCam.scrollY=0;
-    this.input.on('pointerdown',p=>{if(p.y<visibleTop||p.y>visibleBot)return;dragging=true;dy0=p.y;});
-    this.input.on('pointermove',p=>{if(!dragging||!p.isDown)return;const delta=dy0-p.y;dy0=p.y;scroll=Phaser.Math.Clamp(scroll+delta,0,maxScroll);listCam.scrollY=scroll;});
-    this.input.on('pointerup',()=>{dragging=false;});
+    this.input.on('pointerdown',p=>{pointerDownY=p.y;isDragging=false;});
+    this.input.on('pointermove',p=>{if(!p.isDown)return;if(Math.abs(p.y-pointerDownY)>DRAG_THRESHOLD){isDragging=true;scroll=Phaser.Math.Clamp(scroll+(pointerDownY-p.y),0,maxScroll);listCam.scrollY=scroll;pointerDownY=p.y;}});
+    this.input.on('pointerup',p=>{if(isDragging){isDragging=false;return;}const adjustedY=p.y-visibleTop+scroll;tapTargets.forEach(t=>{if(adjustedY>=t.y&&adjustedY<=t.y+t.h){localStorage.setItem('dtm_opponent',JSON.stringify(t.char));DTM.setCurrentLevel(t.idx);this.cameras.main.fadeOut(250,0,0,0);this.time.delayedCall(250,()=>this.scene.start('HubScene'));}});isDragging=false;});
     if(maxScroll>0){
       const sbH=Math.max(40,(visH/totalH)*visH);
       const sbTrack=this.add.graphics().setDepth(20).setScrollFactor(0);

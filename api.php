@@ -63,7 +63,7 @@ if ($action === 'leaderboard') {
 
     $bl = implode(',', array_map(fn($n)=>$pdo->quote($n), $BLACKLIST));
     $and = $where ? 'AND' : 'WHERE';
-    $sql = "SELECT player_name, MAX(score) as score, MAX(level_reached) as level_reached, MAX(kills) as kills, MAX(stars) as stars FROM dtm_scores $where $and LOWER(player_name) NOT IN ($bl) GROUP BY player_name ORDER BY score DESC LIMIT 20";
+    $sql = "SELECT player_name, MAX(score) as score, MAX(level_reached) as level_reached, MAX(kills) as kills, MAX(stars) as stars FROM dtm_scores $where $and LOWER(player_name) NOT IN ($bl) GROUP BY player_name ORDER BY score DESC";
     $rows = $pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC);
     echo json_encode(['success'=>true,'scores'=>$rows]);
     exit;

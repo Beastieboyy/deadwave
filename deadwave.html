@@ -170,6 +170,9 @@ class MenuScene extends Phaser.Scene {
     this.tweens.add({targets:btn,alpha:0.25,duration:700,yoyo:true,repeat:-1});
     const start=()=>{this.cameras.main.fadeOut(400,0,0,0);this.time.delayedCall(400,()=>this.scene.start('NicknameScene'));};
     btn.on('pointerdown',start);this.input.keyboard.once('keydown',start);
+    const joinBtn=this.add.text(W/2,H-160,'\ud83c\udfae WANT TO BE IN THE GAME?',{fontFamily:'Orbitron',fontSize:'12px',color:'#ff9900',fontStyle:'bold',stroke:'#000',strokeThickness:3}).setOrigin(0.5).setDepth(10).setInteractive({useHandCursor:true});
+    this.add.text(W/2,H-138,'getpulsepos.com/pantherprowl',{fontFamily:'Orbitron',fontSize:'10px',color:'#888899'}).setOrigin(0.5).setDepth(10);
+    joinBtn.on('pointerdown',()=>{window.open('https://getpulsepos.com/pantherprowl','_blank');});
     this.add.text(W/2,H-50,'Drag left side to move\nAuto-throws homework  •  Pick powers on level up',{fontFamily:'Orbitron',fontSize:'8px',color:'#444466',align:'center'}).setOrigin(0.5);
     this.add.text(W/2,H-18,'"based on true events in Nappanee, IN"',{fontFamily:'Orbitron',fontSize:'8px',color:'#333344',fontStyle:'italic'}).setOrigin(0.5);
     const bg2=this.add.graphics().setDepth(1);[[0,0],[W,0],[0,H],[W,H]].forEach(([cx,cy])=>{bg2.lineStyle(2,0xff9900,0.25);const sx=cx===0?1:-1,sy=cy===0?1:-1;bg2.lineBetween(cx,cy,cx+sx*40,cy);bg2.lineBetween(cx,cy,cx,cy+sy*40);});
@@ -450,7 +453,7 @@ class LeaderboardScene extends Phaser.Scene {
     });
     this._lbObjs=[];
     const loadBoard=async(period)=>{
-      this._lbObjs.forEach(o=>{if(o?.scene)try{o.destroy();}catch(e){}});this._lbObjs=[];if(this._lbScrollTimer){this._lbScrollTimer.destroy();this._lbScrollTimer=null;}this.input.removeAllListeners('pointerdown');this.input.removeAllListeners('pointermove');
+      this._lbObjs.forEach(o=>{if(o?.scene)try{o.destroy();}catch(e){}});this._lbObjs=[];if(this._lbScrollTimer){this._lbScrollTimer.destroy();this._lbScrollTimer=null;}if(this._lbCam){this.cameras.remove(this._lbCam);this._lbCam=null;}this.input.removeAllListeners('pointerdown');this.input.removeAllListeners('pointermove');this.input.removeAllListeners('pointerup');
       const loadTxt=this.add.text(W/2,H/2,'\u23f3 Loading...',{fontFamily:'Orbitron',fontSize:'16px',color:'#888899'}).setOrigin(0.5).setDepth(10);
       this._lbObjs.push(loadTxt);
       let data=null,fetchErr=null;
@@ -460,35 +463,42 @@ class LeaderboardScene extends Phaser.Scene {
       const scores=data?.scores||[];
       if(scores.length===0){const t1=this.add.text(W/2,H/2-40,'\ud83c\udfc6',{fontSize:'48px'}).setOrigin(0.5).setDepth(10);const t2=this.add.text(W/2,H/2+20,'No scores yet!\nBe the FIRST on the\nNorthwood Snitch List!',{fontFamily:'Orbitron',fontSize:'14px',color:'#ff9900',align:'center',lineSpacing:8}).setOrigin(0.5).setDepth(10);this._lbObjs.push(t1,t2);return;}
       const myName=(DTM.getName()||'').toLowerCase();let myRank=-1;const LW=DTM.W;
-      const rowContainer=this.add.container(0,0);this._lbObjs.push(rowContainer);
-      const rowH=54;const startY=105;
+      const rowH=54;const startY=100;const padBot=135;
+      let scrollY=0,dragY0=0,dragging=false;
+      const maxScroll=Math.max(0,scores.length*rowH-(H-startY-padBot));
+      const rowObjs=[];
       scores.forEach((s,i)=>{
-        const y=startY+i*rowH;const isMe=(s.player_name||'').toLowerCase()===myName;if(isMe)myRank=i+1;
-        const rb=this.add.graphics().setDepth(5);rb.fillStyle(isMe?0x2a1a00:i%2===0?0x0d0d1a:0x111122,1);rb.fillRoundedRect(12,y,LW-24,rowH-4,6);
-        if(isMe){rb.lineStyle(2,0xff9900,1);rb.strokeRoundedRect(12,y,LW-24,rowH-4,6);}
+        const baseY=startY+i*rowH;const isMe=(s.player_name||'').toLowerCase()===myName;if(isMe)myRank=i+1;
         const rc=i===0?'#ffd700':i===1?'#c0c0c0':i===2?'#cd7f32':'#ffffff';
         const nm=(s.player_name||'???').toUpperCase().substring(0,14);
         const sc=parseInt(s.score||0).toLocaleString();
-        const t1=this.add.text(30,y+14,`#${i+1}`,{fontFamily:'Orbitron',fontSize:'14px',color:rc,fontStyle:'bold'}).setOrigin(0,0.5).setDepth(6);
-        const t2=this.add.text(68,y+12,nm,{fontFamily:'Orbitron',fontSize:'12px',color:isMe?'#ff9900':'#ffffff'}).setOrigin(0,0.5).setDepth(6);
-        const t3=this.add.text(68,y+30,`Night ${s.level_reached||1}`,{fontFamily:'Orbitron',fontSize:'10px',color:'#666688'}).setOrigin(0,0.5).setDepth(6);
-        const t4=this.add.text(LW-16,y+20,sc,{fontFamily:'Orbitron',fontSize:'14px',color:'#ff9900',fontStyle:'bold'}).setOrigin(1,0.5).setDepth(6);
-        rowContainer.add([rb,t1,t2,t3,t4]);
+        const bg=this.add.graphics().setDepth(5);bg.fillStyle(isMe?0x2a1a00:i%2===0?0x0d0d1a:0x111122,1);bg.fillRoundedRect(12,baseY,LW-24,rowH-4,6);
+        if(isMe){bg.lineStyle(2,0xff9900,1);bg.strokeRoundedRect(12,baseY,LW-24,rowH-4,6);}
+        bg._color=isMe?0x2a1a00:i%2===0?0x0d0d1a:0x111122;bg._isMe=isMe;
+        const t1=this.add.text(30,baseY+14,`#${i+1}`,{fontFamily:'Orbitron',fontSize:'14px',color:rc,fontStyle:'bold'}).setOrigin(0,0.5).setDepth(6);
+        const t2=this.add.text(68,baseY+12,nm,{fontFamily:'Orbitron',fontSize:'12px',color:isMe?'#ff9900':'#ffffff'}).setOrigin(0,0.5).setDepth(6);
+        const t3=this.add.text(68,baseY+30,`Night ${s.level_reached||1}`,{fontFamily:'Orbitron',fontSize:'10px',color:'#666688'}).setOrigin(0,0.5).setDepth(6);
+        const t4=this.add.text(LW-16,baseY+20,sc,{fontFamily:'Orbitron',fontSize:'14px',color:'#ff9900',fontStyle:'bold'}).setOrigin(1,0.5).setDepth(6);
+        rowObjs.push({bg,t1,t2,t3,t4,baseY});
+        this._lbObjs.push(bg,t1,t2,t3,t4);
       });
-      const visibleTop=95;const visibleBottom=H-130;const visibleH=visibleBottom-visibleTop;
-      const totalH=scores.length*rowH+10;const maxScroll=Math.max(0,totalH-visibleH);
-      let dragStartY=0,dragStartScroll=0,currentScroll=0;
-      const mask=this.add.graphics();mask.fillStyle(0xffffff);mask.fillRect(0,visibleTop,LW,visibleH);this._lbObjs.push(mask);
-      rowContainer.setMask(new Phaser.Display.Masks.GeometryMask(this,mask));rowContainer.y=visibleTop;
-      this.input.on('pointerdown',p=>{dragStartY=p.y;dragStartScroll=currentScroll;});
-      this.input.on('pointermove',p=>{if(!p.isDown)return;const delta=dragStartY-p.y;currentScroll=Phaser.Math.Clamp(dragStartScroll+delta,0,maxScroll);rowContainer.y=visibleTop-currentScroll;});
+      // Dedicated camera for scrollable list area
+      const listCam=this.cameras.add(0,startY,LW,H-startY-padBot);listCam.setBackgroundColor(0x00000000);listCam.scrollY=0;this._lbCam=listCam;
+      // Row objects only visible on listCam, hidden from main camera
+      rowObjs.forEach(r=>[r.bg,r.t1,r.t2,r.t3,r.t4].forEach(o=>{if(o?.cameraFilter!==undefined)o.cameraFilter|=this.cameras.main.id;}));
+      // Drag to scroll
+      this.input.on('pointerdown',p=>{if(p.y<startY||p.y>H-padBot)return;dragging=true;dragY0=p.y;});
+      this.input.on('pointermove',p=>{if(!dragging||!p.isDown)return;const delta=dragY0-p.y;dragY0=p.y;listCam.scrollY=Phaser.Math.Clamp(listCam.scrollY+delta,0,maxScroll);});
+      this.input.on('pointerup',()=>{dragging=false;});
+      // Scrollbar
       if(maxScroll>0){
-        const sbH=Math.max(40,(visibleH/totalH)*visibleH);
-        const sbBg=this.add.graphics().setDepth(20);sbBg.fillStyle(0x222233,0.8);sbBg.fillRoundedRect(LW-8,visibleTop,5,visibleH,3);this._lbObjs.push(sbBg);
-        const sbThumb=this.add.graphics().setDepth(21);this._lbObjs.push(sbThumb);
-        this._lbScrollTimer=this.time.addEvent({delay:16,loop:true,callback:()=>{const pct=maxScroll>0?currentScroll/maxScroll:0;const sbY=visibleTop+pct*(visibleH-sbH);sbThumb.clear();sbThumb.fillStyle(0xff9900,0.8);sbThumb.fillRoundedRect(LW-8,sbY,5,sbH,3);}});
+        const sbH=Math.max(40,((H-startY-padBot)/(scores.length*rowH))*(H-startY-padBot));
+        const sbTrack=this.add.graphics().setDepth(25).setScrollFactor(0);sbTrack.fillStyle(0x222233,0.8);sbTrack.fillRoundedRect(LW-8,startY,5,H-startY-padBot,3);this._lbObjs.push(sbTrack);
+        const sbThumb=this.add.graphics().setDepth(26).setScrollFactor(0);this._lbObjs.push(sbThumb);
+        this._lbScrollTimer=this.time.addEvent({delay:16,loop:true,callback:()=>{if(!sbThumb.scene)return;const pct=maxScroll>0?listCam.scrollY/maxScroll:0;const sbY=startY+pct*(H-startY-padBot-sbH);sbThumb.clear();sbThumb.fillStyle(0xff9900,0.9);sbThumb.fillRoundedRect(LW-8,sbY,5,sbH,3);}});
       }
-      if(myRank>0){const pb=this.add.graphics().setDepth(20);pb.fillStyle(0x1a0d00,0.97);pb.fillRect(0,H-128,LW,48);pb.lineStyle(1,0xff9900,0.5);pb.lineBetween(0,H-128,LW,H-128);this._lbObjs.push(pb);this._lbObjs.push(this.add.text(LW/2,H-104,`\ud83d\udc3e YOU: #${myRank} \u00b7 ${DTM.getName().toUpperCase()}`,{fontFamily:'Orbitron',fontSize:'13px',color:'#ff9900',fontStyle:'bold'}).setOrigin(0.5).setDepth(21));}
+      // Your rank pinned at bottom
+      if(myRank>0){const pb=this.add.graphics().setDepth(24).setScrollFactor(0);pb.fillStyle(0x1a0d00,0.97);pb.fillRect(0,H-padBot,LW,48);pb.lineStyle(1,0xff9900,0.5);pb.lineBetween(0,H-padBot,LW,H-padBot);this._lbObjs.push(pb);this._lbObjs.push(this.add.text(LW/2,H-padBot+24,`\ud83d\udc3e YOU: #${myRank} \u00b7 ${DTM.getName().toUpperCase()}`,{fontFamily:'Orbitron',fontSize:'13px',color:'#ff9900',fontStyle:'bold'}).setOrigin(0.5).setDepth(25).setScrollFactor(0));}
     };
     loadBoard('all');
     this.time.addEvent({delay:30000,callback:()=>loadBoard(activePeriod),loop:true});

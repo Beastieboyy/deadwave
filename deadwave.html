@@ -149,6 +149,20 @@ const GEAR_DEFS={backpack:{slot:'backpack',icon:'\ud83c\udf92',name:'BACKPACK',s
 const RARITIES=[{name:'BEAT UP',color:0x888888,mult:1.0},{name:'DECENT',color:0x00aa44,mult:1.4},{name:'FRESH',color:0x4488ff,mult:1.9},{name:'DRIP',color:0xaa44ff,mult:2.6},{name:'HEAT',color:0xffaa00,mult:3.5},{name:'NORTHWOOD LEGEND',color:0xff2244,mult:5.0}];
 const GEAR_STAT_BASE={dmg:4,maxhp:20,magnet:40,speed:15,firerate:80,crit:0.05};
 
+const ROSTER = [
+  {key:'sister',name:'PEYTON',icon:'\ud83d\udc67',sub:'"I already texted Mom."',difficulty:2,color:0xcc44ff,kryptonite:{id:'moms_phone',icon:'\ud83d\udcf5',name:"MOM'S PHONE",desc:'Silences her — no invincibility, no backup calls',effect:'silence',duration:5000},speech:'"BRODY. I SAW THAT."',deathQuip:'FINE!! Telling in the morning!!',location:"Brody's Bedroom Window",bg:'bg_house'},
+  {key:'ew',name:'NOSEY NEIGHBOR',icon:'\u2615',sub:'"Rodney\'s porch light just came on."',difficulty:2,color:0x888888,kryptonite:{id:'melatonin',icon:'\ud83d\udca4',name:'MELATONIN',desc:'Falls asleep — frozen 5s, stumbles after',effect:'sleep',duration:5000},speech:'"HEY! I SEE YOU OUT THERE!"',deathQuip:"I'm calling the HOA!!",location:'The Front Yard',bg:'bg_street'},
+  {key:'joey',name:'JOEY',icon:'\ud83c\udfc3',sub:'"Watch my form. I\'m literally fast."',difficulty:3,color:0x4444ff,kryptonite:{id:'banana_peel',icon:'\ud83c\udf4c',name:'BANANA PEEL',desc:'Instant cramp — frozen 4s then half speed',effect:'cramp',duration:4000},speech:'"WATCH MY FORM!!"',deathQuip:'I let you win. Saving energy.',location:'The Sidewalk',bg:'bg_street'},
+  {key:'waylon',name:'WAYLON',icon:'\u26bd',sub:'"He brought the soccer ball. Of course."',difficulty:3,color:0x0044ff,kryptonite:{id:'red_card',icon:'\ud83d\udfe5',name:'RED CARD',desc:'Ejected! Stunned 5s, no soccer balls',effect:'ejected',duration:5000},speech:'"YOU WERE SUPPOSED TO PASS!!"',deathQuip:"That's a foul!! Calling VAR!!",location:'The Street',bg:'bg_street'},
+  {key:'jack',name:'JACK',icon:'\ud83d\udcc8',sub:'"The market never sleeps."',difficulty:3,color:0x00aa44,kryptonite:{id:'market_crash',icon:'\ud83d\udcc9',name:'MARKET CRASH',desc:'Panic mode — runs AWAY from you for 5s',effect:'panic',duration:5000},speech:'"THIS INCREASES NEIGHBORHOOD RISK INDEX"',deathQuip:'This is just a dip!! HODLING!!',location:'Main St Roasters',bg:'bg_roasters'},
+  {key:'ef',name:'KAREN',icon:'\ud83d\udccb',sub:'"Karen patrols at 3am. Voluntarily."',difficulty:3,color:0xff8800,kryptonite:{id:'hall_pass',icon:'\ud83d\udcdd',name:'HALL PASS',desc:'She has to let you go — frozen 4s in confusion',effect:'confused',duration:4000},speech:'"EXCUSE ME. DO YOU HAVE A PASS?"',deathQuip:'DETENTION!! Whenever school starts!!',location:'Northwood Hallway',bg:'bg_school'},
+  {key:'es',name:'MRS. STEINER',icon:'\ud83d\udcda',sub:'"Grading papers at 3am. On a Friday."',difficulty:4,color:0x4444aa,kryptonite:{id:'extra_credit',icon:'\u270f\ufe0f',name:'EXTRA CREDIT',desc:'Distracted grading — stops moving, vulnerable 5s',effect:'grading',duration:5000},speech:'"I HOPE YOU STUDIED, BRODY."',deathQuip:'F MINUS!! See me after class!!',location:'Northwood Math Wing',bg:'bg_school'},
+  {key:'coach',name:'COACH ANDREWS',icon:'\ud83c\udfc8',sub:'"He was already running drills. At 3am."',difficulty:4,color:0x4488ff,kryptonite:{id:'air_horn',icon:'\ud83d\udcef',name:'AIR HORN',desc:'Startled — runs wrong direction 4s',effect:'startled',duration:4000},speech:'"SON. DROP AND GIVE ME 20."',deathQuip:'SEE YOU AT 6AM MONDAY!! SUICIDES!!',location:'Northwood Football Field',bg:'bg_school'},
+  {key:'et',name:'MR. BERG',icon:'\ud83c\udf93',sub:'"The VP never actually leaves school property."',difficulty:4,color:0xff0000,kryptonite:{id:'parent_call',icon:'\ud83d\udcde',name:'PARENT CALL',desc:'Has to take the call — frozen on phone 5s',effect:'phone_call',duration:5000},speech:'"MY OFFICE. NOW."',deathQuip:'THIS GOES ON YOUR PERMANENT RECORD!!',location:'Main St Roasters',bg:'bg_roasters'},
+  {key:'braden',name:'BRADEN',icon:'\ud83d\ude02',sub:'"Bro I just need the content."',difficulty:4,color:0xff6600,kryptonite:{id:'dead_battery',icon:'\ud83d\udd0b',name:'DEAD BATTERY',desc:'Phone dies — loses ALL special abilities',effect:'no_phone',duration:8000},speech:'"BRO I JUST NEED THE CONTENT"',deathQuip:'BRO I GOT IT ALL ON CAMERA THOUGH \ud83d\ude02',location:'The Streets',bg:'bg_street'},
+  {key:'boss',name:'MAMA',icon:'\ud83d\udc69',sub:'"Peyton woke her up. Obviously."',difficulty:5,color:0xff6600,isBoss:true,kryptonite:{id:'sleep_mask',icon:'\ud83d\udecf\ufe0f',name:'SLEEP MASK',desc:'Thinks you\'re in bed — confused 3s, half damage',effect:'confused_mama',duration:3000},speech:'"WHERE. HAVE. YOU. BEEN."',deathQuip:"...we'll talk about this tomorrow.",location:"Brody's Front Door",bg:'bg_house'},
+];
+
 // ─────────────────────────────────────────────────
 // MENU SCENE
 // ─────────────────────────────────────────────────
@@ -308,10 +322,15 @@ class HubScene extends Phaser.Scene {
     const starStr='\u2b50'.repeat(levelStars)+'\u2606'.repeat(3-levelStars);
     this.add.text(W/2,220,starStr,{fontSize:'28px'}).setOrigin(0.5);
     if(levelStars>0)this.add.text(W/2,260,'CLEARED \u2713',{fontFamily:'Orbitron',fontSize:'12px',color:'#00ff88'}).setOrigin(0.5);
-    // Enemies preview text
-    const allowed=DTM.enemiesForLevel(level);
-    const eNames=allowed.map(k=>ENAMES[k]||k).join(' \u2022 ');
-    this.add.text(W/2,295,eNames,{fontFamily:'Orbitron',fontSize:'9px',color:'#666688',wordWrap:{width:W-60},align:'center'}).setOrigin(0.5);
+    // Current opponent info
+    const opp=JSON.parse(localStorage.getItem('dtm_opponent')||'null')||ROSTER[0];
+    const oppCol='#'+opp.color.toString(16).padStart(6,'0');
+    this.add.text(W/2,240,'TONIGHT\'S TARGET:',{fontFamily:'Orbitron',fontSize:'11px',color:'#888899'}).setOrigin(0.5);
+    this.add.text(W/2,265,opp.icon+'  '+opp.name,{fontFamily:'Orbitron',fontSize:'20px',color:oppCol,fontStyle:'bold'}).setOrigin(0.5);
+    this.add.text(W/2,293,opp.sub,{fontFamily:'Orbitron',fontSize:'10px',color:'#888899',fontStyle:'italic'}).setOrigin(0.5);
+    const found=JSON.parse(localStorage.getItem('dtm_kryptonite_found')||'{}');
+    const kryptoTxt=found[opp.key]?opp.kryptonite.icon+' '+opp.kryptonite.name+': '+opp.kryptonite.desc:'\ud83d\udd12 Find their kryptonite... (8% drop chance)';
+    this.add.text(W/2,318,kryptoTxt,{fontFamily:'Orbitron',fontSize:'9px',color:found[opp.key]?'#ffcc00':'#555577',fontStyle:found[opp.key]?'bold':'normal',wordWrap:{width:W-40},align:'center'}).setOrigin(0.5);
     // Buttons
     const lockerBtn=DTM.makeBtn(this,16,415,(W-40)/2,56,'\ud83d\udd12 LOCKER',0x1a1a2e);
     lockerBtn.text.setColor('#ff9900');lockerBtn.bg.on('pointerdown',()=>{this.cameras.main.fadeOut(250,0,0,0);this.time.delayedCall(250,()=>this.scene.start('UpgradeScene'));});
@@ -345,48 +364,57 @@ class HubScene extends Phaser.Scene {
 class ChapterScene extends Phaser.Scene {
   constructor(){super('ChapterScene');}
   create(){
-    try{const n=(DTM.getName()||'').toLowerCase().trim(),p=(localStorage.getItem('dtm_pin')||'').trim();if(n==='vince'&&p==='8675')localStorage.setItem('dtm_unlocked',JSON.stringify([1,2,3,4,5,6,7,8,9,10]));}catch(e){}
+    try{const n=(DTM.getName()||'').toLowerCase().trim(),p=(localStorage.getItem('dtm_pin')||'').trim();if(n==='vince'&&p==='8675')localStorage.setItem('dtm_unlocked',JSON.stringify(ROSTER.map((_,i)=>i)));}catch(e){}
     DTM.makeBG(this);
-    const unlocked=DTM.getUnlocked(),stars=DTM.getStars();
-    const hg=this.add.graphics();hg.fillStyle(0x0d0d0d,0.95);hg.fillRect(0,0,W,60);hg.lineStyle(2,0xff9900,0.4);hg.lineBetween(0,60,W,60);
-    this.add.text(W/2,30,'\ud83c\udf19 SELECT YOUR NIGHT',{fontFamily:'Orbitron',fontSize:'16px',color:'#ff9900',fontStyle:'bold'}).setOrigin(0.5);
-    const back=this.add.text(16,30,'\u2039 BACK',{fontFamily:'Orbitron',fontSize:'13px',color:'#888899'}).setOrigin(0,0.5).setInteractive({useHandCursor:true});
+    const hg=this.add.graphics();hg.fillStyle(0x0d0d0d,0.97);hg.fillRect(0,0,W,65);hg.lineStyle(2,0xff9900,0.4);hg.lineBetween(0,65,W,65);
+    this.add.text(W/2,22,'\ud83d\udc3e CHOOSE YOUR OPPONENT',{fontFamily:'Orbitron',fontSize:'15px',color:'#ff9900',fontStyle:'bold'}).setOrigin(0.5);
+    this.add.text(W/2,46,'Who are you sneaking past tonight?',{fontFamily:'Orbitron',fontSize:'10px',color:'#888899'}).setOrigin(0.5);
+    const back=this.add.text(16,33,'\u2039 BACK',{fontFamily:'Orbitron',fontSize:'13px',color:'#888899'}).setOrigin(0,0.5).setInteractive({useHandCursor:true});
     back.on('pointerdown',()=>{this.cameras.main.fadeOut(250,0,0,0);this.time.delayedCall(250,()=>this.scene.start('HubScene'));});
-    const NIGHTS=[
-      {n:1,name:'NIGHT ONE',sub:"Brody's first escape attempt",diff:'EASY',dc:'#00ff88'},
-      {n:2,name:'NIGHT TWO',sub:'The neighbor upgraded his glasses',diff:'EASY',dc:'#00ff88'},
-      {n:3,name:'NIGHT THREE',sub:'Karen has a new clipboard',diff:'MEDIUM',dc:'#ffcc00'},
-      {n:4,name:'NIGHT FOUR',sub:'Steiner assigned extra homework',diff:'MEDIUM',dc:'#ffcc00'},
-      {n:5,name:'NIGHT FIVE',sub:'Coach added Saturday practice',diff:'MEDIUM',dc:'#ffcc00'},
-      {n:6,name:'NIGHT SIX',sub:'Berg called a staff meeting',diff:'HARD',dc:'#ff8800'},
-      {n:7,name:'NIGHT SEVEN',sub:'Peyton got a new phone plan',diff:'HARD',dc:'#ff8800'},
-      {n:8,name:'NIGHT EIGHT',sub:'Everyone has your schedule',diff:'HARD',dc:'#ff8800'},
-      {n:9,name:'NIGHT NINE',sub:'They formed an official committee',diff:'EXPERT',dc:'#ff4400'},
-      {n:10,name:'NIGHT TEN',sub:'Mama found the search history',diff:'INSANE',dc:'#ff0044'},
-    ];
+    const unlocked=JSON.parse(localStorage.getItem('dtm_unlocked')||'[0]');
+    const bestScores=JSON.parse(localStorage.getItem('dtm_best_scores')||'{}');
+    const foundKrypto=JSON.parse(localStorage.getItem('dtm_kryptonite_found')||'{}');
+    const cardW=W-32,cardH=80;
+    const container=this.add.container(0,0).setDepth(5);
     let yPos=75;
-    NIGHTS.forEach(ni=>{
-      const isU=unlocked.includes(ni.n),ns=stars[ni.n]||0,isSel=DTM.getCurrentLevel()===ni.n;const cY=yPos;
-      const card=this.add.graphics().setDepth(2);
-      if(isU){
-        card.fillStyle(isSel?0x2a1a00:0x1a1a2e,0.95);card.fillRoundedRect(16,cY,W-32,68,8);card.lineStyle(isSel?3:1,isSel?0xff9900:0x333355,1);card.strokeRoundedRect(16,cY,W-32,68,8);
-        this.add.text(36,cY+20,`NIGHT ${ni.n}`,{fontFamily:'Orbitron',fontSize:'16px',color:isSel?'#ff9900':'#ffffff',fontStyle:'bold'}).setOrigin(0,0.5).setDepth(3);
-        this.add.text(36,cY+46,`"${ni.sub}"`,{fontFamily:'Orbitron',fontSize:'10px',color:'#888899',fontStyle:'italic'}).setOrigin(0,0.5).setDepth(3);
-        this.add.text(W-24,cY+18,ni.diff,{fontFamily:'Orbitron',fontSize:'11px',color:ni.dc,fontStyle:'bold'}).setOrigin(1,0.5).setDepth(3);
-        const ss=ns>0?'\u2b50'.repeat(ns)+'\u2606'.repeat(3-ns):'\u2606\u2606\u2606';
-        this.add.text(W-24,cY+48,ss,{fontSize:'12px'}).setOrigin(1,0.5).setDepth(3);
-        if(isSel)this.add.text(36,cY+34,'\u25b6',{fontFamily:'Orbitron',fontSize:'14px',color:'#ff9900'}).setOrigin(0,0.5).setDepth(3);
-        const zone=this.add.zone(16,cY,W-32,68).setOrigin(0,0).setDepth(10).setInteractive({useHandCursor:true});
-        zone.on('pointerover',()=>{card.clear();card.fillStyle(0x2a2a4a,0.95);card.fillRoundedRect(16,cY,W-32,68,8);card.lineStyle(2,0xff9900,0.6);card.strokeRoundedRect(16,cY,W-32,68,8);});
-        zone.on('pointerout',()=>{card.clear();card.fillStyle(isSel?0x2a1a00:0x1a1a2e,0.95);card.fillRoundedRect(16,cY,W-32,68,8);card.lineStyle(isSel?3:1,isSel?0xff9900:0x333355,1);card.strokeRoundedRect(16,cY,W-32,68,8);});
-        zone.on('pointerdown',()=>{DTM.setCurrentLevel(ni.n);this.cameras.main.fadeOut(200,0,0,0);this.time.delayedCall(200,()=>this.scene.start('HubScene'));});
+    ROSTER.forEach((char,idx)=>{
+      const isUnlocked=unlocked.includes(idx);
+      const best=bestScores[char.key]||0;
+      const hasKrypto=foundKrypto[char.key]||false;
+      const colHex='#'+char.color.toString(16).padStart(6,'0');
+      const card=this.add.graphics();
+      card.fillStyle(isUnlocked?0x1a1a2e:0x0a0a0a,0.97);
+      card.fillRoundedRect(16,yPos,cardW,cardH,8);
+      card.lineStyle(isUnlocked?2:1,isUnlocked?char.color:0x1a1a1a,isUnlocked?0.7:0.3);
+      card.strokeRoundedRect(16,yPos,cardW,cardH,8);
+      container.add(card);
+      if(isUnlocked){
+        container.add(this.add.text(38,yPos+cardH/2,char.icon,{fontSize:'28px'}).setOrigin(0.5));
+        container.add(this.add.text(68,yPos+20,char.name,{fontFamily:'Orbitron',fontSize:'14px',color:colHex,fontStyle:'bold'}).setOrigin(0,0.5));
+        container.add(this.add.text(68,yPos+40,char.sub,{fontFamily:'Orbitron',fontSize:'9px',color:'#888899',fontStyle:'italic',wordWrap:{width:cardW-160}}).setOrigin(0,0.5));
+        const stars='\u2605'.repeat(char.difficulty)+'\u2606'.repeat(5-char.difficulty);
+        container.add(this.add.text(68,yPos+60,stars,{fontSize:'12px',color:'#ff9900'}).setOrigin(0,0.5));
+        container.add(this.add.text(cardW-4,yPos+20,hasKrypto?char.kryptonite.icon+' KNOWN':'\ud83d\udd12 KRYPTONITE',{fontFamily:'Orbitron',fontSize:'9px',color:hasKrypto?'#00ff88':'#555577'}).setOrigin(1,0.5));
+        if(best>0)container.add(this.add.text(cardW-4,yPos+40,'BEST: '+best.toLocaleString(),{fontFamily:'Orbitron',fontSize:'9px',color:'#888899'}).setOrigin(1,0.5));
+        if(char.isBoss)container.add(this.add.text(cardW-4,yPos+60,'\ud83d\udc51 BOSS',{fontFamily:'Orbitron',fontSize:'10px',color:'#ff6600',fontStyle:'bold'}).setOrigin(1,0.5));
+        const zone=this.add.zone(16,yPos,cardW,cardH).setOrigin(0,0).setInteractive({useHandCursor:true});
+        container.add(zone);
+        zone.on('pointerover',()=>{card.clear();card.fillStyle(0x2a2a4a,0.97);card.fillRoundedRect(16,yPos,cardW,cardH,8);card.lineStyle(3,char.color,1);card.strokeRoundedRect(16,yPos,cardW,cardH,8);});
+        zone.on('pointerout',()=>{card.clear();card.fillStyle(0x1a1a2e,0.97);card.fillRoundedRect(16,yPos,cardW,cardH,8);card.lineStyle(2,char.color,0.7);card.strokeRoundedRect(16,yPos,cardW,cardH,8);});
+        zone.on('pointerdown',()=>{localStorage.setItem('dtm_opponent',JSON.stringify(char));DTM.setCurrentLevel(idx);this.cameras.main.fadeOut(250,0,0,0);this.time.delayedCall(250,()=>this.scene.start('HubScene'));});
       }else{
-        card.fillStyle(0x0a0a0a,0.95);card.fillRoundedRect(16,cY,W-32,68,8);card.lineStyle(1,0x1a1a1a,1);card.strokeRoundedRect(16,cY,W-32,68,8);
-        this.add.text(W/2,cY+24,`\ud83d\udd12  NIGHT ${ni.n}`,{fontFamily:'Orbitron',fontSize:'15px',color:'#333344',fontStyle:'bold'}).setOrigin(0.5).setDepth(3);
-        this.add.text(W/2,cY+46,ni.n===1?'Play to unlock!':`Complete Night ${ni.n-1} to unlock`,{fontFamily:'Orbitron',fontSize:'10px',color:'#222233'}).setOrigin(0.5).setDepth(3);
+        container.add(this.add.text(38,yPos+cardH/2,'\ud83d\udd12',{fontSize:'22px'}).setOrigin(0.5));
+        container.add(this.add.text(68,yPos+cardH/2,idx===0?'Play to unlock!':'Beat '+ROSTER[idx-1].name+' to unlock',{fontFamily:'Orbitron',fontSize:'11px',color:'#333344'}).setOrigin(0,0.5));
       }
-      yPos+=76;
+      yPos+=cardH+6;
     });
+    const totalH=ROSTER.length*(cardH+6);
+    const visH=H-65-80;
+    const maxScroll=Math.max(0,totalH-visH);
+    let scroll=0,dy0=0,dragging=false;
+    this.input.on('pointerdown',p=>{if(p.y<65||p.y>H-80)return;dragging=true;dy0=p.y;});
+    this.input.on('pointermove',p=>{if(!dragging||!p.isDown)return;const diff=dy0-p.y;scroll=Phaser.Math.Clamp(scroll+diff,0,maxScroll);dy0=p.y;container.y=-scroll;});
+    this.input.on('pointerup',()=>dragging=false);
     DTM.bottomNav(this,'chapter');this.cameras.main.fadeIn(350,0,0,0);
   }
 }
@@ -630,7 +658,10 @@ class GameScene extends Phaser.Scene {
       console.log('\ud83d\udd25 DEV MODE ACTIVE');
     }
     const allowed=DTM.enemiesForLevel(L);
-    this.activeRounds=ROUNDS; // all 10 rounds every night, difficulty scales by night number
+    const opponent=JSON.parse(localStorage.getItem('dtm_opponent')||'null')||ROSTER[0];
+    this.opponent=opponent;
+    this.activeRounds=[{label:opponent.name,sub:opponent.sub,loc:'\ud83d\udccd '+opponent.location,enemies:[{type:opponent.key,count:1}],speech:{[opponent.key]:opponent.speech},deathQ:{[opponent.key]:opponent.deathQuip},story:opponent.sub}];
+    this.roundEnemiesExpected=1;this.kryptoSpawned=false;this.kryptoUsed=false;this.kryptoniteItem=null;
   }
 
   create(){
@@ -951,8 +982,11 @@ class GameScene extends Phaser.Scene {
         e.abilityTimer3+=delta;if(e.abilityTimer3>=3000){e.abilityTimer3=0;e.patrolTarget={x:Phaser.Math.Between(60,W-60),y:Phaser.Math.Between(100,H-100)};}
       }
       else if(!e.isBoss||!e.isCharging){
-        if(e.isBoss){const pct=e.hp/e.maxHp;if(pct<=0.3)e.spd=140;else if(pct<=0.6)e.spd=90;else e.spd=65;}
-        const a=Phaser.Math.Angle.Between(e.x,e.y,px,py);e.setVelocity(Math.cos(a)*e.spd,Math.sin(a)*e.spd);
+        if(e.panicking){const a=Phaser.Math.Angle.Between(px,py,e.x,e.y);this.physics.velocityFromAngle(Phaser.Math.RadToDeg(a),e.spd,e.body.velocity);}
+        else if(e.startled){if(!e.startledAng)e.startledAng=Phaser.Math.Between(0,360);this.physics.velocityFromAngle(e.startledAng,e.spd,e.body.velocity);}
+        else if(e.ejected||e.spd===0){e.setVelocity(0,0);}
+        else{if(e.isBoss){const pct=e.hp/e.maxHp;if(pct<=0.3)e.spd=140;else if(pct<=0.6)e.spd=90;else e.spd=65;}
+        const a=Phaser.Math.Angle.Between(e.x,e.y,px,py);e.setVelocity(Math.cos(a)*e.spd,Math.sin(a)*e.spd);}
       }
       if(e.etype==='ew'&&!e.isMinion&&e.abilityTimer>=9000){e.abilityTimer=0;const minis=this.enemies.getChildren().filter(m=>m.etype==='ew'&&m.isMinion&&!m.dead);if(minis.length<2){e.setVelocity(0,0);this.floatText(e.x,e.y-40,"I'm calling your mother!",0xffdd00);this.time.delayedCall(2000,()=>{if(!e.dead){const a=Phaser.Math.Angle.Between(e.x,e.y,px,py);e.setVelocity(Math.cos(a)*e.spd,Math.sin(a)*e.spd);}});this.time.delayedCall(1000,()=>{if(!e.dead)this.spawnMinion('ew',45,60);});}}
       if(e.etype==='ef'&&!e.isMinion&&e.abilityTimer>=10000){e.abilityTimer=0;SFX.play('whistle');this.floatText(e.x,e.y-40,'STOP RIGHT THERE!',0xff4444);this.playerFrozen=true;this.player.setTint(0xff4444);this.specialHitCount++;this.hurtPlayer(15);this.time.delayedCall(1800,()=>{this.playerFrozen=false;this.player.clearTint();});}
@@ -1043,7 +1077,7 @@ class GameScene extends Phaser.Scene {
     e.destroy();
   }
 
-  pickGem(gem){this.pXP+=gem.xp||1;gem.destroy();SFX.play('collect');if(this.pXP>=this.xpNeeded){this.pXP-=this.xpNeeded;this.xpNeeded=Math.floor(this.xpNeeded*1.45);this.pLevel++;this.lvlTxt.setText(`LV ${this.pLevel}`);SFX.play('levelup');this.cameras.main.flash(200,255,200,0);this.showLevelUp();}this.updateXP();}
+  pickGem(gem){this.pXP+=gem.xp||1;gem.destroy();SFX.play('collect');if(this.pXP>=this.xpNeeded){this.pXP-=this.xpNeeded;this.xpNeeded=Math.floor(this.xpNeeded*1.45);this.pLevel++;this.lvlTxt.setText(`LV ${this.pLevel}`);SFX.play('levelup');this.cameras.main.flash(200,255,200,0);this.showLevelUp();}this.updateXP();this.tryDropKryptonite();}
   doMagnet(){if(!this.player)return;this.gems.getChildren().forEach(g=>{const d=Phaser.Math.Distance.Between(this.player.x,this.player.y,g.x,g.y);if(d<this.magnetR){const a=Phaser.Math.Angle.Between(g.x,g.y,this.player.x,this.player.y);g.x+=Math.cos(a)*9;g.y+=Math.sin(a)*9;}});}
   doRegen(){if(this.regenRate>0&&this.pHP<this.pMaxHP){this.pHP=Math.min(this.pMaxHP,this.pHP+this.regenRate);this.updateHP();}}
   doPulse(){if(!this.hasPulse||this.paused||this.dead)return;const r=125;const ring=this.add.graphics().setDepth(8);ring.lineStyle(3,0xff88ff,1);ring.strokeCircle(this.player.x,this.player.y,10);this.tweens.add({targets:ring,scaleX:r/10,scaleY:r/10,alpha:0,duration:420,onComplete:()=>ring.destroy()});this.enemies.getChildren().forEach(e=>{if(e.dead||e.invincible)return;const d=Phaser.Math.Distance.Between(this.player.x,this.player.y,e.x,e.y);if(d<r){const dmg=this.pDmg*0.85;e.hp-=dmg;this.dmgNum(e.x,e.y,Math.floor(dmg));if(e.hp<=0)this.killEnemy(e);}});}
@@ -1106,6 +1140,58 @@ class GameScene extends Phaser.Scene {
   }
   cleanBullets(){this.bullets.getChildren().forEach(b=>{if(b.x<-60||b.x>W+60||b.y<-60||b.y>H+60)b.destroy();});this.enemies.getChildren().forEach(e=>{if(e.dead){if(e.hpGfx){e.hpGfx.destroy();e.hpGfx=null;}if(e.hpTxt){e.hpTxt.destroy();e.hpTxt=null;}if(e.nameBg){e.nameBg.destroy();e.nameBg=null;}if(e.nameLabel){e.nameLabel.destroy();e.nameLabel=null;}if(e.tierDot){e.tierDot.destroy();e.tierDot=null;}if(e.phaseLabel){e.phaseLabel.destroy();e.phaseLabel=null;}}});}
 
+  tryDropKryptonite(){
+    if(!this.opponent||!this.opponent.kryptonite)return;
+    if(Math.random()>0.08)return;
+    if(this.kryptoSpawned)return;
+    this.kryptoSpawned=true;
+    const k=this.opponent.kryptonite;
+    const x=Phaser.Math.Between(60,W-60),y=Phaser.Math.Between(200,H-200);
+    const gfx=this.add.graphics().setDepth(8);gfx.fillStyle(0xffcc00,0.3);gfx.fillRoundedRect(x-22,y-22,44,44,8);gfx.lineStyle(2,0xffcc00,1);gfx.strokeRoundedRect(x-22,y-22,44,44,8);
+    const icon=this.add.text(x,y-4,k.icon,{fontSize:'24px'}).setOrigin(0.5).setDepth(9);
+    const label=this.add.text(x,y+18,k.name,{fontFamily:'Orbitron',fontSize:'8px',color:'#ffcc00',fontStyle:'bold'}).setOrigin(0.5).setDepth(9);
+    this.tweens.add({targets:[gfx,icon],scaleX:1.2,scaleY:1.2,duration:600,yoyo:true,repeat:-1});
+    this.kryptoniteItem={gfx,icon,label,x,y,k};
+    this.floatText(W/2,200,'\u2728 '+k.icon+' '+k.name+' dropped!',0xffcc00);
+    SFX.play('legendary');
+    this.time.delayedCall(20000,()=>this.destroyKryptonite());
+  }
+  destroyKryptonite(){
+    if(!this.kryptoniteItem)return;
+    const ki=this.kryptoniteItem;
+    [ki.gfx,ki.icon,ki.label].forEach(o=>{if(o?.scene)o.destroy();});
+    this.kryptoniteItem=null;
+  }
+  useKryptonite(){
+    if(!this.kryptoniteItem||this.kryptoUsed)return;
+    this.kryptoUsed=true;
+    const k=this.kryptoniteItem.k;
+    this.destroyKryptonite();
+    const found=JSON.parse(localStorage.getItem('dtm_kryptonite_found')||'{}');
+    found[this.opponent.key]=true;
+    localStorage.setItem('dtm_kryptonite_found',JSON.stringify(found));
+    this.enemies.getChildren().forEach(e=>{if(e.dead)return;this.applyKryptonite(e,k);});
+    SFX.play('legendary');
+    this.cameras.main.flash(400,255,204,0);
+    this.floatText(W/2,H/2-60,'\ud83d\udca5 '+k.icon+' '+k.name.toUpperCase()+'!!',0xffcc00);
+  }
+  applyKryptonite(e,k){
+    const origSpd=e.spd;
+    switch(k.effect){
+      case'silence':e.invincible=false;e.silenced=true;e.setTint(0xaaaaaa);this.floatText(e.x,e.y-50,'"no signal??"',0xcc44ff);this.time.delayedCall(k.duration,()=>{if(!e.dead){e.silenced=false;e.clearTint();}});break;
+      case'sleep':e.spd=0;e.setVelocity(0,0);e.setTint(0x8888ff);this.floatText(e.x,e.y-50,'\ud83d\udca4 zzzzz...',0x8888ff);this.time.delayedCall(k.duration,()=>{if(!e.dead){e.spd=origSpd*0.5;e.clearTint();}});break;
+      case'cramp':e.spd=0;e.setVelocity(0,0);e.setTint(0xff8800);this.floatText(e.x,e.y-50,'\ud83d\ude23 CRAMP!!',0x4444ff);this.time.delayedCall(k.duration,()=>{if(!e.dead){e.spd=origSpd*0.4;e.clearTint();this.floatText(e.x,e.y-30,"I'm ok... I'm ok",0x888888);}});break;
+      case'ejected':e.spd=0;e.setVelocity(0,0);e.ejected=true;e.setTint(0xff4444);this.floatText(e.x,e.y-50,'\ud83d\udfe5 EJECTED!!',0xff4444);this.time.delayedCall(k.duration,()=>{if(!e.dead){e.ejected=false;e.spd=origSpd;e.clearTint();}});break;
+      case'panic':e.panicking=true;e.setTint(0x00aa44);this.floatText(e.x,e.y-50,'\ud83d\udcc9 SELL EVERYTHING!!',0x00aa44);this.time.delayedCall(k.duration,()=>{if(!e.dead){e.panicking=false;e.clearTint();}});break;
+      case'confused':e.spd=0;e.setVelocity(0,0);e.setTint(0xff8800);this.floatText(e.x,e.y-50,'"This... appears to be valid."',0xff8800);this.time.delayedCall(k.duration,()=>{if(!e.dead){e.spd=origSpd;e.clearTint();}});break;
+      case'grading':e.spd=0;e.setVelocity(0,0);e.setTint(0x4444aa);this.floatText(e.x,e.y-50,'\ud83d\udcdd "Just one more paper..."',0x4444aa);this.time.delayedCall(k.duration,()=>{if(!e.dead){e.spd=origSpd;e.clearTint();}});break;
+      case'startled':e.startled=true;e.startledAng=Phaser.Math.Between(0,360);e.setTint(0x4488ff);this.floatText(e.x,e.y-50,'\ud83d\udcef WHAT THE\u2014!!',0x4488ff);this.time.delayedCall(k.duration,()=>{if(!e.dead){e.startled=false;e.clearTint();}});break;
+      case'phone_call':e.spd=0;e.setVelocity(0,0);e.setTint(0xff0000);this.floatText(e.x,e.y-50,'\ud83d\udcde "Yes, this is Berg..."',0xff0000);this.time.delayedCall(k.duration,()=>{if(!e.dead){e.spd=origSpd;e.clearTint();}});break;
+      case'no_phone':e.bradenDisabled=true;e.spd=origSpd*0.6;e.setTint(0x888888);this.floatText(e.x,e.y-50,'\ud83d\udd0b "NOOOO MY BATTERY!!"',0x888888);this.time.delayedCall(k.duration,()=>{if(!e.dead){e.bradenDisabled=false;e.spd=origSpd;e.clearTint();}});break;
+      case'confused_mama':e.spd=origSpd*0.5;e.mamaDazed=true;e.setTint(0xaaaaff);this.floatText(e.x,e.y-50,'"...Brody? Is that you?"',0xaaaaff);this.time.delayedCall(k.duration,()=>{if(!e.dead){e.mamaDazed=false;e.spd=origSpd;e.clearTint();}});break;
+    }
+  }
+
   checkCollisions(){
     if(this.paused||this.dead)return;
     const bullets=this.bullets.getChildren(),enemies=this.enemies.getChildren();
@@ -1141,6 +1227,8 @@ class GameScene extends Phaser.Scene {
         }
       }
     }
+    // Kryptonite pickup
+    if(this.kryptoniteItem&&!this.kryptoUsed){const ki=this.kryptoniteItem;const kx=this.player.x-ki.x,ky=this.player.y-ki.y;if(Math.sqrt(kx*kx+ky*ky)<30)this.useKryptonite();}
     // Braden phone pickup
     if(this.bradenPhone){const bp=this.bradenPhone;const dx2=this.player.x-bp.x,dy2=this.player.y-bp.y;if(Math.sqrt(dx2*dx2+dy2*dy2)<35){bp.pickup();}}
     // Ground gear auto-pickup
@@ -1281,14 +1369,14 @@ class ResultScene extends Phaser.Scene {
     const stars=win?(specialHits===0?3:(finalHP>maxHP*0.5?2:1)):0;
     const score=DTM.calcScore(kills,rounds||0,timeLeft,stars,level);
     const gearRewards=[];
-    if(win){DTM.setStars(level,stars);DTM.unlockLevel(level+1);DTM.addSnacks(snacksEarned||0);const hs=parseInt(localStorage.getItem('dw_hs')||'0');if(kills>hs)localStorage.setItem('dw_hs',kills);
+    if(win){DTM.setStars(level,stars);DTM.unlockLevel(level+1);DTM.addSnacks(snacksEarned||0);const hs=parseInt(localStorage.getItem('dw_hs')||'0');if(kills>hs)localStorage.setItem('dw_hs',kills);const cIdx=DTM.getCurrentLevel(),nIdx=cIdx+1;if(nIdx<ROSTER.length){const unlk=JSON.parse(localStorage.getItem('dtm_unlocked')||'[0]');if(!unlk.includes(nIdx)){unlk.push(nIdx);localStorage.setItem('dtm_unlocked',JSON.stringify(unlk));}}const bSc=JSON.parse(localStorage.getItem('dtm_best_scores')||'{}'),oK=(JSON.parse(localStorage.getItem('dtm_opponent')||'null')||ROSTER[0]).key;if(!bSc[oK]||score>bSc[oK]){bSc[oK]=score;localStorage.setItem('dtm_best_scores',JSON.stringify(bSc));}
       const slots=Object.keys(GEAR_DEFS);const numR=Math.min(2,1+Math.floor(level/10));
       for(let i=0;i<numR;i++){const sl=slots[Phaser.Math.Between(0,slots.length-1)];const def=GEAR_DEFS[sl];const maxR=Math.min(5,Math.floor(level/8));const ri=Phaser.Math.Between(0,maxR);const rar=RARITIES[ri];const sv=Math.floor(GEAR_STAT_BASE[def.stat]*rar.mult);const gi={id:Date.now()+'_'+i,slot:sl,rarityIdx:ri,statVal:sv,level:1,name:rar.name+' '+def.name};gearRewards.push(gi);const inv=DTM.getInventory();inv.push(gi);DTM.saveInventory(inv);}
     }
     const headerColor=win?'#00ff88':'#ff2244';
     const headerText=win?'\ud83d\udc3e THE PANTHER PROWLS FREE!':'\ud83d\udc80 CAUGHT BY THE SNITCHES!';
     this.add.text(W/2,80,headerText,{fontFamily:'Orbitron',fontSize:'22px',fontStyle:'bold',color:headerColor,stroke:'#000',strokeThickness:5,wordWrap:{width:320}}).setOrigin(0.5);
-    if(win){for(let i=0;i<3;i++){const s=this.add.text(W/2-40+i*40,140,i<stars?'\u2b50':'\u2606',{fontSize:'28px'}).setOrigin(0.5).setAlpha(0);this.time.delayedCall(300+i*200,()=>this.tweens.add({targets:s,alpha:1,scaleX:1.3,scaleY:1.3,duration:300,yoyo:true}));}}
+    if(win){for(let i=0;i<3;i++){const s=this.add.text(W/2-40+i*40,140,i<stars?'\u2b50':'\u2606',{fontSize:'28px'}).setOrigin(0.5).setAlpha(0);this.time.delayedCall(300+i*200,()=>this.tweens.add({targets:s,alpha:1,scaleX:1.3,scaleY:1.3,duration:300,yoyo:true}));}const nI2=DTM.getCurrentLevel()+1;if(nI2<ROSTER.length)this.add.text(W/2,170,'\ud83d\udd13 '+ROSTER[nI2].icon+' '+ROSTER[nI2].name+' UNLOCKED!',{fontFamily:'Orbitron',fontSize:'13px',color:'#00ff88',fontStyle:'bold',stroke:'#000',strokeThickness:4}).setOrigin(0.5);}
     DTM.makeCard(this,24,185,W-48,220,0.95);
     const rows=[['SNITCHES CAUGHT',kills],['ROUNDS SURVIVED',rounds||0],['SNACKS COLLECTED',snacksEarned||0],['SCORE',score.toLocaleString()]];
     rows.forEach(([label,val],i)=>{const y=210+i*48;this.add.text(40,y,label,{fontFamily:'Orbitron',fontSize:'11px',color:'#888899'});this.add.text(W-40,y,String(val),{fontFamily:'Orbitron',fontSize:'18px',color:'#ffffff',fontStyle:'bold'}).setOrigin(1,0);if(i<rows.length-1){const lg=this.add.graphics();lg.lineStyle(1,0x1e1e3a);lg.lineBetween(40,y+30,W-40,y+30);}});

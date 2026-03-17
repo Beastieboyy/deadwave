@@ -170,17 +170,17 @@ class MenuScene extends Phaser.Scene {
     this.tweens.add({targets:btn,alpha:0.25,duration:700,yoyo:true,repeat:-1});
     const start=()=>{this.cameras.main.fadeOut(400,0,0,0);this.time.delayedCall(400,()=>this.scene.start('NicknameScene'));};
     btn.on('pointerdown',start);this.input.keyboard.once('keydown',start);
-    // Animated glowing card at bottom of menu
-    const joinCard=this.add.graphics().setDepth(10);
-    joinCard.fillStyle(0xff9900,0.15);
-    joinCard.fillRoundedRect(24,H-150,W-48,100,12);
-    joinCard.lineStyle(2,0xff9900,0.9);
-    joinCard.strokeRoundedRect(24,H-150,W-48,100,12);
-    this.add.text(W/2,H-122,'\ud83c\udfae WANT TO BE IN THE GAME?',{fontFamily:'Orbitron',fontSize:'15px',color:'#ff9900',fontStyle:'bold',stroke:'#000',strokeThickness:4}).setOrigin(0.5).setDepth(11);
-    this.add.text(W/2,H-98,'Submit your photo \u2014 get added as a character!',{fontFamily:'Orbitron',fontSize:'10px',color:'#ffffff'}).setOrigin(0.5).setDepth(11);
-    this.add.text(W/2,H-74,'getpulsepos.com/pantherprowl  \u203a',{fontFamily:'Orbitron',fontSize:'11px',color:'#ffcc00',fontStyle:'bold'}).setOrigin(0.5).setDepth(11);
-    this.tweens.add({targets:joinCard,alpha:0.6,duration:1000,yoyo:true,repeat:-1,ease:'Sine.easeInOut'});
-    this.add.zone(24,H-150,W-48,100).setOrigin(0,0).setDepth(12).setInteractive({useHandCursor:true}).on('pointerdown',()=>window.open('https://getpulsepos.com/pantherprowl','_blank'));
+    // Pulsing orange banner — hard to miss
+    const jBg=this.add.graphics().setDepth(10);
+    jBg.fillStyle(0xff9900,0.2);
+    jBg.fillRoundedRect(20,H-165,W-40,115,14);
+    jBg.lineStyle(3,0xff9900,1);
+    jBg.strokeRoundedRect(20,H-165,W-40,115,14);
+    this.add.text(W/2,H-138,'\ud83c\udfae  WANT TO BE IN THE GAME?',{fontFamily:'Orbitron',fontSize:'16px',color:'#ffcc00',fontStyle:'bold',stroke:'#000',strokeThickness:5}).setOrigin(0.5).setDepth(11);
+    this.add.text(W/2,H-112,'Submit your photo \u2192 get added as a character!',{fontFamily:'Orbitron',fontSize:'10px',color:'#ffffff',stroke:'#000',strokeThickness:3}).setOrigin(0.5).setDepth(11);
+    this.add.text(W/2,H-86,'getpulsepos.com/pantherprowl',{fontFamily:'Orbitron',fontSize:'12px',color:'#ff9900',fontStyle:'bold',stroke:'#000',strokeThickness:3}).setOrigin(0.5).setDepth(11);
+    this.tweens.add({targets:jBg,alpha:0.5,duration:900,yoyo:true,repeat:-1,ease:'Sine.easeInOut'});
+    this.add.zone(20,H-165,W-40,115).setOrigin(0,0).setDepth(12).setInteractive({useHandCursor:true}).on('pointerdown',()=>window.open('https://getpulsepos.com/pantherprowl','_blank'));
     this.add.text(W/2,H-50,'Drag left side to move\nAuto-throws homework  •  Pick powers on level up',{fontFamily:'Orbitron',fontSize:'8px',color:'#444466',align:'center'}).setOrigin(0.5);
     this.add.text(W/2,H-18,'"based on true events in Nappanee, IN"',{fontFamily:'Orbitron',fontSize:'8px',color:'#333344',fontStyle:'italic'}).setOrigin(0.5);
     const bg2=this.add.graphics().setDepth(1);[[0,0],[W,0],[0,H],[W,H]].forEach(([cx,cy])=>{bg2.lineStyle(2,0xff9900,0.25);const sx=cx===0?1:-1,sy=cy===0?1:-1;bg2.lineBetween(cx,cy,cx+sx*40,cy);bg2.lineBetween(cx,cy,cx,cy+sy*40);});

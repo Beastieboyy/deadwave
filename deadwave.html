@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>PANTHER PROWL</title>
+<title>PANTHER PROWL v1.03</title>
 <link rel="manifest" href="manifest.json">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -184,6 +184,7 @@ class MenuScene extends Phaser.Scene {
     this.add.text(W/2,H-50,'Drag left side to move\nAuto-throws homework  •  Pick powers on level up',{fontFamily:'Orbitron',fontSize:'8px',color:'#444466',align:'center'}).setOrigin(0.5);
     this.add.text(W/2,H-18,'"based on true events in Nappanee, IN"',{fontFamily:'Orbitron',fontSize:'8px',color:'#333344',fontStyle:'italic'}).setOrigin(0.5);
     const bg2=this.add.graphics().setDepth(1);[[0,0],[W,0],[0,H],[W,H]].forEach(([cx,cy])=>{bg2.lineStyle(2,0xff9900,0.25);const sx=cx===0?1:-1,sy=cy===0?1:-1;bg2.lineBetween(cx,cy,cx+sx*40,cy);bg2.lineBetween(cx,cy,cx,cy+sy*40);});
+    this.add.text(W-8,H-8,'v1.03',{fontFamily:'Orbitron',fontSize:'10px',color:'#333355'}).setOrigin(1,1).setDepth(5);
   }
 }
 

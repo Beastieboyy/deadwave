@@ -698,6 +698,7 @@ class GameScene extends Phaser.Scene {
     const vig=this.add.graphics().setDepth(95).setScrollFactor(0);
     vig.fillGradientStyle(0x000000,0x000000,0x000000,0x000000,0.4,0.4,0,0);vig.fillRect(0,0,W,80);
     vig.fillGradientStyle(0x000000,0x000000,0x000000,0x000000,0,0,0.4,0.4);vig.fillRect(0,H-80,W,80);
+    this.physics.world.setBounds(0,100,W,H-190);
     this.enemies=this.physics.add.group();this.bullets=this.physics.add.group();this.gems=this.physics.add.group();
     this.physics.add.collider(this.enemies,this.enemies);
     // Safety cleanup for stuck enemies
@@ -805,7 +806,7 @@ class GameScene extends Phaser.Scene {
     if(!enemy||!enemy.active||enemy.dead)return;
     const ex=enemy.x,ey=enemy.y-enemy.displayHeight/2-20;
     const bw=Math.min(260,W-40),bh=52;
-    const bx=Phaser.Math.Clamp(ex-bw/2,10,W-bw-10),by=Math.max(ey-bh-10,80);
+    const bx=Phaser.Math.Clamp(ex-bw/2,10,W-bw-10),by=Phaser.Math.Clamp(ey-bh-10,90,H-bh-160);
     const bubble=this.add.graphics().setDepth(180);
     bubble.fillStyle(0xffffff,0.97);bubble.fillRoundedRect(bx,by,bw,bh,8);
     bubble.lineStyle(2,0x000000,0.5);bubble.strokeRoundedRect(bx,by,bw,bh,8);
@@ -929,7 +930,7 @@ class GameScene extends Phaser.Scene {
     });
   }
 
-  randEdge(){const s=Phaser.Math.Between(0,3);switch(s){case 0:return{x:Phaser.Math.Between(0,W),y:-40};case 1:return{x:W+40,y:Phaser.Math.Between(0,H)};case 2:return{x:Phaser.Math.Between(0,W),y:H+40};case 3:return{x:-40,y:Phaser.Math.Between(0,H)};}}
+  randEdge(){const s=Phaser.Math.Between(0,3);switch(s){case 0:return{x:Phaser.Math.Between(20,W-20),y:110};case 1:return{x:W-20,y:Phaser.Math.Between(110,H-180)};case 2:return{x:Phaser.Math.Between(20,W-20),y:H-180};default:return{x:20,y:Phaser.Math.Between(110,H-180)};}}
 
   // getEnemyStats removed â€” stats hardcoded in spawnEnemy
 
@@ -938,6 +939,7 @@ class GameScene extends Phaser.Scene {
     const{x,y}=this.randEdge();
     const e=this.enemies.create(x,y,tex==='sister'?'sister':tex==='boss'?'boss':tex).setDepth(6);
     e.uid=++this.uidCounter;e.dead=false;e.invincible=false;e.etype=tex;
+    e.setCollideWorldBounds(true);
     e.isMinion=false;e.isBoss=tex==='boss';e.isPeyton=tex==='sister';
     e.isCharging=false;e.chargeDmg=0;
     e.abilityTimer=0;e.abilityTimer2=0;e.abilityTimer3=0;
@@ -1162,7 +1164,7 @@ class GameScene extends Phaser.Scene {
     for(let i=this.projectiles.length-1;i>=0;i--){const p=this.projectiles[i];p.x+=p.vx*(delta/1000);p.y+=p.vy*(delta/1000);p.life-=delta;if(p.life<=0||p.x<-50||p.x>W+50||p.y<-50||p.y>H+50){p.destroy();this.projectiles.splice(i,1);continue;}if(Phaser.Math.Distance.Between(p.x,p.y,this.player.x,this.player.y)<28&&this.playerIframes<=0){this.hurtPlayer(p.dmg);this.specialHitCount++;p.destroy();this.projectiles.splice(i,1);}}
   }
 
-  floatText(x,y,txt,col){const t=this.add.text(x,y,txt,{fontFamily:'Orbitron',fontSize:'9px',color:'#'+col.toString(16).padStart(6,'0'),stroke:'#000',strokeThickness:3,fontStyle:'bold'}).setDepth(51).setOrigin(0.5);this.tweens.add({targets:t,y:y-50,alpha:0,duration:1800,ease:'Power2',onComplete:()=>t.destroy()});}
+  floatText(x,y,txt,col){const cx=Phaser.Math.Clamp(x,60,W-60),cy=Phaser.Math.Clamp(y,140,H-200);const t=this.add.text(cx,cy,txt,{fontFamily:'Orbitron',fontSize:'9px',color:'#'+(typeof col==='number'?col:0xffffff).toString(16).padStart(6,'0'),stroke:'#000',strokeThickness:3,fontStyle:'bold',align:'center',wordWrap:{width:W-80}}).setDepth(51).setOrigin(0.5);this.tweens.add({targets:t,y:cy-55,alpha:0,duration:2000,ease:'Power2',onComplete:()=>{if(t?.scene)t.destroy();}});}
 
   killEnemy(e){
     console.log('KILL:',e?.etype,'hp:',e?.hp,'maxHp:',e?.maxHp);
@@ -1329,9 +1331,9 @@ class GameScene extends Phaser.Scene {
         [[-80,-60],[80,-60]].forEach((off,i)=>{
           this.time.delayedCall(i*300,()=>{
             if(this.dead)return;
-            const c=this.enemies.create(ox+off[0],oy+off[1],'player').setDepth(6);
+            const cx2=Phaser.Math.Clamp(ox+off[0],50,W-50),cy2=Phaser.Math.Clamp(oy+off[1],140,H-180);const c=this.enemies.create(cx2,cy2,'player').setDepth(6);
             c.uid=++this.uidCounter;c.dead=false;c.invincible=false;c.etype='brody_villain';
-            c.isMinion=false;c.isBoss=false;c.isPeyton=false;c.isCharging=false;c.chargeDmg=0;
+            c.setCollideWorldBounds(true);c.isMinion=false;c.isBoss=false;c.isPeyton=false;c.isCharging=false;c.chargeDmg=0;
             c.abilityTimer=0;c.abilityTimer2=0;c.abilityTimer3=0;c.spawnedMinions=0;c.patrolTarget=null;
             c.hp=cloneHP;c.maxHp=cloneHP;c.spd=cloneSpd;c.dmg=cloneDmg;c.gd=6;c.sv=250;c.burstColor=0x00ffcc;
             c.isBrodyVillain=true;c.hasSplit=true;c.trashCD=Phaser.Math.Between(0,3000);c.oreoCD=Phaser.Math.Between(0,3000);c.dashCD=Phaser.Math.Between(0,3000);

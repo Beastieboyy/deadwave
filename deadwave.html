@@ -999,8 +999,6 @@ class GameScene extends Phaser.Scene {
   }
 
   update(time,delta){
-    // Ghost-pause recovery
-    if(this.paused&&!this.levelUpActive&&!this.dead&&!this.transitioning){console.warn('Ghost pause — recovering');this.paused=false;this.physics.resume();}
     if(this.paused||this.dead)return;
     // Joey player cramp
     if(this.isJoey&&!this.joeyCramped){const now2=this.time.now;if(now2-(this.joeyPlayerCrampCD||0)>30000){this.joeyPlayerCrampCD=now2;this.joeyCramped=true;const os=this.pSpeed;this.pSpeed=0;this.floatText(this.player.x,this.player.y-40,'\ud83d\ude23 CRAMP!!',0x4444ff);this.time.delayedCall(2000,()=>{this.pSpeed=os;this.joeyCramped=false;this.floatText(this.player.x,this.player.y-40,"ok I'm good",0x4444ff);});}}
@@ -1225,6 +1223,16 @@ class GameScene extends Phaser.Scene {
   showLevelUp(){
     if(this.levelUpActive)return;this.levelUpActive=true;
     this.paused=true;this.physics.pause();
+    // Kill joystick
+    this.joyActive=false;this.joyDist=0;this.joyPtrId=null;
+    if(this.jBase)this.jBase.setAlpha(0);if(this.jThumb)this.jThumb.setAlpha(0);
+    if(this.player?.body)this.player.body.setVelocity(0,0);
+    this.enemies.getChildren().forEach(e=>{if(e?.body)e.body.setVelocity(0,0);});
+    // Strip ALL pointer listeners so joystick can't intercept
+    this.input.removeAllListeners('pointerdown');
+    this.input.removeAllListeners('pointermove');
+    this.input.removeAllListeners('pointerup');
+    this.input.removeAllListeners('pointerupoutside');
     if(this._kh){this.input.keyboard.off('keydown',this._kh);this._kh=null;}
     const objs=[];const add=(o)=>{objs.push(o);return o;};
     add(this.add.graphics().setDepth(200)).fillStyle(0x000000,0.82).fillRect(0,0,W,H);
@@ -1232,20 +1240,30 @@ class GameScene extends Phaser.Scene {
     add(this.add.text(W/2,153,`LEVEL ${this.pLevel} \u2014 CHOOSE YOUR POWER`,{fontFamily:'Orbitron',fontSize:'11px',color:'#888899',letterSpacing:3}).setDepth(201).setOrigin(0.5));
     const SKILLS=[{id:'dmg',name:'OVERDRIVE',desc:'+4 Bullet Damage',icon:'\ud83d\udca5',col:0xff4444},{id:'rate',name:'RAPID FIRE',desc:'Fire 120ms Faster',icon:'\u26a1',col:0xffaa00},{id:'spd',name:'AFTERBURN',desc:'+30 Move Speed',icon:'\ud83d\udc5f',col:0x00ccff},{id:'pierce',name:'PENETRATOR',desc:'Bullets Pierce Enemies',icon:'\ud83d\udd31',col:0xcc44ff},{id:'orbit',name:'ORBIT BLADE',desc:'Spinning Blade Weapon',icon:'\ud83c\udf00',col:0x00ff88},{id:'pulse',name:'SHOCKWAVE',desc:'Area Pulse Every 3s',icon:'\ud83d\udcab',col:0xff88ff},{id:'mag',name:'VORTEX',desc:'+60 Snack Pickup Range',icon:'\ud83e\uddf2',col:0xffff44},{id:'regen',name:'NANOBOTS',desc:'+2 HP Regen Per Second',icon:'\u2764\ufe0f',col:0xff6688},{id:'maxhp',name:'FORTIFY',desc:'+25 Max HP + Heal',icon:'\ud83d\udee1\ufe0f',col:0x44aaff},{id:'laser',name:'LASER BEAM',desc:'Piercing laser every 2.5s (8x dmg)',icon:'\ud83d\udd34',col:0xff0000}];
     const pool=[...SKILLS],chosen=[];for(let i=0;i<3;i++)chosen.push(pool.splice(Phaser.Math.Between(0,pool.length-1),1)[0]);
-    const close=(skillId)=>{if(!this.levelUpActive)return;this.levelUpActive=false;if(this._kh){this.input.keyboard.off('keydown',this._kh);this._kh=null;}objs.forEach(o=>{if(o?.scene)try{o.destroy();}catch(e){}});if(skillId)this.applySkill(skillId);this.time.delayedCall(50,()=>{this.paused=false;if(!this.dead)this.physics.resume();});};
-    const cW=W-60,cH=140,startY=195;
-    chosen.forEach((sk,i)=>{const cx=30,cy=startY+i*(cH+12);const colH='#'+sk.col.toString(16).padStart(6,'0');
+    const cW=W-60,cH=140,startY=195,gap=cH+12;
+    const close=(skillId)=>{
+      if(!this.levelUpActive)return;this.levelUpActive=false;
+      this.input.removeAllListeners('pointerdown');
+      if(this._kh){this.input.keyboard.off('keydown',this._kh);this._kh=null;}
+      objs.forEach(o=>{if(o?.scene)try{o.destroy();}catch(e){}});
+      if(skillId)this.applySkill(skillId);
+      this.time.delayedCall(100,()=>{this.paused=false;this.physics.resume();this.setupJoystick();console.log('Level up closed, game resumed');});
+    };
+    chosen.forEach((sk,i)=>{const cx=30,cy=startY+i*gap;const colH='#'+sk.col.toString(16).padStart(6,'0');
       const card=add(this.add.graphics().setDepth(201));card.fillStyle(0x0e0e22,0.97);card.fillRoundedRect(cx,cy,cW,cH,10);card.lineStyle(2,sk.col,0.8);card.strokeRoundedRect(cx,cy,cW,cH,10);
       add(this.add.text(cx+20,cy+cH/2,sk.icon,{fontSize:'36px'}).setOrigin(0,0.5).setDepth(202));
       add(this.add.text(cx+72,cy+42,sk.name,{fontFamily:'Orbitron',fontSize:'15px',color:colH,fontStyle:'bold'}).setOrigin(0,0.5).setDepth(202));
       add(this.add.text(cx+72,cy+78,sk.desc,{fontFamily:'Orbitron',fontSize:'11px',color:'#9999bb',wordWrap:{width:cW-90}}).setOrigin(0,0.5).setDepth(202));
       add(this.add.text(cx+cW-16,cy+cH/2,`[${i+1}]`,{fontFamily:'Orbitron',fontSize:'13px',color:'#555577'}).setOrigin(1,0.5).setDepth(202));
-      const zone=add(this.add.zone(cx,cy,cW,cH).setOrigin(0,0).setDepth(210).setInteractive({useHandCursor:true}));
-      zone.on('pointerdown',()=>{console.log('Skill tapped:',sk.id);close(sk.id);});
     });
-    // Skip button
-    const skipBtn=add(this.add.text(W/2,H-110,'[ TAP HERE IF STUCK \u2014 SKIP ]',{fontFamily:'Orbitron',fontSize:'11px',color:'#555577'}).setOrigin(0.5).setDepth(210).setInteractive({useHandCursor:true}));
-    skipBtn.on('pointerdown',()=>{console.log('Skip tapped');close(chosen[0].id);});
+    const skipBtn=add(this.add.text(W/2,H-110,'[ TAP HERE IF STUCK \u2014 SKIP ]',{fontFamily:'Orbitron',fontSize:'11px',color:'#555577'}).setOrigin(0.5).setDepth(210));
+    // Single pointerdown handler for ALL level-up input
+    this.input.on('pointerdown',p=>{
+      // Check skill cards by Y
+      chosen.forEach((sk,i)=>{const cy=startY+i*gap;if(p.y>=cy&&p.y<=cy+cH&&p.x>=30&&p.x<=W-30){console.log('Skill tapped:',sk.id);close(sk.id);}});
+      // Skip button
+      if(p.y>=H-130&&p.y<=H-90){console.log('Skip tapped');close(chosen[0].id);}
+    });
     this._kh=(ev)=>{const idx=['1','2','3'].indexOf(ev.key);if(idx>=0&&chosen[idx])close(chosen[idx].id);};
     this.input.keyboard.on('keydown',this._kh);
     this.time.delayedCall(20000,()=>{if(this.levelUpActive){console.warn('Level up auto-close 20s');close(chosen[0].id);}});

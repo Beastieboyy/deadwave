@@ -679,8 +679,10 @@ class GameScene extends Phaser.Scene {
     }
     const allowed=DTM.enemiesForLevel(L);
     if(DTM.getSnacks()<30)DTM.addSnacks(30-DTM.getSnacks());
-    const opponent=JSON.parse(localStorage.getItem('dtm_opponent')||'null')||ROSTER[0];
+    const savedOpp=JSON.parse(localStorage.getItem('dtm_opponent')||'null');
+    const opponent=savedOpp?ROSTER.find(r=>r.key===savedOpp.key)||ROSTER[0]:ROSTER[0];
     this.opponent=opponent;
+    console.log('Opponent loaded:',opponent.key,opponent.name,'cutscene:',!!opponent.cutscene);
     this.activeRounds=[{label:opponent.name,sub:opponent.sub,loc:'\ud83d\udccd '+opponent.location,enemies:[{type:opponent.key,count:1}],speech:{[opponent.key]:opponent.speech},deathQ:{[opponent.key]:opponent.deathQuip},story:opponent.sub}];
     this.roundEnemiesExpected=1;this.kryptoSpawned=false;this.kryptoUsed=false;this.kryptoniteItem=null;
   }
@@ -882,9 +884,10 @@ class GameScene extends Phaser.Scene {
   }
 
   doStartRound(n){
+    console.log('doStartRound:',n,'activeRounds:',this.activeRounds?.length,'opponent:',this.opponent?.key);
     this.roundNum=n;this.roundActive=true;this.roundEnemies=[];this.roundEnemiesExpected=0;
     let rd=this.activeRounds[n-1];
-    if(!rd){this.winGame();return;}
+    if(!rd){console.error('No round at index',n-1,'activeRounds:',this.activeRounds);this.winGame();return;}
     // Villain swap: if playing as friend, Brody replaces that friend's round
     const vc=this.selectedChar;
     if(vc&&vc.vr!==null&&vc.vr!==undefined&&(n-1)===vc.vr){rd={...rd,label:'BRODY FOUND OUT',sub:vc.vs||'"..."',story:'Wait... is that BRODY??\nHe looks angry.',enemies:[{type:'brody_villain',count:1}],speech:{brody_villain:vc.vs||'"..."'},deathQ:{brody_villain:vc.vq||'This isn\'t over!!'}};}
@@ -902,10 +905,12 @@ class GameScene extends Phaser.Scene {
   }
 
   checkRoundClear(){
-    if(!this.roundActive||this.dead||this.transitioning)return;
-    if(this.roundEnemiesExpected<=0||this.roundEnemies.length<this.roundEnemiesExpected)return;
+    if(!this.roundActive||this.dead||this.transitioning||this.levelUpActive)return;
+    if(this.roundEnemiesExpected<=0)return;
+    if(this.roundEnemies.length<this.roundEnemiesExpected)return;
     const alive=this.roundEnemies.filter(e=>e&&e.active&&!e.dead);
     if(alive.length>0)return;
+    console.log('Round clear! enemies:',this.roundEnemies.length,'/',this.roundEnemiesExpected);
     // Round complete
     this.transitioning=true;this.roundActive=false;this.roundsCompleted++;
     SFX.play('roundclear');
@@ -927,6 +932,7 @@ class GameScene extends Phaser.Scene {
   // getEnemyStats removed — stats hardcoded in spawnEnemy
 
   spawnEnemy(tex){
+    console.log('spawnEnemy:',tex,'expected:',this.roundEnemiesExpected,'spawned:',this.roundEnemies?.length);
     const{x,y}=this.randEdge();
     const e=this.enemies.create(x,y,tex==='sister'?'sister':tex==='boss'?'boss':tex).setDepth(6);
     e.uid=++this.uidCounter;e.dead=false;e.invincible=false;e.etype=tex;
@@ -956,8 +962,9 @@ class GameScene extends Phaser.Scene {
       case 'joey':e.setDisplaySize(90,90);e.setBodySize(32,32);e.hp=Math.floor(380*hm);e.spd=110;e.dmg=8;e.gd=2;e.sv=70;e.burstColor=0x4444ff;if(this.anims.exists('joey_run'))e.play('joey_run');e.joeyCD=0;e.joeyBurst=false;break;
       case 'braden':e.setDisplaySize(90,90);e.setBodySize(32,32);e.hp=Math.floor(600*hm);e.spd=75;e.dmg=14;e.gd=5;e.sv=200;e.burstColor=0xff6600;if(this.anims.exists('braden_film'))e.play('braden_film');e.bradenLiveCD=0;e.bradenSpawnCD=0;e.bradenLaughCD=0;break;
       case 'brody_villain':e.setTexture('player');e.setDisplaySize(90,90);e.setBodySize(32,32);e.hp=Math.floor(800*hm);e.spd=110;e.dmg=18;e.gd=5;e.sv=150;e.burstColor=0x00ffcc;e.ename='BRODY';if(this.anims.exists('brody_idle'))e.play('brody_idle');e.isBrodyVillain=true;break;
+      default:console.warn('Unknown enemy type:',tex,'— using fallback');e.setDisplaySize(90,90);e.setBodySize(32,32);e.hp=Math.floor(300*hm);e.spd=55;e.dmg=10;e.gd=3;e.sv=80;e.burstColor=0xffffff;break;
     }
-    if(!e.hp||e.hp<=0){console.error('Enemy 0 HP on spawn! type:',tex);e.hp=100;}
+    if(!e.hp||e.hp<=0){console.error('Enemy 0 HP on spawn! type:',tex);e.hp=300;}
     e.maxHp=e.hp;
     console.log('SPAWN:',tex,'hp:',e.hp,'maxHp:',e.maxHp);
     e.hpGfx=this.add.graphics().setDepth(7);

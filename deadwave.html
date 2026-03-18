@@ -150,17 +150,17 @@ const RARITIES=[{name:'BEAT UP',color:0x888888,mult:1.0},{name:'DECENT',color:0x
 const GEAR_STAT_BASE={dmg:4,maxhp:20,magnet:40,speed:15,firerate:80,crit:0.05};
 
 const ROSTER = [
-  {key:'sister',name:'PEYTON',icon:'\ud83d\udc67',sub:'"I already texted Mom."',difficulty:2,color:0xcc44ff,kryptonite:{id:'moms_phone',icon:'\ud83d\udcf5',name:"MOM'S PHONE",desc:'Silences her — no invincibility, no backup calls',effect:'silence',duration:5000},speech:'"BRODY. I SAW THAT."',deathQuip:'FINE!! Telling in the morning!!',location:"Brody's Back Door",bg:'bg_house'},
-  {key:'ew',name:'NOSEY NEIGHBOR',icon:'\u2615',sub:'"Rodney\'s porch light just came on."',difficulty:2,color:0x888888,kryptonite:{id:'melatonin',icon:'\ud83d\udca4',name:'MELATONIN',desc:'Falls asleep — frozen 5s, stumbles after',effect:'sleep',duration:5000},speech:'"HEY! I SEE YOU OUT THERE!"',deathQuip:"I'm calling the HOA!!",location:'The Front Yard',bg:'bg_street'},
-  {key:'joey',name:'JOEY',icon:'\ud83c\udfc3',sub:'"Watch my form. I\'m literally fast."',difficulty:3,color:0x4444ff,kryptonite:{id:'banana_peel',icon:'\ud83c\udf4c',name:'BANANA PEEL',desc:'Instant cramp — frozen 4s then half speed',effect:'cramp',duration:4000},speech:'"WATCH MY FORM!!"',deathQuip:'I let you win. Saving energy.',location:'The Sidewalk',bg:'bg_street'},
-  {key:'waylon',name:'WAYLON',icon:'\u26bd',sub:'"He brought the soccer ball. Of course."',difficulty:3,color:0x0044ff,kryptonite:{id:'red_card',icon:'\ud83d\udfe5',name:'RED CARD',desc:'Ejected! Stunned 5s, no soccer balls',effect:'ejected',duration:5000},speech:'"YOU WERE SUPPOSED TO PASS!!"',deathQuip:"That's a foul!! Calling VAR!!",location:'The Street',bg:'bg_street'},
-  {key:'jack',name:'JACK',icon:'\ud83d\udcc8',sub:'"The market never sleeps."',difficulty:3,color:0x00aa44,kryptonite:{id:'market_crash',icon:'\ud83d\udcc9',name:'MARKET CRASH',desc:'Panic mode — runs AWAY from you for 5s',effect:'panic',duration:5000},speech:'"THIS INCREASES NEIGHBORHOOD RISK INDEX"',deathQuip:'This is just a dip!! HODLING!!',location:'Main St Roasters',bg:'bg_roasters'},
-  {key:'ef',name:'KAREN',icon:'\ud83d\udccb',sub:'"Karen patrols at 3am. Voluntarily."',difficulty:3,color:0xff8800,kryptonite:{id:'hall_pass',icon:'\ud83d\udcdd',name:'HALL PASS',desc:'She has to let you go — frozen 4s in confusion',effect:'confused',duration:4000},speech:'"EXCUSE ME. DO YOU HAVE A PASS?"',deathQuip:'DETENTION!! Whenever school starts!!',location:'Northwood Hallway',bg:'bg_school'},
-  {key:'es',name:'MRS. STEINER',icon:'\ud83d\udcda',sub:'"Grading papers at 3am. On a Friday."',difficulty:4,color:0x4444aa,kryptonite:{id:'extra_credit',icon:'\u270f\ufe0f',name:'EXTRA CREDIT',desc:'Distracted grading — stops moving, vulnerable 5s',effect:'grading',duration:5000},speech:'"I HOPE YOU STUDIED, BRODY."',deathQuip:'F MINUS!! See me after class!!',location:'Northwood Math Wing',bg:'bg_school'},
-  {key:'coach',name:'COACH ANDREWS',icon:'\ud83c\udfc8',sub:'"He was already running drills. At 3am."',difficulty:4,color:0x4488ff,kryptonite:{id:'air_horn',icon:'\ud83d\udcef',name:'AIR HORN',desc:'Startled — runs wrong direction 4s',effect:'startled',duration:4000},speech:'"SON. DROP AND GIVE ME 20."',deathQuip:'SEE YOU AT 6AM MONDAY!! SUICIDES!!',location:'Northwood Football Field',bg:'bg_school'},
-  {key:'et',name:'MR. BERG',icon:'\ud83c\udf93',sub:'"The VP never actually leaves school property."',difficulty:4,color:0xff0000,kryptonite:{id:'parent_call',icon:'\ud83d\udcde',name:'PARENT CALL',desc:'Has to take the call — frozen on phone 5s',effect:'phone_call',duration:5000},speech:'"MY OFFICE. NOW."',deathQuip:'THIS GOES ON YOUR PERMANENT RECORD!!',location:'Main St Roasters',bg:'bg_roasters'},
-  {key:'braden',name:'BRADEN',icon:'\ud83d\ude02',sub:'"Bro I just need the content."',difficulty:4,color:0xff6600,kryptonite:{id:'dead_battery',icon:'\ud83d\udd0b',name:'DEAD BATTERY',desc:'Phone dies — loses ALL special abilities',effect:'no_phone',duration:8000},speech:'"BRO I JUST NEED THE CONTENT"',deathQuip:'BRO I GOT IT ALL ON CAMERA THOUGH \ud83d\ude02',location:'The Streets',bg:'bg_street'},
-  {key:'boss',name:'MAMA',icon:'\ud83d\udc69',sub:'"Peyton woke her up. Obviously."',difficulty:5,color:0xff6600,isBoss:true,kryptonite:{id:'sleep_mask',icon:'\ud83d\udecf\ufe0f',name:'SLEEP MASK',desc:'Thinks you\'re in bed — confused 3s, half damage',effect:'confused_mama',duration:3000},speech:'"WHERE. HAVE. YOU. BEEN."',deathQuip:"...we'll talk about this tomorrow.",location:"Brody's Front Door",bg:'bg_house'},
+  {key:'sister',name:'PEYTON',icon:'\ud83d\udc67',sub:'"I already texted Mom."',difficulty:2,color:0xcc44ff,cutscene:{time:'2:47 AM',location:'THE BACKYARD',panel1Caption:'I had one rule.\nDon\'t wake Peyton.',panel2Speech:'"BRODY. I SAW THAT."',panel3Caption:'She was awake.\nShe\'s always awake.'},kryptonite:{id:'moms_phone',icon:'\ud83d\udcf5',name:"MOM'S PHONE",desc:'Silences her \u2014 no invincibility, no backup',effect:'silence',duration:5000},speech:'"BRODY. I SAW THAT."',deathQuip:'FINE!! Telling in the morning!!',location:'THE BACKYARD',bg:'bg_house'},
+  {key:'ew',name:'NOSEY NEIGHBOR',icon:'\u2615',sub:'"His porch light just came on."',difficulty:2,color:0x888888,cutscene:{time:'2:51 AM',location:'THE FRONT YARD',panel1Caption:'Rodney hasn\'t slept since 1987.\nWe don\'t talk about why.',panel2Speech:'"HEY! I SEE YOU OUT THERE!"',panel3Caption:'He sees everything.\nHe always sees everything.'},kryptonite:{id:'melatonin',icon:'\ud83d\udca4',name:'MELATONIN',desc:'Falls asleep 5s, stumbles after',effect:'sleep',duration:5000},speech:'"HEY! I SEE YOU OUT THERE!"',deathQuip:"I'm calling the HOA!!",location:'THE FRONT YARD',bg:'bg_street'},
+  {key:'joey',name:'JOEY',icon:'\ud83c\udfc3',sub:'"Watch my form. I\'m literally fast."',difficulty:3,color:0x4444ff,cutscene:{time:'3:02 AM',location:'THE SIDEWALK',panel1Caption:'Joey told me he runs a 4.3 forty.\nI\'ve never seen any evidence of this.',panel2Speech:'"WATCH MY FORM!!\nI\'M LITERALLY FAST!!"',panel3Caption:'He pulled a hamstring last Tuesday.\nHe does not know this yet.'},kryptonite:{id:'banana_peel',icon:'\ud83c\udf4c',name:'BANANA PEEL',desc:'Instant cramp \u2014 frozen 4s then half speed',effect:'cramp',duration:4000},speech:'"WATCH MY FORM!!"',deathQuip:'I let you win. Saving energy.',location:'THE SIDEWALK',bg:'bg_street'},
+  {key:'waylon',name:'WAYLON',icon:'\u26bd',sub:'"He brought the soccer ball. Of course."',difficulty:3,color:0x0044ff,cutscene:{time:'3:08 AM',location:'THE STREET',panel1Caption:'Waylon carries a soccer ball everywhere.\nEverywhere.',panel2Speech:'"YOU WERE SUPPOSED\nTO PASS!!"',panel3Caption:'We haven\'t played soccer in three weeks.\nHe\'s still mad about the pass.'},kryptonite:{id:'red_card',icon:'\ud83d\udfe5',name:'RED CARD',desc:'Ejected! Stunned 5s, no soccer balls',effect:'ejected',duration:5000},speech:'"YOU WERE SUPPOSED TO PASS!!"',deathQuip:"That's a foul!! Calling VAR!!",location:'THE STREET',bg:'bg_street'},
+  {key:'jack',name:'JACK',icon:'\ud83d\udcc8',sub:'"The market never sleeps."',difficulty:3,color:0x00aa44,cutscene:{time:'3:14 AM',location:'MAIN ST ROASTERS',panel1Caption:'Jack discovered day trading\nsix weeks ago.\nHe will not stop talking about it.',panel2Speech:'"THIS INCREASES\nNEIGHBORHOOD RISK INDEX."',panel3Caption:'He\'s down $340.\nHe says it\'s a long-term play.'},kryptonite:{id:'market_crash',icon:'\ud83d\udcc9',name:'MARKET CRASH',desc:'Panic mode \u2014 runs AWAY from you 5s',effect:'panic',duration:5000},speech:'"THIS INCREASES NEIGHBORHOOD RISK INDEX."',deathQuip:'This is just a dip!! HODLING!!',location:'MAIN ST ROASTERS',bg:'bg_roasters'},
+  {key:'ef',name:'KAREN',icon:'\ud83d\udccb',sub:'"She volunteered. Nobody asked her to."',difficulty:3,color:0xff8800,cutscene:{time:'3:22 AM',location:'NORTHWOOD HALLWAY',panel1Caption:'Karen volunteered to be hall monitor.\nNobody asked her to.\nThere is no hall monitor position.',panel2Speech:'"EXCUSE ME.\nDO YOU HAVE A PASS?"',panel3Caption:'It\'s 3am on a Saturday.\nShe made the pass forms herself.'},kryptonite:{id:'hall_pass',icon:'\ud83d\udcdd',name:'HALL PASS',desc:'She has to let you go \u2014 frozen 4s',effect:'confused',duration:4000},speech:'"EXCUSE ME. DO YOU HAVE A PASS?"',deathQuip:'DETENTION!! Whenever school starts!!',location:'NORTHWOOD HALLWAY',bg:'bg_school'},
+  {key:'es',name:'MRS. STEINER',icon:'\ud83d\udcda',sub:'"Grading papers. In summer."',difficulty:4,color:0x4444aa,cutscene:{time:'3:31 AM',location:'NORTHWOOD MATH WING',panel1Caption:'Mrs. Steiner never leaves.\nWe think she lives here.\nNo one has investigated.',panel2Speech:'"I HOPE YOU STUDIED,\nBRODY."',panel3Caption:'She\'s grading papers.\nIt\'s summer.\nSchool doesn\'t start for two months.'},kryptonite:{id:'extra_credit',icon:'\u270f\ufe0f',name:'EXTRA CREDIT',desc:'Distracted grading \u2014 stops 5s',effect:'grading',duration:5000},speech:'"I HOPE YOU STUDIED, BRODY."',deathQuip:'F MINUS!! See me after class!!',location:'NORTHWOOD MATH WING',bg:'bg_school'},
+  {key:'coach',name:'COACH ANDREWS',icon:'\ud83c\udfc8',sub:'"The lights were already on."',difficulty:4,color:0x4488ff,cutscene:{time:'3:39 AM',location:'NORTHWOOD FOOTBALL FIELD',panel1Caption:'The field lights were already on\nwhen I got here.\nI don\'t want to know why.',panel2Speech:'"SON.\nDROP AND GIVE ME 20."',panel3Caption:'He was running drills. Alone. At 3am.\nThe man is a force of nature.'},kryptonite:{id:'air_horn',icon:'\ud83d\udcef',name:'AIR HORN',desc:'Startled \u2014 runs wrong direction 4s',effect:'startled',duration:4000},speech:'"SON. DROP AND GIVE ME 20."',deathQuip:'SEE YOU AT 6AM MONDAY!! SUICIDES!!',location:'NORTHWOOD FOOTBALL FIELD',bg:'bg_school'},
+  {key:'et',name:'MR. BERG',icon:'\ud83c\udf93',sub:'"My office. We are at a coffee shop."',difficulty:4,color:0xff0000,cutscene:{time:'3:44 AM',location:'MAIN ST ROASTERS',panel1Caption:'Mr. Berg hasn\'t left school property\nsince 2019.\nMain St Roasters technically counts.',panel2Speech:'"MY OFFICE.\nNOW."',panel3Caption:'He said \'my office.\'\nWe are at a coffee shop.\nHe has a permanent table.'},kryptonite:{id:'parent_call',icon:'\ud83d\udcde',name:'PARENT CALL',desc:'Has to take the call \u2014 frozen 5s',effect:'phone_call',duration:5000},speech:'"MY OFFICE. NOW."',deathQuip:'THIS GOES ON YOUR PERMANENT RECORD!!',location:'MAIN ST ROASTERS',bg:'bg_roasters'},
+  {key:'braden',name:'BRADEN',icon:'\ud83d\ude02',sub:'"He\'s been live for six minutes."',difficulty:4,color:0xff6600,cutscene:{time:'3:51 AM',location:'THE STREETS',panel1Caption:'Braden is my best friend.\nHe found out I was sneaking out.\nHe grabbed his phone.',panel2Speech:'"BRO I JUST\nNEED THE CONTENT."',panel3Caption:'He\'s been live for 6 minutes.\n4 viewers.\nOne of them is my mom.'},kryptonite:{id:'dead_battery',icon:'\ud83d\udd0b',name:'DEAD BATTERY',desc:'Phone dies \u2014 loses ALL abilities 8s',effect:'no_phone',duration:8000},speech:'"BRO I JUST NEED THE CONTENT."',deathQuip:'BRO I GOT IT ALL ON CAMERA THOUGH \ud83d\ude02',location:'THE STREETS',bg:'bg_street'},
+  {key:'boss',name:'MAMA',icon:'\ud83d\udc69',sub:'"Peyton texted her at 2:48."',difficulty:5,color:0xff6600,isBoss:true,cutscene:{time:'4:00 AM',location:'THE FRONT DOOR',panel1Caption:'The door was already open\nwhen I got back.\nThat\'s never good.',panel2Speech:'"WHERE.\nHAVE. YOU.\nBEEN."',panel3Caption:'She knew.\nShe always knew.\nPeyton texted her at 2:48.'},kryptonite:{id:'sleep_mask',icon:'\ud83d\udecf\ufe0f',name:'SLEEP MASK',desc:'Confused 3s \u2014 half damage',effect:'confused_mama',duration:3000},speech:'"WHERE. HAVE. YOU. BEEN."',deathQuip:"...we'll talk about this tomorrow.",location:'THE FRONT DOOR',bg:'bg_house'},
 ];
 
 // ─────────────────────────────────────────────────
@@ -773,60 +773,70 @@ class GameScene extends Phaser.Scene {
   }
 
   showIntroCutscene(opp,onComplete){
+    const cs=opp.cutscene;if(!cs){if(onComplete)onComplete();return;}
     const objs=[];const a=o=>{objs.push(o);return o;};
-    const cleanup=()=>{this.tweens.add({targets:objs,alpha:0,duration:300,onComplete:()=>{objs.forEach(o=>{if(o?.scene)o.destroy();});if(onComplete)onComplete();}});};
-    const times=['12:47 AM','1:23 AM','2:17 AM','3:02 AM','2:58 AM','1:45 AM','3:15 AM','2:33 AM','1:58 AM','3:47 AM','4:00 AM'];
-    const tIdx=ROSTER.findIndex(r=>r.key===opp.key);
-    const timeStr=times[tIdx]||'3:00 AM';
-    const loc=(opp.location||'THE STREETS').toUpperCase();
+    const cleanup=()=>{this.tweens.add({targets:objs,alpha:0,duration:400,onComplete:()=>{objs.forEach(o=>{try{if(o?.scene)o.destroy();}catch(e){}});if(onComplete)onComplete();}});};
     const colHex='#'+(opp.color||0xff9900).toString(16).padStart(6,'0');
-    // Panel 1 — Location
-    const black=a(this.add.graphics().setDepth(500));black.fillStyle(0x000000,1);black.fillRect(0,0,W,H);
-    const panel=a(this.add.graphics().setDepth(501));
-    panel.fillStyle(0x0a0a0a,1);panel.fillRect(20,80,W-40,H-160);panel.lineStyle(4,0xffffff,1);panel.strokeRect(20,80,W-40,H-160);
-    const locBg=a(this.add.graphics().setDepth(502));locBg.fillStyle(0x000000,1);locBg.fillRect(20,140,W-40,50);
-    const t1=a(this.add.text(W/2,155,timeStr,{fontFamily:'Orbitron',fontSize:'13px',color:'#ffcc00',fontStyle:'bold'}).setOrigin(0.5).setDepth(503).setAlpha(0));
-    const t2=a(this.add.text(W/2,190,'\ud83d\udccd '+loc,{fontFamily:'Orbitron',fontSize:'16px',color:'#ffffff',fontStyle:'bold',stroke:'#000',strokeThickness:4}).setOrigin(0.5).setDepth(503).setAlpha(0));
-    this.tweens.add({targets:[t1,t2],alpha:1,duration:400});
-    this.cameras.main.shake(200,0.008);
-    // Panel 2 — Enemy reveal (after 1.8s)
-    this.time.delayedCall(1800,()=>{
-      panel.clear();panel.fillStyle(0x0a0a0a,1);panel.fillRect(20,80,W-40,H-160);panel.lineStyle(4,0xffffff,1);panel.strokeRect(20,80,W-40,H-160);
-      t1.setAlpha(0);t2.setAlpha(0);locBg.setAlpha(0);
-      const lines=a(this.add.graphics().setDepth(502));
-      for(let i=0;i<16;i++){const ang=(i/16)*Math.PI*2;lines.lineStyle(1,opp.color||0xff9900,0.3);lines.lineBetween(W*0.35+Math.cos(ang)*30,H*0.48+Math.sin(ang)*30,W*0.35+Math.cos(ang)*200,H*0.48+Math.sin(ang)*200);}
-      let enemySprite=null;
-      if(this.textures.exists(opp.key)){enemySprite=a(this.add.image(W*0.35,H*0.48,opp.key).setDepth(503).setDisplaySize(140,140).setAlpha(0));this.tweens.add({targets:enemySprite,alpha:1,displayWidth:170,displayHeight:170,duration:2000,ease:'Sine.easeOut'});}
-      const ic=a(this.add.text(W*0.68,H*0.40,opp.icon,{fontSize:'50px'}).setOrigin(0.5).setDepth(504).setAlpha(0));
-      const nm=a(this.add.text(W*0.68,H*0.50,opp.name,{fontFamily:'Orbitron',fontSize:'18px',color:colHex,fontStyle:'bold',stroke:'#000',strokeThickness:5}).setOrigin(0.5).setDepth(504).setAlpha(0));
-      const st=a(this.add.text(W*0.68,H*0.58,'\u2605'.repeat(opp.difficulty||1)+'\u2606'.repeat(5-(opp.difficulty||1)),{fontSize:'16px',color:'#ffcc00'}).setOrigin(0.5).setDepth(504).setAlpha(0));
-      const speech=opp.speech||'"..."';
-      const bx=30,by=H-180,bw=W-60,bh=70;
+    // Black base
+    const base=a(this.add.graphics().setDepth(500));base.fillStyle(0x000000,1);base.fillRect(0,0,W,H);
+    // ── PANEL 1 — Time + Location + Narrator ──
+    const showPanel1=()=>{
+      const lines=a(this.add.graphics().setDepth(501));for(let i=0;i<20;i++){lines.lineStyle(1,0x111111,1);lines.lineBetween(0,i*(H/20),W,i*(H/20));}
+      const timeTxt=a(this.add.text(20,90,'',{fontFamily:'Orbitron',fontSize:'13px',color:'#ffcc00',fontStyle:'bold',stroke:'#000',strokeThickness:3}).setDepth(502));
+      const locTxt=a(this.add.text(W/2,H/2-20,cs.location,{fontFamily:'Orbitron',fontSize:'22px',color:'#ffffff',fontStyle:'bold',stroke:'#000',strokeThickness:6,align:'center'}).setOrigin(0.5).setDepth(502).setAlpha(0));
+      const bar=a(this.add.graphics().setDepth(501).setAlpha(0));bar.fillStyle(opp.color||0xff9900,0.6);bar.fillRect(0,H/2+10,W,4);
+      const narBg=a(this.add.graphics().setDepth(502).setAlpha(0));narBg.fillStyle(0x000000,0.85);narBg.fillRect(0,H-140,W,120);
+      const narTxt=a(this.add.text(W/2,H-80,cs.panel1Caption,{fontFamily:'Orbitron',fontSize:'12px',color:'#ffff99',fontStyle:'italic',align:'center',lineSpacing:8,wordWrap:{width:W-40},stroke:'#000',strokeThickness:2}).setOrigin(0.5).setDepth(503).setAlpha(0));
+      const timeStr=cs.time+' \u2014';let ci=0;
+      this.time.addEvent({delay:60,repeat:timeStr.length-1,callback:()=>{timeTxt.setText(timeStr.substring(0,++ci));}});
+      this.time.delayedCall(400,()=>{this.tweens.add({targets:[locTxt,bar],alpha:1,duration:400});this.cameras.main.shake(150,0.006);});
+      this.time.delayedCall(900,()=>{this.tweens.add({targets:[narBg,narTxt],alpha:1,duration:400});});
+      this.time.delayedCall(2400,showPanel2);
+    };
+    // ── PANEL 2 — Enemy close-up + speech ──
+    const showPanel2=()=>{
+      const toRm=objs.slice(1);this.tweens.add({targets:toRm,alpha:0,duration:200,onComplete:()=>toRm.forEach(o=>{try{if(o?.scene)o.destroy();}catch(e){}})});
+      const cx=W*0.38,cy=H*0.48;
+      const sl=a(this.add.graphics().setDepth(501).setAlpha(0));for(let i=0;i<24;i++){const ang=(i/24)*Math.PI*2;sl.lineStyle(1.5,opp.color||0xff9900,0.25);sl.lineBetween(cx+Math.cos(ang)*20,cy+Math.sin(ang)*20,cx+Math.cos(ang)*250,cy+Math.sin(ang)*250);}
+      let eImg=null;try{if(this.textures.exists(opp.key)){eImg=a(this.add.image(cx,cy,opp.key).setDisplaySize(150,150).setDepth(503).setAlpha(0));}}catch(e){}
+      const wash=a(this.add.graphics().setDepth(501).setAlpha(0));wash.fillStyle(opp.color||0xff9900,0.08);wash.fillRect(0,0,W,H);
+      a(this.add.text(W*0.72,H*0.38,opp.icon,{fontSize:'44px'}).setOrigin(0.5).setDepth(504).setAlpha(0));
+      a(this.add.text(W*0.72,H*0.50,opp.name,{fontFamily:'Orbitron',fontSize:'16px',color:colHex,fontStyle:'bold',stroke:'#000',strokeThickness:5,align:'center',wordWrap:{width:W*0.48}}).setOrigin(0.5).setDepth(504).setAlpha(0));
+      const stars='\u2605'.repeat(opp.difficulty||1)+'\u2606'.repeat(5-(opp.difficulty||1));
+      a(this.add.text(W*0.72,H*0.60,stars,{fontSize:'14px',color:'#ffcc00'}).setOrigin(0.5).setDepth(504).setAlpha(0));
+      const bW2=W-40,bH2=80,bX=20,bY=H-160;
       const bubble=a(this.add.graphics().setDepth(504).setAlpha(0));
-      bubble.fillStyle(0xffffff,1);bubble.fillRoundedRect(bx,by,bw,bh,10);bubble.lineStyle(3,0x000000,1);bubble.strokeRoundedRect(bx,by,bw,bh,10);
-      bubble.fillTriangle(bx+40,by,bx+60,by,bx+30,by-18);bubble.fillStyle(0x000000,1);bubble.fillTriangle(bx+40,by,bx+60,by,bx+30,by-18);bubble.fillStyle(0xffffff,1);bubble.fillTriangle(bx+41,by,bx+59,by,bx+32,by-14);
-      const stxt=a(this.add.text(bx+bw/2,by+bh/2,speech,{fontFamily:'Orbitron',fontSize:'11px',color:'#000000',fontStyle:'bold',wordWrap:{width:bw-20},align:'center'}).setOrigin(0.5).setDepth(505).setAlpha(0));
-      [ic,nm,st,bubble,stxt,lines].forEach((o,i)=>this.tweens.add({targets:o,alpha:1,duration:250,delay:i*50}));
-      this.cameras.main.shake(300,0.012);
-      // Panel 3 — FIGHT flash (after 2.5s more)
-      this.time.delayedCall(2500,()=>{
-        const fb=a(this.add.graphics().setDepth(510).setAlpha(0));fb.fillStyle(0x000000,1);fb.fillRect(0,0,W,H);
-        this.tweens.add({targets:fb,alpha:1,duration:150,onComplete:()=>{
-          const ft=a(this.add.text(W/2,H/2,'FIGHT!',{fontFamily:'Orbitron',fontSize:'64px',color:'#ff9900',fontStyle:'bold',stroke:'#000',strokeThickness:8}).setOrigin(0.5).setDepth(511).setAlpha(0).setScale(2));
-          this.tweens.add({targets:ft,alpha:1,scale:1,duration:200,ease:'Back.easeOut',onComplete:()=>{
-            this.cameras.main.shake(400,0.02);SFX.play('roundclear');
-            this.time.delayedCall(700,()=>{this.tweens.add({targets:ft,alpha:0,scale:0.5,duration:200,onComplete:cleanup});});
-          }});
+      bubble.fillStyle(0xffffff,1);bubble.fillRoundedRect(bX,bY,bW2,bH2,10);bubble.lineStyle(3,0x000000,1);bubble.strokeRoundedRect(bX,bY,bW2,bH2,10);
+      bubble.fillTriangle(bX+50,bY,bX+75,bY,bX+42,bY-20);bubble.lineStyle(3,0x000000,1);bubble.strokeTriangle(bX+50,bY,bX+75,bY,bX+42,bY-20);
+      a(this.add.text(bX+bW2/2,bY+bH2/2,cs.panel2Speech,{fontFamily:'Orbitron',fontSize:'12px',color:'#000000',fontStyle:'bold',wordWrap:{width:bW2-20},align:'center'}).setOrigin(0.5).setDepth(505).setAlpha(0));
+      this.tweens.add({targets:[wash,sl],alpha:1,duration:200});
+      if(eImg)this.tweens.add({targets:eImg,alpha:1,duration:300,onComplete:()=>{this.tweens.add({targets:eImg,displayWidth:175,displayHeight:175,duration:2000,ease:'Sine.easeOut'});}});
+      this.time.delayedCall(150,()=>{objs.filter(o=>o.alpha===0).forEach((o,i)=>this.tweens.add({targets:o,alpha:1,duration:250,delay:i*60}));});
+      this.cameras.main.shake(200,0.01);
+      this.time.delayedCall(2500,showPanel3);
+    };
+    // ── PANEL 3 — Narrator punchline + FIGHT! ──
+    const showPanel3=()=>{
+      const pBg=a(this.add.graphics().setDepth(510).setAlpha(0));pBg.fillStyle(0x000000,0.92);pBg.fillRect(0,H*0.3,W,H*0.22);
+      a(this.add.text(W/2,H*0.41,cs.panel3Caption,{fontFamily:'Orbitron',fontSize:'12px',color:'#ffff99',fontStyle:'italic',align:'center',lineSpacing:8,wordWrap:{width:W-40},stroke:'#000',strokeThickness:2}).setOrigin(0.5).setDepth(511).setAlpha(0));
+      objs.filter(o=>o.alpha===0).forEach(o=>this.tweens.add({targets:o,alpha:1,duration:300}));
+      this.time.delayedCall(1200,()=>{
+        const fw=a(this.add.graphics().setDepth(515).setAlpha(0));fw.fillStyle(0xffffff,1);fw.fillRect(0,0,W,H);
+        this.tweens.add({targets:fw,alpha:1,duration:80,onComplete:()=>{
+          fw.clear();fw.fillStyle(0x000000,1);fw.fillRect(0,0,W,H);
+          const ft=a(this.add.text(W/2,H/2,'FIGHT!',{fontFamily:'Orbitron',fontSize:'72px',color:'#ff9900',fontStyle:'bold',stroke:'#000000',strokeThickness:10}).setOrigin(0.5).setDepth(516).setAlpha(0).setScale(2.5));
+          this.tweens.add({targets:ft,alpha:1,scale:1,duration:180,ease:'Back.easeOut',onComplete:()=>{this.cameras.main.shake(500,0.025);SFX.play('roundclear');this.time.delayedCall(800,cleanup);}});
         }});
       });
-    });
+    };
+    this.time.delayedCall(100,showPanel1);
   }
 
   startRound(n){
     if(this.dead)return;
     const rd0=this.activeRounds[n-1];
     if(!rd0){this.winGame();return;}
-    if(n===1&&this.opponent){
+    if(this.opponent?.cutscene){
       this.showIntroCutscene(this.opponent,()=>this.doStartRound(n));
     }else{
       this.doStartRound(n);

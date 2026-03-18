@@ -152,6 +152,8 @@ const GEAR_STAT_BASE={dmg:4,maxhp:20,magnet:40,speed:15,firerate:80,crit:0.05};
 const WEAPONS=[{id:'spread',icon:'\ud83c\udf00',name:'SPREAD SHOT',desc:'3-way bullet spread',color:0x00ffcc},{id:'orbit',icon:'\ud83d\udcab',name:'ORBIT BLADES',desc:'Spinning blades around you',color:0xffcc00},{id:'pulse',icon:'\u26a1',name:'SHOCK PULSE',desc:'AoE burst every 3s',color:0xff8800},{id:'laser',icon:'\ud83d\udd34',name:'LASER BEAM',desc:'Piercing beam, 8x damage',color:0xff0000},{id:'rapid',icon:'\ud83d\udd25',name:'RAPID FIRE',desc:'4x fire rate, less damage',color:0xff4400},{id:'vacuum',icon:'\ud83e\uddf2',name:'SNACK VACUUM',desc:'Huge snack pickup radius',color:0xcc44ff}];
 const POWERUPS=[{id:'sugar_rush',icon:'\ud83d\udc5f',name:'SUGAR RUSH',desc:'2x speed 30s',color:0x4488ff,duration:30000},{id:'jacket',icon:'\ud83d\udee1\ufe0f',name:"MOM'S JACKET",desc:'50% damage reduction 30s',color:0xffcc00,duration:30000},{id:'energy_drink',icon:'\u26a1',name:'ENERGY DRINK',desc:'3x fire rate 20s',color:0xff8800,duration:20000},{id:'home_cooking',icon:'\u2764\ufe0f',name:'HOME COOKING',desc:'+40 HP instant',color:0x00ff88,duration:0},{id:'rage',icon:'\ud83d\udd25',name:'RAGE MODE',desc:'5x damage 15s',color:0xff2244,duration:15000},{id:'ghost',icon:'\ud83c\udf00',name:'GHOST MODE',desc:'Invincible 8s',color:0xcc44ff,duration:8000}];
 const BRODY_VILLAIN_TRASH=["I've been on creatine for TWO WEEKS.\nYou can literally see the difference.","These Oreos? Pre-workout.\nYou wouldn't understand.","I gained 4 pounds this month.\nThat's called MASS BRO.","My protein shake has 47 grams of protein.\nI counted.","I'm basically in a bulk right now\nso I'm supposed to look like this.","Coach said I'm looking big.\nCOACH SAID THAT.","I do intermittent fasting.\nFrom midnight to 12:03am.","These aren't love handles.\nThis is CREATINE WATER RETENTION.","I've been doing push-ups.\nWell. A push-up. But with perfect form.","My macros are DIALED IN bro.\nOreos are mostly carbs which is fuel.","I'm not even going that hard.\nThis is like 40%.","I watched a 47-minute YouTube video\nabout deadlifts. I'm basically certified.","My shaker bottle cost $34.\nTHIRTY. FOUR. DOLLARS.","I can bench 95 pounds. On a good day.\nWith a spotter. And encouragement.","Creatine makes you stronger AND smarter.\nI read that somewhere.","I've been meal prepping.\nI made one chicken breast on Sunday.","My gym playlist is IMMACULATE.\n4 songs. All Eye of the Tiger.","I'm thinking about getting a trainer.\nOr at least following one on Instagram.","My biceps were sore yesterday.\nThat means they're GROWING.","I only eat Oreos after 6pm.\nThat's called CARB CYCLING.","I've been taking creatine for 3 days.\nI'm basically a different person.","I could stop you with one arm but\nI just did arms yesterday. Being careful.","I'm not sweating.\nThis is my creatine working.","I have a gym membership at the YMCA.\nI've been twice.","Mom said I look skinnier.\nI've gained 8 pounds.\nWe don't talk about it."];
+const GEAR_SLOTS=[{key:'shoes',icon:'\ud83d\udc5f',name:'SHOES',stat:'speed',statLabel:'Speed',statPerLevel:12,tiers:[{name:'BEAT-UP VANS',color:0x888888,maxLevel:5,unlockCost:0},{name:'FRESH NIKES',color:0xaaaaaa,maxLevel:10,unlockCost:150},{name:'TURBO CLEATS',color:0xffd700,maxLevel:15,unlockCost:400},{name:'HOVERBOARD SHOES',color:0x00ffff,maxLevel:20,unlockCost:800},{name:'SONIC SNEAKERS',color:0xff4444,maxLevel:25,unlockCost:1500,special:'Speed trail + dodge chance'}]},{key:'backpack',icon:'\ud83c\udf92',name:'BACKPACK',stat:'dmg',statLabel:'Damage',statPerLevel:3,tiers:[{name:'OLD JANSPORT',color:0x888888,maxLevel:5,unlockCost:0},{name:'TEXTBOOK PACK',color:0xaaaaaa,maxLevel:10,unlockCost:150},{name:'TRAINING PACK',color:0xffd700,maxLevel:15,unlockCost:400},{name:'JETPACK BACKPACK',color:0x00ffff,maxLevel:20,unlockCost:800},{name:'CHAOS PACK',color:0xff4444,maxLevel:25,unlockCost:1500,special:'Shoots homework in all directions'}]},{key:'phone',icon:'\ud83d\udcf1',name:'PHONE',stat:'firerate',statLabel:'Fire Rate',statPerLevel:40,tiers:[{name:'CRACKED BURNER',color:0x888888,maxLevel:5,unlockCost:0},{name:'STANDARD iPHONE',color:0xaaaaaa,maxLevel:10,unlockCost:150},{name:'GAMING PHONE',color:0xffd700,maxLevel:15,unlockCost:400},{name:'5G TURBO PHONE',color:0x00ffff,maxLevel:20,unlockCost:800},{name:'CONTENT CREATOR PRO',color:0xff4444,maxLevel:25,unlockCost:1500,special:'Auto-films enemies, stuns them'}]},{key:'hat',icon:'\ud83e\udde2',name:'HAT',stat:'maxhp',statLabel:'Max HP',statPerLevel:20,tiers:[{name:'FLAT BRIM CAP',color:0x888888,maxLevel:5,unlockCost:0},{name:'NW SNAPBACK',color:0xaaaaaa,maxLevel:10,unlockCost:150},{name:'VIKING HELMET',color:0xffd700,maxLevel:15,unlockCost:400},{name:'KNIGHT HELMET',color:0x00ffff,maxLevel:20,unlockCost:800},{name:'TITANIUM FITTED',color:0xff4444,maxLevel:25,unlockCost:1500,special:'Reflects 10% damage back'}]},{key:'lunchbox',icon:'\ud83c\udf55',name:'LUNCHBOX',stat:'magnet',statLabel:'Snack Range',statPerLevel:35,tiers:[{name:'PAPER BAG LUNCH',color:0x888888,maxLevel:5,unlockCost:0},{name:'TUPPERWARE',color:0xaaaaaa,maxLevel:10,unlockCost:150},{name:'INSULATED COOLER',color:0xffd700,maxLevel:15,unlockCost:400},{name:'SNACK VACUUM 3000',color:0x00ffff,maxLevel:20,unlockCost:800},{name:'BLACK HOLE BENTO',color:0xff4444,maxLevel:25,unlockCost:1500,special:'Pulls ALL snacks instantly'}]},{key:'drink',icon:'\ud83e\uddc3',name:'DRINK',stat:'crit',statLabel:'Crit Rate',statPerLevel:0.03,tiers:[{name:'WATER BOTTLE',color:0x888888,maxLevel:5,unlockCost:0},{name:'SPORTS DRINK',color:0xaaaaaa,maxLevel:10,unlockCost:150},{name:'ENERGY DRINK',color:0xffd700,maxLevel:15,unlockCost:400},{name:'PRE-WORKOUT JUG',color:0x00ffff,maxLevel:20,unlockCost:800},{name:'DOUBLE SCOOP CREATINE',color:0xff4444,maxLevel:25,unlockCost:1500,special:'Temporary split \u2014 become 2 Brodys!'}]}];
+const WEAPONS_CATALOG=[{id:'textbook',icon:'\ud83d\udcda',name:'TEXTBOOK THROW',desc:'High damage, slow fire',unlockCost:0,dmgMult:2.0,rateMult:1.0},{id:'paper',icon:'\ud83d\udcc4',name:'PAPER AIRPLANE',desc:'Fast, low damage, curves',unlockCost:50,dmgMult:0.6,rateMult:0.5},{id:'frisbee',icon:'\ud83e\udd4f',name:'FRISBEE',desc:'Bounces off walls once',unlockCost:150,dmgMult:1.2,rateMult:0.8,bounces:true},{id:'banana',icon:'\ud83c\udf4c',name:'BANANA PEEL',desc:'Trips enemies on hit',unlockCost:300,dmgMult:0.8,rateMult:0.9,trips:true},{id:'oreo',icon:'\ud83c\udf6a',name:'OREO BARRAGE',desc:'3-way spread shot',unlockCost:500,dmgMult:0.7,rateMult:0.7,spread:true},{id:'cupcake',icon:'\ud83e\uddc1',name:'CUPCAKE CANNON',desc:'Explosive AoE on hit',unlockCost:800,dmgMult:1.5,rateMult:1.2,explosive:true},{id:'airhorn',icon:'\ud83d\udcef',name:'AIR HORN BLAST',desc:'Pushes enemies back',unlockCost:1200,dmgMult:1.0,rateMult:1.0,pushback:true},{id:'spitball',icon:'\ud83c\udfaf',name:'SPITBALL SHOOTER',desc:'Ultra rapid fire',unlockCost:2000,dmgMult:0.4,rateMult:0.25}];
 
 const ROSTER = [
   {key:'sister',name:'PEYTON',icon:'\ud83d\udc67',sub:'"I already texted Mom."',difficulty:2,color:0xcc44ff,cutscene:{time:'2:47 AM',location:'THE BACKYARD',panel1Caption:'I had one rule.\nDon\'t wake Peyton.',panel2Speech:'"BRODY. I SAW THAT."',panel3Caption:'She was awake.\nShe\'s always awake.'},kryptonite:{id:'moms_phone',icon:'\ud83d\udcf5',name:"MOM'S PHONE",desc:'Silences her \u2014 no invincibility, no backup',effect:'silence',duration:5000},speech:'"BRODY. I SAW THAT."',deathQuip:'FINE!! Telling in the morning!!',location:'THE BACKYARD',bg:'bg_house'},
@@ -570,41 +572,78 @@ class LeaderboardScene extends Phaser.Scene {
 // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 class UpgradeScene extends Phaser.Scene {
   constructor(){super('UpgradeScene');}
+  init(d){this.activeTab=d?.tab||'gear';}
   create(){
-    DTM.makeBG(this);this.upgrades=DTM.getUpgrades();
-    const hg=this.add.graphics();hg.fillStyle(0x0d0d0d,0.95);hg.fillRect(0,0,W,60);hg.lineStyle(2,0x00ff88,0.4);hg.lineBetween(0,60,W,60);
-    this.add.text(W/2,30,"\ud83c\udf92 BRODY'S LOCKER",{fontFamily:'Orbitron',fontSize:'16px',color:'#00ff88',fontStyle:'bold'}).setOrigin(0.5);
-    const back=this.add.text(16,30,'\u2039 BACK',{fontFamily:'Orbitron',fontSize:'13px',color:'#888899'}).setOrigin(0,0.5).setInteractive({useHandCursor:true});
-    back.on('pointerdown',()=>{this.cameras.main.fadeOut(250,0,0,0);this.time.delayedCall(250,()=>this.scene.start('HubScene'));});
-    this.snackTxt=this.add.text(W-16,30,`\ud83c\udf55 ${DTM.getSnacks()}`,{fontFamily:'Orbitron',fontSize:'14px',color:'#ffcc00'}).setOrigin(1,0.5);
-    const items=[
-      {key:'sneakers',icon:'\ud83d\udc5f',name:'SNEAKERS',desc:'Move Speed',stat:'+18 SPD/lv',base:30},
-      {key:'backpack',icon:'\ud83c\udf92',name:'BACKPACK',desc:'Throw Damage',stat:'+12% DMG/lv',base:40},
-      {key:'phone',icon:'\ud83d\udcf1',name:'PHONE',desc:'Fire Rate',stat:'-55ms/lv',base:35},
-      {key:'hoodie',icon:'\ud83e\udde2',name:'HOODIE',desc:'Max HP',stat:'+40 HP/lv',base:25},
-    ];
-    items.forEach((item,i)=>this.drawUpgradeCard(item,80+i*162));
-    DTM.bottomNav(this,'upgrade');this.cameras.main.fadeIn(350,0,0,0);
+    DTM.makeBG(this);this.cameras.main.fadeIn(300,0,0,0);
+    const snacks=DTM.getSnacks(),upgrades=DTM.getUpgrades();
+    const unlockedWpns=JSON.parse(localStorage.getItem('dtm_weapons')||'["textbook"]');
+    const equippedWpn=localStorage.getItem('dtm_equipped_weapon')||'textbook';
+    const hg=this.add.graphics().setScrollFactor(0).setDepth(30);
+    hg.fillStyle(0x0d0d0d,0.97);hg.fillRect(0,0,W,65);hg.lineStyle(2,0xff9900,0.4);hg.lineBetween(0,65,W,65);
+    this.add.text(W/2,22,"\ud83d\udd12 BRODY'S LOCKER",{fontFamily:'Orbitron',fontSize:'16px',color:'#ff9900',fontStyle:'bold'}).setOrigin(0.5).setDepth(31).setScrollFactor(0);
+    this.add.text(W-16,22,'\ud83c\udf55 '+snacks,{fontFamily:'Orbitron',fontSize:'14px',color:'#ffcc00',fontStyle:'bold'}).setOrigin(1,0.5).setDepth(31).setScrollFactor(0);
+    this.add.text(16,33,'\u2039 BACK',{fontFamily:'Orbitron',fontSize:'13px',color:'#888899'}).setOrigin(0,0.5).setDepth(31).setScrollFactor(0).setInteractive({useHandCursor:true}).on('pointerdown',()=>{this.cameras.main.fadeOut(250,0,0,0);this.time.delayedCall(250,()=>this.scene.start('HubScene'));});
+    [{id:'gear',label:'\u2699\ufe0f GEAR'},{id:'weapons',label:'\u2694\ufe0f WEAPONS'}].forEach((t,i)=>{
+      const isA=this.activeTab===t.id,tx=16+i*(W/2-12);
+      const tbg=this.add.graphics().setDepth(31).setScrollFactor(0);tbg.fillStyle(isA?0xff9900:0x1a1a2e,1);tbg.fillRoundedRect(tx,68,W/2-20,30,6);
+      this.add.text(tx+(W/2-20)/2,83,t.label,{fontFamily:'Orbitron',fontSize:'11px',color:isA?'#000000':'#888899',fontStyle:isA?'bold':'normal'}).setOrigin(0.5).setDepth(32).setScrollFactor(0).setInteractive({useHandCursor:true}).on('pointerdown',()=>{if(!isA)this.scene.restart({tab:t.id});});
+    });
+    if(this.activeTab==='gear')this.buildGearTab(upgrades,snacks);
+    else this.buildWeaponsTab(unlockedWpns,equippedWpn,snacks);
+    DTM.bottomNav(this,'upgrade');
   }
-  drawUpgradeCard(item,y){
-    const level=this.upgrades[item.key]||0,maxLevel=10,cost=item.base*(level+1),canAfford=DTM.getSnacks()>=cost,isMax=level>=maxLevel;
-    DTM.makeCard(this,16,y,W-32,148,0.95);
-    this.add.text(28,y+16,item.icon,{fontSize:'28px'});
-    this.add.text(72,y+18,item.name,{fontFamily:'Orbitron',fontSize:'14px',color:'#ffffff',fontStyle:'bold'});
-    this.add.text(72,y+38,item.desc,{fontFamily:'Orbitron',fontSize:'11px',color:'#888899'});
-    this.add.text(72,y+56,item.stat,{fontFamily:'Orbitron',fontSize:'11px',color:'#00ff88'});
-    const barW=W-80,barBg=this.add.graphics();
-    barBg.fillStyle(0x0d0d0d,1);barBg.fillRoundedRect(28,y+78,barW,14,4);
-    barBg.fillStyle(0x00ff88,1);barBg.fillRoundedRect(28,y+78,Math.floor(barW*(level/maxLevel)),14,4);
-    this.add.text(28+barW+8,y+78,`LV ${level}/${maxLevel}`,{fontFamily:'Orbitron',fontSize:'10px',color:'#888899'});
-    if(isMax){
-      const mb=this.add.graphics();mb.fillStyle(0xffcc00,1);mb.fillRoundedRect(W-108,y+100,80,36,8);
-      this.add.text(W-68,y+118,'MAX \u2b50',{fontFamily:'Orbitron',fontSize:'12px',color:'#000',fontStyle:'bold'}).setOrigin(0.5);
-    }else{
-      const btnC=canAfford?0xff9900:0x333333,ub=this.add.graphics();ub.fillStyle(btnC,1);ub.fillRoundedRect(W-148,y+100,120,36,8);
-      this.add.text(W-88,y+118,`\ud83c\udf55 ${cost}`,{fontFamily:'Orbitron',fontSize:'12px',color:canAfford?'#000':'#666666',fontStyle:'bold'}).setOrigin(0.5);
-      if(canAfford){const zone=this.add.zone(W-148,y+100,120,36).setOrigin(0,0).setInteractive({useHandCursor:true});zone.on('pointerdown',()=>{DTM.spendSnacks(cost);this.upgrades[item.key]=(this.upgrades[item.key]||0)+1;DTM.saveUpgrades(this.upgrades);SFX.play('equip');this.scene.restart();});}
-    }
+  buildGearTab(upgrades,snacks){
+    let yPos=108;
+    GEAR_SLOTS.forEach(slot=>{
+      const lv=upgrades[slot.key]||0;let tierIdx=0,cum=0;
+      for(let i=0;i<slot.tiers.length;i++){if(lv<cum+slot.tiers[i].maxLevel){tierIdx=i;break;}cum+=slot.tiers[i].maxLevel;if(i===slot.tiers.length-1)tierIdx=i;}
+      const tier=slot.tiers[tierIdx],lvInTier=lv-cum;
+      const maxLv=slot.tiers.reduce((s,t)=>s+t.maxLevel,0),isMaxed=lv>=maxLv;
+      const tierMaxed=lvInTier>=tier.maxLevel,nextTier=slot.tiers[tierIdx+1];
+      const cost=tierMaxed?(nextTier?nextTier.unlockCost:0):(lv+1)*8;
+      const colH='#'+tier.color.toString(16).padStart(6,'0'),cardH=78;
+      const card=this.add.graphics().setDepth(2);card.fillStyle(0x1a1a2e,0.97);card.fillRoundedRect(16,yPos,W-32,cardH,8);card.lineStyle(2,tier.color,0.8);card.strokeRoundedRect(16,yPos,W-32,cardH,8);
+      this.add.text(36,yPos+20,slot.icon,{fontSize:'22px'}).setOrigin(0.5).setDepth(3);
+      this.add.text(56,yPos+14,tier.name,{fontFamily:'Orbitron',fontSize:'10px',color:colH,fontStyle:'bold'}).setOrigin(0,0.5).setDepth(3);
+      this.add.text(56,yPos+32,slot.statLabel+' +'+Math.floor(lv*Math.abs(slot.statPerLevel)),{fontFamily:'Orbitron',fontSize:'9px',color:'#aaaacc'}).setOrigin(0,0.5).setDepth(3);
+      // Tier dots
+      slot.tiers.forEach((t,i)=>{const dg=this.add.graphics().setDepth(3);dg.fillStyle(i<=tierIdx?t.color:0x333344,i<=tierIdx?1:0.3);dg.fillCircle(56+i*14,yPos+48,4);});
+      // Level bar
+      const bw=W-180;const bg2=this.add.graphics().setDepth(3);bg2.fillStyle(0x111122,1);bg2.fillRoundedRect(56,yPos+58,bw,6,3);
+      const pct=tier.maxLevel>0?lvInTier/tier.maxLevel:0;bg2.fillStyle(tier.color,1);bg2.fillRoundedRect(56,yPos+58,bw*pct,6,3);
+      this.add.text(56+bw+4,yPos+61,'Lv'+lv,{fontFamily:'Orbitron',fontSize:'8px',color:'#666688'}).setOrigin(0,0.5).setDepth(3);
+      if(!isMaxed){
+        const canA=snacks>=cost;
+        const bl=tierMaxed?'\u2b06 '+cost+'\ud83c\udf55':'UP '+cost+'\ud83c\udf55';
+        const bbg=this.add.graphics().setDepth(3);bbg.fillStyle(canA?(tierMaxed?0xffcc00:0xff9900):0x333344,1);bbg.fillRoundedRect(W-90,yPos+12,66,28,6);
+        this.add.text(W-57,yPos+26,bl,{fontFamily:'Orbitron',fontSize:'9px',color:canA?'#000':'#555',fontStyle:'bold'}).setOrigin(0.5).setDepth(4);
+        this.add.zone(W-90,yPos+12,66,28).setOrigin(0,0).setDepth(5).setInteractive({useHandCursor:canA}).on('pointerdown',()=>{
+          if(!canA){this.cameras.main.flash(150,255,0,0);return;}
+          const ups=DTM.getUpgrades();DTM.spendSnacks(cost);
+          if(!tierMaxed)ups[slot.key]=(ups[slot.key]||0)+1;
+          DTM.saveUpgrades(ups);SFX.play('equip');
+          this.cameras.main.flash(200,0,255,128);
+          this.time.delayedCall(150,()=>this.scene.restart({tab:'gear'}));
+        });
+      }else{this.add.text(W-57,yPos+26,'\u2713 MAX',{fontFamily:'Orbitron',fontSize:'10px',color:'#ff4444',fontStyle:'bold'}).setOrigin(0.5).setDepth(3);}
+      yPos+=cardH+6;
+    });
+  }
+  buildWeaponsTab(unlockedWpns,equippedWpn,snacks){
+    let yPos=108;
+    WEAPONS_CATALOG.forEach(wpn=>{
+      const isU=unlockedWpns.includes(wpn.id),isE=equippedWpn===wpn.id,canA=snacks>=wpn.unlockCost;
+      const cardH=68;const col=isE?0xff9900:isU?0x00ff88:0x333344;
+      const card=this.add.graphics().setDepth(2);card.fillStyle(isE?0x2a1a00:0x1a1a2e,0.97);card.fillRoundedRect(16,yPos,W-32,cardH,8);card.lineStyle(isE?3:1,col,isE?1:0.6);card.strokeRoundedRect(16,yPos,W-32,cardH,8);
+      this.add.text(36,yPos+cardH/2,wpn.icon,{fontSize:'24px'}).setOrigin(0.5).setDepth(3);
+      this.add.text(60,yPos+18,wpn.name,{fontFamily:'Orbitron',fontSize:'11px',color:isE?'#ff9900':isU?'#ffffff':'#555566',fontStyle:'bold'}).setOrigin(0,0.5).setDepth(3);
+      this.add.text(60,yPos+36,wpn.desc,{fontFamily:'Orbitron',fontSize:'9px',color:'#888899'}).setOrigin(0,0.5).setDepth(3);
+      this.add.text(60,yPos+52,'DMG x'+wpn.dmgMult+'  RATE x'+wpn.rateMult,{fontFamily:'Orbitron',fontSize:'8px',color:'#666688'}).setOrigin(0,0.5).setDepth(3);
+      if(isE)this.add.text(W-24,yPos+cardH/2,'\u2713 EQUIPPED',{fontFamily:'Orbitron',fontSize:'10px',color:'#ff9900',fontStyle:'bold'}).setOrigin(1,0.5).setDepth(3);
+      else if(isU){const eb=this.add.text(W-24,yPos+cardH/2,'EQUIP \u203a',{fontFamily:'Orbitron',fontSize:'11px',color:'#00ff88',fontStyle:'bold'}).setOrigin(1,0.5).setDepth(3).setInteractive({useHandCursor:true});eb.on('pointerdown',()=>{localStorage.setItem('dtm_equipped_weapon',wpn.id);SFX.play('equip');this.cameras.main.flash(200,0,255,100);this.time.delayedCall(150,()=>this.scene.restart({tab:'weapons'}));});}
+      else{const bb=this.add.text(W-24,yPos+cardH/2,canA?'BUY \ud83c\udf55'+wpn.unlockCost:'\ud83d\udd12 \ud83c\udf55'+wpn.unlockCost,{fontFamily:'Orbitron',fontSize:'10px',color:canA?'#ffcc00':'#555566',fontStyle:'bold',align:'right'}).setOrigin(1,0.5).setDepth(3);if(canA){bb.setInteractive({useHandCursor:true});bb.on('pointerdown',()=>{DTM.spendSnacks(wpn.unlockCost);const uw=JSON.parse(localStorage.getItem('dtm_weapons')||'["textbook"]');uw.push(wpn.id);localStorage.setItem('dtm_weapons',JSON.stringify(uw));localStorage.setItem('dtm_equipped_weapon',wpn.id);SFX.play('legendary');this.cameras.main.flash(300,255,204,0);this.time.delayedCall(150,()=>this.scene.restart({tab:'weapons'}));});}}
+      yPos+=cardH+6;
+    });
   }
 }
 
@@ -646,9 +685,11 @@ class GameScene extends Phaser.Scene {
     this.orbitBlades=[];this.orbitAng=0;
     // Locker â€” flat
     const u=DTM.getUpgrades();
-    this.pSpeed+=(u.sneakers||0)*10;this.pDmg+=(u.backpack||0)*3;
-    this.fireRate=Math.max(300,this.fireRate-(u.phone||0)*30);
-    this.pMaxHP+=(u.hoodie||0)*25;this.pHP=this.pMaxHP;
+    GEAR_SLOTS.forEach(sl=>{const lv=u[sl.key]||0;const bonus=lv*Math.abs(sl.statPerLevel);switch(sl.stat){case'speed':this.pSpeed+=bonus;break;case'dmg':this.pDmg+=Math.floor(bonus);break;case'firerate':this.fireRate=Math.max(200,this.fireRate-bonus);break;case'maxhp':this.pMaxHP+=bonus;this.pHP=this.pMaxHP;break;case'magnet':this.magnetR+=bonus;break;case'crit':this.critRate+=bonus;break;}});
+    const eqWpnId=localStorage.getItem('dtm_equipped_weapon')||'textbook';
+    const wpnDef=WEAPONS_CATALOG.find(w=>w.id===eqWpnId)||WEAPONS_CATALOG[0];
+    this.equippedWeapon=wpnDef;this.pDmg=Math.round(this.pDmg*wpnDef.dmgMult);this.fireRate=Math.round(this.fireRate*wpnDef.rateMult);
+    this.hasSpread=wpnDef.spread||false;this.hasBounce=wpnDef.bounces||false;this.hasTrip=wpnDef.trips||false;this.hasExplosive=wpnDef.explosive||false;this.hasPushback=wpnDef.pushback||false;
     // â•â• GAME STATE â•â•
     this.lastShot=0;this.pXP=0;this.pLevel=1;this.xpNeeded=10;
     this.score=0;this.kills=0;this.elapsed=0;this.totalTime=15*60*1000;

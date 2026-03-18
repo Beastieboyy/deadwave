@@ -104,7 +104,7 @@ const DTM = {
     return{bg:g,text:t};
   },
   bottomNav:(scene,active)=>{
-    const tabs=[{key:'hub',icon:'\ud83c\udfe0',label:'HOME'},{key:'chapter',icon:'\u2b50',label:'NIGHTS'},{key:'leaderboard',icon:'\ud83c\udfc6',label:'RANKS'},{key:'upgrade',icon:'\ud83c\udf92',label:'LOCKER'}];
+    const tabs=[{key:'hub',icon:'\ud83c\udfe0',label:'HOME'},{key:'chapter',icon:'\u2b50',label:'ROSTER'},{key:'leaderboard',icon:'\ud83c\udfc6',label:'RANKS'},{key:'upgrade',icon:'\ud83c\udf92',label:'LOCKER'}];
     const bg=scene.add.graphics().setDepth(99);bg.fillStyle(0x0d0d0d,0.97);bg.fillRect(0,H-80,W,80);bg.lineStyle(1,0xff9900,0.4);bg.lineBetween(0,H-80,W,H-80);
     tabs.forEach((tab,i)=>{
       const tx=i*(W/4)+W/8;const isA=tab.key===active;
@@ -299,7 +299,7 @@ class HubScene extends Phaser.Scene {
     const level=DTM.getCurrentLevel(),loc=DTM.locationForLevel(level),stars=DTM.getStars(),snacks=DTM.getSnacks(),name=DTM.getName();
     const topBar=this.add.graphics();topBar.fillStyle(0x0d0d0d,0.95);topBar.fillRect(0,0,W,68);topBar.lineStyle(2,0xff9900,0.5);topBar.lineBetween(0,68,W,68);
     this.add.text(16,20,name.toUpperCase(),{fontFamily:'Orbitron',fontSize:'14px',color:'#ff9900',fontStyle:'bold'});
-    this.add.text(16,42,'NIGHT '+level,{fontFamily:'Orbitron',fontSize:'11px',color:'#888899'});
+    const loopCount=parseInt(localStorage.getItem('dtm_loop_count')||'0');this.add.text(16,42,loopCount>0?'\ud83d\udd25 LOOP '+(loopCount+1):'PANTHER PROWL',{fontFamily:'Orbitron',fontSize:'11px',color:loopCount>0?'#ff4444':'#888899'});
     this.add.text(W-16,20,'\ud83c\udf55 '+snacks,{fontFamily:'Orbitron',fontSize:'14px',color:'#ffcc00'}).setOrigin(1,0);
     this.add.text(W-16,42,'SNACKS',{fontFamily:'Orbitron',fontSize:'9px',color:'#666688'}).setOrigin(1,0);
     const spkBtn=this.add.text(W/2-14,20,SFX.musicMuted?'\ud83d\udd07':'\ud83d\udd0a',{fontSize:'18px'}).setOrigin(0.5).setDepth(10).setInteractive({useHandCursor:true});
@@ -317,7 +317,7 @@ class HubScene extends Phaser.Scene {
       cb.bg.on('pointerdown',()=>{this.children.list.filter(c=>c.depth>=200).forEach(c=>c.destroy());});
     });
     DTM.makeCard(this,16,85,W-32,310,0.95);
-    this.add.text(W/2,108,`NIGHT ${level}`,{fontFamily:'Orbitron',fontSize:'28px',fontStyle:'bold',color:'#ffffff'}).setOrigin(0.5);
+    this.add.text(W/2,108,loopCount>0?'\ud83d\udd25 LOOP '+(loopCount+1):'PANTHER PROWL',{fontFamily:'Orbitron',fontSize:loopCount>0?'22px':'28px',fontStyle:'bold',color:loopCount>0?'#ff4444':'#ffffff'}).setOrigin(0.5);
     const charD=DTM.getCharacter();const charCol=charD.color||0x00ffcc;const charColH='#'+charCol.toString(16).padStart(6,'0');
     const cc=this.add.graphics().setDepth(5);cc.fillStyle(0x1a1a2e,0.97);cc.fillRoundedRect(16,155,W-32,64,8);cc.lineStyle(2,charCol,0.8);cc.strokeRoundedRect(16,155,W-32,64,8);
     if(this.textures.exists(charD.sprite||'player'))this.add.image(52,187,charD.sprite||'player').setDisplaySize(50,50).setDepth(6);
@@ -406,6 +406,7 @@ class ChapterScene extends Phaser.Scene {
         this.add.text(x+CARD_W/2,y+40,char.name,{fontFamily:'Orbitron',fontSize:'10px',color:colHex,fontStyle:'bold',wordWrap:{width:CARD_W-8},align:'center'}).setOrigin(0.5).setDepth(3);
         const stars='\u2605'.repeat(char.difficulty||1)+'\u2606'.repeat(5-(char.difficulty||1));
         this.add.text(x+CARD_W/2,y+58,stars,{fontSize:'10px',color:'#ff9900'}).setOrigin(0.5).setDepth(3);
+        const lc2=parseInt(localStorage.getItem('dtm_loop_count')||'0');if(lc2>0)this.add.text(x+CARD_W/2,y+74,'\ud83d\udd25 x'+(1+lc2*0.3).toFixed(1),{fontFamily:'Orbitron',fontSize:'8px',color:'#ff4444'}).setOrigin(0.5).setDepth(3);
         if(hasK)this.add.text(x+CARD_W-6,y+8,char.kryptonite?.icon||'\u2728',{fontSize:'12px'}).setOrigin(1,0).setDepth(3);
         if(char.isBoss)this.add.text(x+6,y+6,'\ud83d\udc51',{fontSize:'12px'}).setDepth(3);
         if(best>0)this.add.text(x+CARD_W/2,y+74,best.toLocaleString(),{fontFamily:'Orbitron',fontSize:'8px',color:'#555577'}).setOrigin(0.5).setDepth(3);
@@ -681,6 +682,7 @@ class GameScene extends Phaser.Scene {
     const opponent=savedOpp?ROSTER.find(r=>r.key===savedOpp.key)||ROSTER[0]:ROSTER[0];
     this.opponent=opponent;
     console.log('Opponent loaded:',opponent.key,opponent.name,'cutscene:',!!opponent.cutscene);
+    const loopCount=parseInt(localStorage.getItem('dtm_loop_count')||'0');this.loopMult=1+(loopCount*0.3);if(loopCount>0)console.log('Loop:',loopCount,'Difficulty mult:',this.loopMult);
     this.activeRounds=[{label:opponent.name,sub:opponent.sub,loc:'\ud83d\udccd '+opponent.location,enemies:[{type:opponent.key,count:1}],speech:{[opponent.key]:opponent.speech},deathQ:{[opponent.key]:opponent.deathQuip},story:opponent.sub}];
     this.roundEnemiesExpected=1;this.kryptoSpawned=false;this.kryptoUsed=false;this.kryptoniteItem=null;
   }
@@ -940,7 +942,7 @@ class GameScene extends Phaser.Scene {
     e.spawnedMinions=0;e.patrolTarget=null;
     const ln=this.levelNum||1;
     e.tier=ln<=10?1:ln<=30?2:3;
-    const hm=0.6+(ln-1)*0.38;
+    const hm=(0.6+(ln-1)*0.38)*(this.loopMult||1);
     switch(tex){
       case 'ew':e.setDisplaySize(90,90);e.setBodySize(32,32);e.hp=Math.floor(600*hm);e.spd=38;e.dmg=8;e.gd=3;e.sv=50;e.burstColor=0xaaaaaa;break;
       case 'ef':e.setDisplaySize(90,90);e.setBodySize(32,32);e.play('karen_walk');e.hp=Math.floor(450*hm);e.spd=85;e.dmg=10;e.gd=3;e.sv=60;e.burstColor=0xff8800;break;
@@ -963,7 +965,7 @@ class GameScene extends Phaser.Scene {
       default:console.warn('Unknown enemy type:',tex,'— using fallback');e.setDisplaySize(90,90);e.setBodySize(32,32);e.hp=Math.floor(300*hm);e.spd=55;e.dmg=10;e.gd=3;e.sv=80;e.burstColor=0xffffff;break;
     }
     if(!e.hp||e.hp<=0){console.error('Enemy 0 HP on spawn! type:',tex);e.hp=300;}
-    e.maxHp=e.hp;
+    e.maxHp=e.hp;e.dmg=Math.ceil((e.dmg||8)*(this.loopMult||1));
     console.log('SPAWN:',tex,'hp:',e.hp,'maxHp:',e.maxHp);
     e.hpGfx=this.add.graphics().setDepth(7);
     e.hpTxt=null;
@@ -1600,7 +1602,7 @@ class ResultScene extends Phaser.Scene {
     retryBtn.bg.on('pointerdown',()=>{this.cameras.main.fadeOut(250,0,0,0);this.time.delayedCall(250,()=>this.scene.start('GameScene',{level:level}));});
     const hubBtn=DTM.makeBtn(this,W/2+6,510,(W-52)/2,56,'\ud83c\udfe0 HOME',0x1a1a2e);
     hubBtn.text.setColor('#ff9900');hubBtn.bg.on('pointerdown',()=>{this.cameras.main.fadeOut(250,0,0,0);this.time.delayedCall(250,()=>this.scene.start('HubScene'));});
-    if(win){const nextBtn=DTM.makeBtn(this,20,578,W-40,52,`NEXT NIGHT ${level+1} \u203a`,0x00aa44);nextBtn.bg.on('pointerdown',()=>{DTM.setCurrentLevel(level+1);this.cameras.main.fadeOut(250,0,0,0);this.time.delayedCall(250,()=>this.scene.start('GameScene',{level:level+1}));});}
+    if(win){const curOpp=JSON.parse(localStorage.getItem('dtm_opponent')||'null');const curIdx=ROSTER.findIndex(r=>r.key===curOpp?.key);const nxtIdx=(curIdx+1)%ROSTER.length;const nxtOpp=ROSTER[nxtIdx];const lc=parseInt(localStorage.getItem('dtm_loop_count')||'0');const isLoop=nxtIdx===0;if(isLoop)localStorage.setItem('dtm_loop_count',String(lc+1));const nxtLabel=isLoop?'\ud83d\udd01 START OVER \u2014 HARDER (Loop '+(lc+2)+')':'\u25b6 NEXT: '+nxtOpp.icon+' '+nxtOpp.name;const nextBtn=DTM.makeBtn(this,20,578,W-40,52,nxtLabel,isLoop?0xff4400:0x00aa44);nextBtn.text.setFontSize('13px');nextBtn.bg.on('pointerdown',()=>{localStorage.setItem('dtm_opponent',JSON.stringify(nxtOpp));DTM.setCurrentLevel(nxtIdx);this.cameras.main.fadeOut(300,0,0,0);this.time.delayedCall(300,()=>this.scene.start('GameScene',{level:nxtIdx}));});if(isLoop&&lc===0)this.add.text(W/2,555,'\ud83c\udfc6 YOU BEAT EVERYONE!\nThey\'re all back... and angrier.',{fontFamily:'Orbitron',fontSize:'12px',color:'#ffcc00',align:'center',lineSpacing:6,stroke:'#000',strokeThickness:3}).setOrigin(0.5);else if(isLoop)this.add.text(W/2,555,'\ud83d\udd25 LOOP '+(lc+2)+' \u2014 '+Math.round((lc+1)*30)+'% HARDER',{fontFamily:'Orbitron',fontSize:'12px',color:'#ff4444',align:'center',stroke:'#000',strokeThickness:3}).setOrigin(0.5);}
     if(!win){const lc=parseInt(localStorage.getItem(`dtm_losses_${level}`)||'0');if(lc>=1)this.add.text(W/2,580,'\ud83d\udca1 Tip: Upgrade your gear\nin the Locker!',{fontFamily:'Orbitron',fontSize:'11px',color:'#888899',align:'center'}).setOrigin(0.5);if(lc>=2)this.add.text(W/2,616,'\ud83d\udcaa Comeback buff active next try!',{fontFamily:'Orbitron',fontSize:'10px',color:'#00ff88'}).setOrigin(0.5);}
     this.cameras.main.fadeIn(400,0,0,0);
   }

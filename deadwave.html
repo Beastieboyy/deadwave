@@ -752,10 +752,34 @@ class GameScene extends Phaser.Scene {
   setupInput(){this.cursors=this.input.keyboard.createCursorKeys();this.wasd=this.input.keyboard.addKeys('W,A,S,D');}
 
   setupJoystick(){
-    this.jBase=this.add.graphics().setDepth(151).setAlpha(0);this.jThumb=this.add.graphics().setDepth(152).setAlpha(0);const R=60;
-    this.input.on('pointerdown',p=>{if(this.paused||this.dead)return;this.joyActive=true;this.joyBaseX=p.x;this.joyBaseY=p.y;this.joyPointerId=p.id;this.jBase.setAlpha(0.35).clear().lineStyle(3,0x00ffcc).strokeCircle(p.x,p.y,R);this.jThumb.setAlpha(0.65).clear().fillStyle(0x00ffcc).fillCircle(p.x,p.y,22);});
-    this.input.on('pointermove',p=>{if(!this.joyActive||p.id!==this.joyPointerId)return;const dx=p.x-this.joyBaseX,dy=p.y-this.joyBaseY,d=Math.hypot(dx,dy);this.joyAng=Math.atan2(dy,dx);this.joyDist=Math.min(d,R)/R;const tx=this.joyBaseX+Math.cos(this.joyAng)*Math.min(d,R),ty=this.joyBaseY+Math.sin(this.joyAng)*Math.min(d,R);this.jThumb.clear().fillStyle(0x00ffcc).fillCircle(tx,ty,22);});
-    this.input.on('pointerup',p=>{if(p.id!==this.joyPointerId)return;this.joyActive=false;this.joyDist=0;this.jBase.setAlpha(0);this.jThumb.setAlpha(0);});
+    this.joyActive=false;this.joyStartX=0;this.joyStartY=0;this.joyAng=0;this.joyDist=0;this.joyPtrId=null;
+    this.jBase=this.add.graphics().setDepth(96).setScrollFactor(0).setAlpha(0);
+    this.jThumb=this.add.graphics().setDepth(97).setScrollFactor(0).setAlpha(0);
+    this.input.on('pointerdown',p=>{
+      if(this.paused||this.dead||this.levelUpActive)return;if(this.joyPtrId!==null)return;
+      this.joyPtrId=p.id;this.joyActive=true;this.joyStartX=p.x;this.joyStartY=p.y;
+      this.jBase.clear().setAlpha(0.35).lineStyle(3,0x00ffcc,1).strokeCircle(p.x,p.y,52);
+      this.jThumb.clear().setAlpha(0.65).fillStyle(0x00ffcc,1).fillCircle(p.x,p.y,22);
+    });
+    this.input.on('pointermove',p=>{
+      if(!this.joyActive||p.id!==this.joyPtrId||this.paused||this.dead)return;
+      const dx=p.x-this.joyStartX,dy=p.y-this.joyStartY,dist=Math.sqrt(dx*dx+dy*dy);
+      this.joyAng=Math.atan2(dy,dx);this.joyDist=Math.min(dist,52);
+      const tx=this.joyStartX+Math.cos(this.joyAng)*this.joyDist;
+      const ty=this.joyStartY+Math.sin(this.joyAng)*this.joyDist;
+      this.jThumb.clear().setAlpha(0.65).fillStyle(0x00ffcc,1).fillCircle(tx,ty,22);
+    });
+    this.input.on('pointerup',p=>{
+      if(p.id!==this.joyPtrId)return;
+      this.joyActive=false;this.joyPtrId=null;this.joyDist=0;
+      this.jBase.clear().setAlpha(0);this.jThumb.clear().setAlpha(0);
+      if(this.player?.body)this.player.body.setVelocity(0,0);
+    });
+    this.input.on('pointerupoutside',p=>{
+      if(p.id!==this.joyPtrId)return;
+      this.joyActive=false;this.joyPtrId=null;this.joyDist=0;
+      this.jBase.clear().setAlpha(0);this.jThumb.clear().setAlpha(0);
+    });
   }
 
   showSpeechBubble(enemy,text){
@@ -1002,15 +1026,24 @@ class GameScene extends Phaser.Scene {
   }
 
   movePlayer(){
-    let vx=0,vy=0;
-    if(this.cursors.left.isDown||this.wasd.A.isDown)vx=-1;
-    if(this.cursors.right.isDown||this.wasd.D.isDown)vx=1;
-    if(this.cursors.up.isDown||this.wasd.W.isDown)vy=-1;
-    if(this.cursors.down.isDown||this.wasd.S.isDown)vy=1;
-    if(this.joyActive&&this.joyDist>0.1){vx=Math.cos(this.joyAng)*this.joyDist;vy=Math.sin(this.joyAng)*this.joyDist;}
-    if(vx&&vy){vx*=0.707;vy*=0.707;}
-    this.player.setVelocity(vx*this.pSpeed,vy*this.pSpeed);
-    if(vx>0)this.player.setAngle(12);else if(vx<0)this.player.setAngle(-12);else this.player.setAngle(0);
+    if(this.joyActive&&this.joyDist>8){
+      const spd=this.pSpeed*(this.joyDist/52);
+      const vx=Math.cos(this.joyAng)*spd,vy=Math.sin(this.joyAng)*spd;
+      this.player.body.setVelocity(vx,vy);
+      this.lastAimAngle=this.joyAng;
+      if(vx<-10)this.player.setFlipX(true);else if(vx>10)this.player.setFlipX(false);
+    }else if(!this.joyActive){
+      let vx=0,vy=0;
+      if(this.cursors.left.isDown||this.wasd.A.isDown)vx=-1;
+      if(this.cursors.right.isDown||this.wasd.D.isDown)vx=1;
+      if(this.cursors.up.isDown||this.wasd.W.isDown)vy=-1;
+      if(this.cursors.down.isDown||this.wasd.S.isDown)vy=1;
+      if(vx&&vy){vx*=0.707;vy*=0.707;}
+      this.player.setVelocity(vx*this.pSpeed,vy*this.pSpeed);
+      if(vx<0)this.player.setFlipX(true);else if(vx>0)this.player.setFlipX(false);
+    }else{
+      this.player.body.setVelocity(0,0);
+    }
   }
 
   autoShoot(time){

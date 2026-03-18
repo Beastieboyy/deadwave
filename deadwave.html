@@ -880,7 +880,7 @@ class GameScene extends Phaser.Scene {
     const rd0=this.activeRounds[n-1];
     if(!rd0){this.winGame();return;}
     const rd1=this.activeRounds[n-1];const isBV=rd1&&rd1.enemies&&rd1.enemies.some(e=>e.type==='brody_villain');
-    if(isBV&&this.selectedChar?.villainCutscene){const fakeOpp={name:'BRODY',icon:'\ud83d\udcaa',color:0x00ffcc,difficulty:3,cutscene:this.selectedChar.villainCutscene,key:'brody_villain'};this.showIntroCutscene(fakeOpp,()=>this.doStartRound(n));}
+    if(isBV){const ch=DTM.getCharacter();const bvb=ch?.key==='brody';const vc={time:'3:17 AM',location:'THE WEIGHT ROOM',panel1Caption:bvb?'Brody followed the sound\nof a shaker bottle.\nIt was coming from inside the house.':'Nobody expected\nto find Brody here.',panel2Speech:'"BRO I\'VE BEEN\nWAITING FOR YOU.\nWANT SOME CREATINE?"',panel3Caption:bvb?'It was him.\nHe was fighting himself.\nCreatine does things to a person.':'He\'s been in here 11 minutes.\nHe\'s already told 4 people\nabout his gains.'};const fakeOpp={name:'BRODY',icon:'\ud83d\udcaa',color:0x00ffcc,difficulty:5,cutscene:vc,key:'brody_villain'};this.showIntroCutscene(fakeOpp,()=>this.doStartRound(n));}
     else if(this.opponent?.cutscene){this.showIntroCutscene(this.opponent,()=>this.doStartRound(n));}
     else{this.doStartRound(n);}
   }

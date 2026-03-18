@@ -1109,7 +1109,7 @@ class GameScene extends Phaser.Scene {
     SFX.play('death');if(e.isBoss||e.isPeyton)SFX.play('roundclear');
     // Victory slow-mo on last kill
     const remaining=this.enemies.getChildren().filter(en=>en!==e&&!en.dead&&en.active);
-    if(remaining.length===0){this.cameras.main.flash(500,255,204,0);this.cameras.main.shake(300,0.015);}
+    if(remaining.length===0&&!this.transitioning){this.physics.world.timeScale=4;this.time.timeScale=0.25;this.cameras.main.flash(600,255,204,0);this.cameras.main.shake(300,0.015);this.time.delayedCall(600,()=>{this.physics.world.timeScale=1;this.time.timeScale=1;});}
     // Multi-ring death explosion
     const r1=this.add.graphics().setDepth(12);r1.lineStyle(3,e.burstColor||0xff4444,1);r1.strokeCircle(e.x,e.y,10);this.tweens.add({targets:r1,scaleX:4,scaleY:4,alpha:0,duration:350,onComplete:()=>r1.destroy()});
     const r2=this.add.graphics().setDepth(11);r2.lineStyle(2,0xffffff,0.6);r2.strokeCircle(e.x,e.y,8);this.tweens.add({targets:r2,scaleX:6,scaleY:6,alpha:0,duration:500,onComplete:()=>r2.destroy()});
@@ -1153,7 +1153,9 @@ class GameScene extends Phaser.Scene {
     this.pHP=Math.max(0,this.pHP-dmg);this.updateHP();this.playerIframes=250;SFX.play('hurt');
     this.player.setAlpha(0.5);this.time.delayedCall(250,()=>{if(!this.dead)this.player.setAlpha(1);});
     const f=this.add.graphics().setDepth(99);f.fillStyle(0xff0000,0.28);f.fillRect(0,0,W,H);this.time.delayedCall(130,()=>f.destroy());
-    this.cameras.main.shake(180,0.009);if(this.pHP<=0)this.diePlayer();
+    this.cameras.main.shake(180,0.009);
+    if(this.pHP>0&&this.pHP<this.pMaxHP*0.25&&!this.lowHPWarning){this.lowHPWarning=true;this.floatText(W/2,H/2-80,'\u26a0\ufe0f LOW HP!!',0xff4444);}
+    if(this.pHP<=0)this.diePlayer();
   }
 
   updateHP(){this.hpBar.clear();const p=this.pHP/this.pMaxHP;const c=p>0.5?0xff9900:p>0.25?0xffaa00:0xff2200;this.hpBar.fillStyle(c,0.88);this.hpBar.fillRoundedRect(9,9,Math.floor(158*p),16,3);this.hpTxt.setText(`${Math.ceil(this.pHP)}/${this.pMaxHP}`);}

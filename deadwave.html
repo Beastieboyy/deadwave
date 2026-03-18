@@ -600,7 +600,7 @@ class UpgradeScene extends Phaser.Scene {
     }else{
       const btnC=canAfford?0xff9900:0x333333,ub=this.add.graphics();ub.fillStyle(btnC,1);ub.fillRoundedRect(W-148,y+100,120,36,8);
       this.add.text(W-88,y+118,`\ud83c\udf55 ${cost}`,{fontFamily:'Orbitron',fontSize:'12px',color:canAfford?'#000':'#666666',fontStyle:'bold'}).setOrigin(0.5);
-      if(canAfford){const zone=this.add.zone(W-148,y+100,120,36).setOrigin(0,0).setInteractive({useHandCursor:true});zone.on('pointerdown',()=>{DTM.spendSnacks(cost);this.upgrades[item.key]=(this.upgrades[item.key]||0)+1;DTM.saveUpgrades(this.upgrades);DTM.saveProgress();this.scene.restart();});}
+      if(canAfford){const zone=this.add.zone(W-148,y+100,120,36).setOrigin(0,0).setInteractive({useHandCursor:true});zone.on('pointerdown',()=>{DTM.spendSnacks(cost);this.upgrades[item.key]=(this.upgrades[item.key]||0)+1;DTM.saveUpgrades(this.upgrades);SFX.play('equip');this.scene.restart();});}
     }
   }
 }

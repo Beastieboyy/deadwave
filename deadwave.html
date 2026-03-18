@@ -348,12 +348,10 @@ class HubScene extends Phaser.Scene {
     lockerBtn.text.setColor('#ff9900');lockerBtn.bg.on('pointerdown',()=>{this.cameras.main.fadeOut(250,0,0,0);this.time.delayedCall(250,()=>this.scene.start('UpgradeScene'));});
     const rankBtn=DTM.makeBtn(this,W/2+4,415,(W-40)/2,56,'\ud83c\udfc6 RANKS',0x1a1a2e);
     rankBtn.text.setColor('#ffcc00');rankBtn.bg.on('pointerdown',()=>{this.cameras.main.fadeOut(250,0,0,0);this.time.delayedCall(250,()=>this.scene.start('LeaderboardScene'));});
-    const startBtn=DTM.makeBtn(this,16,490,W-32,62,`\u25b6  CHOOSE ROUND`,0xff9900);
-    startBtn.text.setFontSize('18px');startBtn.bg.on('pointerdown',()=>{this.cameras.main.fadeOut(300,0,0,0);this.time.delayedCall(300,()=>this.scene.start('RoundSelectScene',{night:level}));});
-    const quickBtn=DTM.makeBtn(this,50,562,W-100,40,'\u25b6 QUICK START FROM ROUND 1',0x1a1a2e);
-    quickBtn.text.setColor('#888899').setFontSize('11px');quickBtn.bg.on('pointerdown',()=>{this.cameras.main.fadeOut(250,0,0,0);this.time.delayedCall(250,()=>this.scene.start('GameScene',{level:level,startRound:1}));});
-    const chapBtn=DTM.makeBtn(this,16,612,W-32,40,'SELECT A DIFFERENT NIGHT  \u203a',0x1a1a2e);
-    chapBtn.text.setColor('#555577').setFontSize('11px');chapBtn.bg.on('pointerdown',()=>{this.cameras.main.fadeOut(250,0,0,0);this.time.delayedCall(250,()=>this.scene.start('ChapterScene'));});
+    const startBtn=DTM.makeBtn(this,16,490,W-32,62,'\u25b6  FIGHT '+opp.name,0xff9900);
+    startBtn.text.setFontSize('18px');startBtn.bg.on('pointerdown',()=>{this.cameras.main.fadeOut(300,0,0,0);this.time.delayedCall(300,()=>this.scene.start('GameScene',{level:level,startRound:1}));});
+    const chapBtn=DTM.makeBtn(this,16,570,W-32,48,'CHOOSE DIFFERENT OPPONENT  \u203a',0x1a1a2e);
+    chapBtn.text.setColor('#ff9900').setFontSize('13px');chapBtn.bg.on('pointerdown',()=>{this.cameras.main.fadeOut(250,0,0,0);this.time.delayedCall(250,()=>this.scene.start('ChapterScene'));});
     DTM.bottomNav(this,'hub');this.cameras.main.fadeIn(350,0,0,0);
     // Add to Home Screen tip (iOS only, one-time)
     if(!window.navigator.standalone&&!localStorage.getItem('dtm_hometip')&&/iPhone|iPad/.test(navigator.userAgent)){
